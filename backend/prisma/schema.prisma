@@ -1,0 +1,123 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Customer {
+  id       Int       @id @default(autoincrement())
+  nama     String
+  telepon  String
+  vehicles Vehicle[]
+}
+
+model Vehicle {
+  id               Int       @id @default(autoincrement())
+  customer_id      Int
+  customer         Customer  @relation(fields: [customer_id], references: [id])
+  nopol            String    @unique
+  brand_id         Int?
+  motor_type_id    Int?
+  engine_capacity_id Int?
+  brand            MotorBrand? @relation(fields: [brand_id], references: [id])
+  motorTypeMaster  MotorType? @relation(fields: [motor_type_id], references: [id])
+  engineCapacity   EngineCapacity? @relation(fields: [engine_capacity_id], references: [id])
+  merk             String
+  tipe             String
+  kapasitas_mesin  String
+  jenis            String    // e.g. matic, bebek, sport
+  services         Service[]
+}
+
+model MotorBrand {
+  id         Int         @id @default(autoincrement())
+  nama       String      @unique
+  types      MotorType[]
+  vehicles   Vehicle[]
+}
+
+model MotorType {
+  id         Int         @id @default(autoincrement())
+  nama       String
+  brand_id   Int
+  brand      MotorBrand  @relation(fields: [brand_id], references: [id])
+  vehicles   Vehicle[]
+
+  @@unique([brand_id, nama])
+}
+
+model EngineCapacity {
+  id         Int       @id @default(autoincrement())
+  kapasitas  String    @unique
+  vehicles   Vehicle[]
+}
+
+model Mechanic {
+  id          Int       @id @default(autoincrement())
+  nama        String
+  tgl_lahir   DateTime
+  waktu_kerja String    // e.g. "Full-time", "Part-time"
+  services    Service[]
+}
+
+model Service {
+  id           Int           @id @default(autoincrement())
+  vehicle_id   Int
+  vehicle      Vehicle       @relation(fields: [vehicle_id], references: [id])
+  mechanic_id  Int?
+  mechanic     Mechanic?     @relation(fields: [mechanic_id], references: [id])
+  keluhan      String
+  status       String        // e.g. "Menunggu", "Dikerjakan", "Selesai"
+  tgl_masuk    DateTime      @default(now())
+  tgl_selesai  DateTime?
+  serviceItems ServiceItem[]
+  transactions Transaction[]
+}
+
+enum ItemType {
+  SPAREPART
+  JASA
+}
+
+model ServiceItem {
+  id            Int       @id @default(autoincrement())
+  service_id    Int
+  service       Service   @relation(fields: [service_id], references: [id])
+  item_type     ItemType
+  sparepart_id  Int?
+  sparepart     Sparepart? @relation(fields: [sparepart_id], references: [id])
+  quantity      Int
+  harga_saat_ini Float
+}
+
+model Sparepart {
+  id           Int           @id @default(autoincrement())
+  nama         String
+  stok         Int
+  harga_beli   Float
+  harga_jual   Float
+  supplier     String
+  stockIns     StockIn[]
+  serviceItems ServiceItem[]
+}
+
+model StockIn {
+  id           Int       @id @default(autoincrement())
+  sparepart_id Int
+  sparepart    Sparepart @relation(fields: [sparepart_id], references: [id])
+  jumlah       Int
+  tgl_masuk    DateTime  @default(now())
+  supplier     String
+}
+
+model Transaction {
+  id            Int       @id @default(autoincrement())
+  service_id    Int
+  service       Service   @relation(fields: [service_id], references: [id])
+  total         Float
+  tgl_bayar     DateTime  @default(now())
+  metode_bayar  String    // e.g. Tunai, Transfer
+}
