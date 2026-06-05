@@ -107,6 +107,13 @@
       :form="serviceMasterForm"
       @submit="saveServiceMaster"
     />
+
+    <!-- Toast Notification -->
+    <Transition name="toast">
+      <div v-if="toastMessage" class="toast-notification" @click="clearToast">
+        <span>{{ toastMessage }}</span>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -172,6 +179,9 @@ const {
   motorTypeLoading,
   errorMessage,
   retryAllData,
+  toastMessage,
+  showToast,
+  clearToast,
 } = useBengkelApp();
 
 const activeViewComponent = computed(() => {

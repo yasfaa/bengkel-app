@@ -428,7 +428,7 @@ router.post('/services', async (req, res) => {
       }
 
       // 4. Buat antrean Servis
-      const statusInitial = mechanic ? 'Dikerjakan' : 'Menunggu';
+      const statusInitial = req.body.initialStatus || (mechanic ? 'Dikerjakan' : 'Menunggu');
       const service = await tx.service.create({
         data: {
           vehicle_id: vehicle.id,

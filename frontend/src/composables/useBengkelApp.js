@@ -1,4 +1,40 @@
 import { computed, onMounted, ref, watch } from 'vue';
+import Swal from 'sweetalert2';
+
+// Swal mixin dengan custom theme BengkelKu (Slate & Moss)
+const SwalConfirm = Swal.mixin({
+  customClass: {
+    popup: 'swal-popup',
+    header: 'swal-header',
+    title: 'swal-title',
+    htmlContainer: 'swal-text',
+    confirmButton: 'btn btn-primary swal-btn',
+    cancelButton: 'btn btn-secondary swal-btn',
+    icon: 'swal-icon',
+  },
+  buttonsStyling: false,
+  reverseButtons: true,
+  showCancelButton: true,
+  confirmButtonText: 'Ya, lanjutkan',
+  cancelButtonText: 'Batal',
+  backdrop: 'rgba(26, 38, 52, 0.45)',
+});
+
+const SwalSuccess = Swal.mixin({
+  customClass: {
+    popup: 'swal-popup',
+    title: 'swal-title',
+    htmlContainer: 'swal-text',
+    confirmButton: 'btn btn-accent swal-btn',
+    icon: 'swal-icon',
+  },
+  buttonsStyling: false,
+  confirmButtonText: 'OK',
+  timer: 2500,
+  timerProgressBar: true,
+  showConfirmButton: true,
+  backdrop: 'rgba(26, 38, 52, 0.45)',
+});
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -82,6 +118,21 @@ export function useBengkelApp() {
   const motorTypeLoading = ref(false);
   const errorMessage = ref('');
   const isPrefillingVehicle = ref(false);
+  const toastMessage = ref('');
+  let toastTimer = null;
+
+  const showToast = (message, duration = 3000) => {
+    toastMessage.value = message;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toastMessage.value = '';
+    }, duration);
+  };
+
+  const clearToast = () => {
+    toastMessage.value = '';
+    if (toastTimer) clearTimeout(toastTimer);
+  };
 
   const activeMenuName = computed(() => {
     const menu = menus.find((item) => item.id === activeMenu.value);
@@ -271,7 +322,14 @@ export function useBengkelApp() {
 
   const saveServiceMaster = async () => {
     if (!serviceMasterForm.value.nama || serviceMasterForm.value.harga === null || serviceMasterForm.value.harga === '') {
-      alert('Nama dan harga jasa servis wajib diisi.');
+      SwalConfirm.fire({
+        title: 'Data Tidak Lengkap',
+        text: 'Nama dan harga jasa servis wajib diisi.',
+        icon: 'warning',
+        iconColor: '#B3737A',
+        showCancelButton: false,
+        confirmButtonText: 'OK',
+      });
       return;
     }
 
@@ -302,18 +360,41 @@ export function useBengkelApp() {
       }
 
       await fetchServiceMasters();
+      const savedNama = serviceMasterForm.value.nama;
+      const savedHarga = serviceMasterForm.value.harga;
       serviceMasterForm.value = createServiceMasterForm();
       editingServiceMasterId.value = null;
       showServiceMasterModal.value = false;
+      SwalSuccess.fire({
+        title: 'Jasa Servis Tersimpan',
+        text: `${savedNama} — Rp ${formatCurrency(savedHarga)}`,
+        icon: 'success',
+      });
     } catch (error) {
       console.error('Error saving service master:', error);
-      alert(error.message || 'Gagal menyimpan jasa servis.');
+      SwalConfirm.fire({
+        title: 'Gagal Menyimpan',
+        text: error.message || 'Terjadi kesalahan. Silakan coba lagi.',
+        icon: 'error',
+        iconColor: '#B3737A',
+        showCancelButton: false,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3D4F5F',
+      });
     }
   };
 
   const deleteServiceMaster = async (serviceMaster) => {
-    const confirmed = confirm(`Hapus jasa servis "${serviceMaster.nama}"?`);
-    if (!confirmed) return;
+    const result = await SwalConfirm.fire({
+      title: 'Hapus Jasa Servis',
+      html: `Hapus jasa servis <strong>"${serviceMaster.nama}"</strong>?<br>Tindakan ini tidak dapat dibatalkan.`,
+      icon: 'warning',
+      iconColor: '#B3737A',
+      confirmButtonText: 'Ya, hapus',
+      confirmButtonColor: '#B3737A',
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const response = await fetch(`/api/master/services/${serviceMaster.id}`, {
@@ -326,9 +407,14 @@ export function useBengkelApp() {
       }
 
       await fetchServiceMasters();
+      SwalSuccess.fire({
+        title: 'Berhasil Dihapus',
+        text: `Jasa "${serviceMaster.nama}" telah dihapus.`,
+        icon: 'success',
+      });
     } catch (error) {
       console.error('Error deleting service master:', error);
-      alert(error.message || 'Gagal menghapus jasa servis.');
+      showToast('❌ Gagal menghapus jasa servis.', 4000);
     }
   };
 
@@ -397,15 +483,20 @@ export function useBengkelApp() {
     if (!newServiceForm.value.capacityName.trim()) errors.push('Kapasitas mesin');
 
     if (errors.length) {
-      alert(`Harap lengkapi kolom berikut: ${errors.join(', ')}`);
+      showToast(`Harap lengkapi kolom berikut: ${errors.join(', ')}`, 4000);
       return;
     }
 
     const nopolRegex = /^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{1,3}$/;
     if (!nopolRegex.test(newServiceForm.value.nopol.trim().toUpperCase())) {
-      alert('Format nomor polisi tidak valid. Contoh: B 1234 ABC');
+      showToast('Format nomor polisi tidak valid. Contoh: B 1234 ABC', 4000);
       return;
     }
+
+    // Cek apakah mekanik yang dipilih sedang sibuk
+    const busyMechanics = services.value
+      .filter((item) => item.status === 'Dikerjakan' && item.mechanicName)
+      .map((item) => item.mechanicName);
 
     const payload = {
       ...newServiceForm.value,
@@ -414,6 +505,11 @@ export function useBengkelApp() {
       capacityName: newServiceForm.value.capacityName,
       motorType: composeMotorLabel(),
     };
+
+    // Jika mekanik dipilih dan sedang sibuk, kirim status awal 'Menunggu'
+    if (newServiceForm.value.mechanicName && busyMechanics.includes(newServiceForm.value.mechanicName)) {
+      payload.initialStatus = 'Menunggu';
+    }
 
     try {
       const response = await fetch('/api/services', {
@@ -431,12 +527,19 @@ export function useBengkelApp() {
 
       await fetchServices();
       await fetchMechanics();
+      const savedNopol = newServiceForm.value.nopol;
+      const savedCustomer = newServiceForm.value.customerName;
       newServiceForm.value = createServiceForm();
       motorTypes.value = [];
       showAddServiceModal.value = false;
+      SwalSuccess.fire({
+        title: 'Servis Baru Tercatat',
+        html: `<strong>${savedNopol}</strong> — ${savedCustomer}`,
+        icon: 'success',
+      });
     } catch (error) {
       console.error('Error saving service:', error);
-      alert(error.message || 'Gagal menghubungi server.');
+      showToast('❌ Gagal menyimpan data servis. Silakan coba lagi.', 4000);
     }
   };
 
@@ -445,8 +548,28 @@ export function useBengkelApp() {
       .filter((item) => item.status === 'Dikerjakan' && item.mechanicName)
       .map((item) => item.mechanicName);
 
-    const standbyMechanic = mechanics.value.find((mechanic) => !busyMechanics.includes(mechanic.nama));
-    const mechanicName = standbyMechanic ? standbyMechanic.nama : 'Cecep';
+    const standbyMechanic = mechanics.value.find((mech) => !busyMechanics.includes(mech.nama));
+    const mechanicName = standbyMechanic ? standbyMechanic.nama : null;
+
+    if (!mechanicName) {
+      showToast('⚠️ Semua mekanik sedang sibuk. Tunggu hingga ada yang tersedia.', 4000);
+      return;
+    }
+
+    const isMechanicBusy = busyMechanics.includes(mechanicName);
+    const newStatus = isMechanicBusy ? 'Menunggu' : 'Dikerjakan';
+
+    const confirmResult = await SwalConfirm.fire({
+      title: isMechanicBusy ? 'Mekanik Sedang Sibuk' : 'Konfirmasi Tugas',
+      html: isMechanicBusy
+        ? `Mekanik <strong>${mechanicName}</strong> sedang mengerjakan servis lain.<br><br>Tetap tugaskan? Servis akan masuk <strong>antrean (Menunggu)</strong>.`
+        : `Tugaskan mekanik <strong>${mechanicName}</strong> untuk mengerjakan servis <strong>${service.nopol}</strong>?`,
+      icon: 'question',
+      iconColor: '#8B9D83',
+      confirmButtonText: isMechanicBusy ? 'Ya, tetap tugaskan' : 'Ya, tugaskan',
+    });
+
+    if (!confirmResult.isConfirmed) return;
 
     try {
       const response = await fetch(`/api/services/${service.id}/status`, {
@@ -454,7 +577,7 @@ export function useBengkelApp() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: 'Dikerjakan', mechanicName }),
+        body: JSON.stringify({ status: newStatus, mechanicName }),
       });
 
       if (!response.ok) {
@@ -463,12 +586,37 @@ export function useBengkelApp() {
 
       await fetchServices();
       await fetchMechanics();
+
+      if (newStatus === 'Dikerjakan') {
+        SwalSuccess.fire({
+          title: 'Mekanik Ditugaskan',
+          text: `${mechanicName} mulai mengerjakan ${service.nopol}`,
+          icon: 'success',
+        });
+      } else {
+        SwalSuccess.fire({
+          title: 'Masuk Antrean',
+          text: `${mechanicName} ditugaskan — menunggu hingga mekanik selesai`,
+          icon: 'success',
+        });
+      }
     } catch (error) {
       console.error('Failed to assign mechanic:', error);
+      showToast('❌ Gagal menugaskan mekanik. Silakan coba lagi.', 4000);
     }
   };
 
   const completeService = async (service) => {
+    const confirmResult = await SwalConfirm.fire({
+      title: 'Selesaikan Servis',
+      html: `Selesaikan servis <strong>${service.nopol}</strong> (<strong>${service.customerName}</strong>)?<br><br>Pastikan semua pekerjaan sudah selesai.`,
+      icon: 'question',
+      iconColor: '#8B9D83',
+      confirmButtonText: 'Ya, selesaikan',
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
     try {
       const response = await fetch(`/api/services/${service.id}/status`, {
         method: 'PATCH',
@@ -484,8 +632,14 @@ export function useBengkelApp() {
 
       await fetchServices();
       await fetchMechanics();
+      SwalSuccess.fire({
+        title: 'Servis Selesai',
+        text: `${service.nopol} (${service.customerName}) — siap di-invoice`,
+        icon: 'success',
+      });
     } catch (error) {
       console.error('Failed to complete service:', error);
+      showToast('❌ Gagal menyelesaikan servis. Silakan coba lagi.', 4000);
     }
   };
 
@@ -504,7 +658,14 @@ export function useBengkelApp() {
 
     if (selectedSparepart.value) {
       if (selectedSparepart.value.stok <= 0) {
-        alert('Stok sparepart ini habis!');
+        SwalConfirm.fire({
+          title: 'Stok Habis',
+          text: 'Stok sparepart ini habis!',
+          icon: 'warning',
+          iconColor: '#B3737A',
+          showCancelButton: false,
+          confirmButtonText: 'OK',
+        });
         return;
       }
       selectedSparepart.value.stok -= 1;
@@ -536,7 +697,14 @@ export function useBengkelApp() {
 
   const saveStockIn = () => {
     if (!stockForm.value.sparepartId || stockForm.value.qty <= 0) {
-      alert('Data input stok tidak valid!');
+      SwalConfirm.fire({
+        title: 'Data Tidak Valid',
+        text: 'Pilih sparepart dan isi jumlah stok masuk.',
+        icon: 'warning',
+        iconColor: '#B3737A',
+        showCancelButton: false,
+        confirmButtonText: 'OK',
+      });
       return;
     }
 
@@ -546,7 +714,11 @@ export function useBengkelApp() {
       if (stockForm.value.supplier) {
         part.supplier = stockForm.value.supplier;
       }
-      alert(`Berhasil menambahkan ${stockForm.value.qty} unit ke stok ${part.name}.`);
+      SwalSuccess.fire({
+        title: 'Stok Ditambahkan',
+        html: `<strong>${stockForm.value.qty} unit</strong> ${part.name}<br>Stok sekarang: <strong>${part.stok}</strong>`,
+        icon: 'success',
+      });
     }
 
     stockForm.value = createStockForm();
@@ -606,5 +778,8 @@ export function useBengkelApp() {
     motorTypeLoading,
     errorMessage,
     retryAllData,
+    toastMessage,
+    showToast,
+    clearToast,
   };
 }
