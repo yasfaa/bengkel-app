@@ -24,10 +24,11 @@
         <h4 style="font-weight: 700; margin-bottom: 12px;">Sparepart & Jasa Tambahan</h4>
         <div class="form-group">
           <label class="form-label">Pilih Jasa Servis</label>
-          <select v-model="invoiceForm.jasaPrice" class="form-input" style="height: auto;">
-            <option :value="50000">Servis Ringan - Rp 50.000</option>
-            <option :value="100000">Servis Lengkap - Rp 100.000</option>
-            <option :value="150000">Turun Mesin Ringan - Rp 150.000</option>
+          <select v-model="invoiceForm.serviceMasterId" class="form-input" style="height: auto;">
+            <option value="">-- Pilih Jasa Servis --</option>
+            <option v-for="service in serviceMasters" :key="service.id" :value="service.id" :disabled="!service.is_active">
+              {{ service.nama }} - Rp {{ formatCurrency(service.harga) }}
+            </option>
           </select>
         </div>
 
@@ -44,7 +45,11 @@
         <div style="background-color: var(--bg-app); padding: 16px; border-radius: 12px; margin-top: 20px;">
           <div style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
             <span>Jasa Servis:</span>
-            <span>Rp {{ formatCurrency(invoiceForm.jasaPrice) }}</span>
+            <span>Rp {{ formatCurrency(selectedServiceMaster?.harga || 0) }}</span>
+          </div>
+          <div v-if="selectedServiceMaster" style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
+            <span>Nama Jasa:</span>
+            <span>{{ selectedServiceMaster.nama }}</span>
           </div>
           <div v-if="selectedSparepart" style="display: flex; justify-content: space-between; font-weight: 600; margin-bottom: 8px;">
             <span>Sparepart ({{ selectedSparepart.name }}):</span>
@@ -78,8 +83,10 @@ defineProps({
   modelValue: { type: Boolean, default: false },
   selectedService: { type: Object, default: null },
   invoiceForm: { type: Object, required: true },
+  serviceMasters: { type: Array, required: true },
   spareparts: { type: Array, required: true },
   selectedSparepart: { type: Object, default: null },
+  selectedServiceMaster: { type: Object, default: null },
   calculatedTotalInvoice: { type: Number, required: true },
   formatCurrency: { type: Function, required: true },
 });

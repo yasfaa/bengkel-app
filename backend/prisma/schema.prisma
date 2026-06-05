@@ -55,6 +55,16 @@ model EngineCapacity {
   vehicles   Vehicle[]
 }
 
+model ServiceMaster {
+  id          Int      @id @default(autoincrement())
+  nama        String   @unique
+  harga       Float
+  deskripsi   String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+}
+
 model Mechanic {
   id          Int       @id @default(autoincrement())
   nama        String

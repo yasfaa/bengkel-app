@@ -48,6 +48,7 @@
           :filtered-services="filteredServices"
           :active-services="activeServices"
           :mechanics="mechanics"
+          :service-masters="serviceMasters"
           :transactions="transactions"
           :spareparts="spareparts"
           :total-revenue="totalRevenue"
@@ -60,6 +61,9 @@
           @update:search-query="searchQuery = $event"
           @open-service-modal="openAddServiceModal"
           @open-stock-modal="openAddStockModal"
+          @open-service-master-modal="openServiceMasterModal"
+          @edit-service-master="editServiceMaster"
+          @delete-service-master="deleteServiceMaster"
           @assign-mechanic="assignMechanic"
           @complete-service="completeService"
           @create-invoice="createInvoice"
@@ -82,8 +86,10 @@
       v-model="showInvoiceModal"
       :selected-service="selectedService"
       :invoice-form="invoiceForm"
+      :service-masters="serviceMasters"
       :spareparts="spareparts"
       :selected-sparepart="selectedSparepart"
+      :selected-service-master="selectedServiceMaster"
       :calculated-total-invoice="calculatedTotalInvoice"
       :format-currency="formatCurrency"
       @submit="processPayment"
@@ -94,6 +100,12 @@
       :stock-form="stockForm"
       :spareparts="spareparts"
       @submit="saveStockIn"
+    />
+
+    <ServiceMasterModal
+      v-model="showServiceMasterModal"
+      :form="serviceMasterForm"
+      @submit="saveServiceMaster"
     />
   </div>
 </template>
@@ -109,6 +121,7 @@ import MekanikView from './views/MekanikView.vue';
 import AddServiceModal from './components/AddServiceModal.vue';
 import AddStockModal from './components/AddStockModal.vue';
 import InvoiceModal from './components/InvoiceModal.vue';
+import ServiceMasterModal from './components/ServiceMasterModal.vue';
 
 const {
   activeMenu,
@@ -120,6 +133,7 @@ const {
   motorBrands,
   motorTypes,
   engineCapacities,
+  serviceMasters,
   transactions,
   spareparts,
   searchQuery,
@@ -135,18 +149,25 @@ const {
   completeService,
   openAddServiceModal,
   openAddStockModal,
+  openServiceMasterModal,
+  editServiceMaster,
+  deleteServiceMaster,
   showAddServiceModal,
   showAddStockModal,
   showInvoiceModal,
   selectedService,
   selectedSparepart,
+  selectedServiceMaster,
   calculatedTotalInvoice,
   invoiceForm,
   stockForm,
   newServiceForm,
+  serviceMasterForm,
   processPayment,
   saveNewService,
   saveStockIn,
+  showServiceMasterModal,
+  saveServiceMaster,
   createInvoice,
   motorTypeLoading,
   errorMessage,

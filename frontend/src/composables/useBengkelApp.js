@@ -1,19 +1,20 @@
 import { computed, onMounted, ref, watch } from 'vue';
 
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const createServiceForm = () => ({
   customerName: '',
   phone: '',
   nopol: '',
-  brandId: '',
-  typeId: '',
-  capacityId: '',
-  motorType: '',
+  brandName: '',
+  typeName: '',
+  capacityName: '',
   keluhan: '',
   mechanicName: '',
 });
 
 const createInvoiceForm = () => ({
-  jasaPrice: 50000,
+  serviceMasterId: '',
   sparepartId: '',
   paymentMethod: 'Tunai',
 });
@@ -22,6 +23,14 @@ const createStockForm = () => ({
   sparepartId: '',
   qty: 10,
   supplier: '',
+});
+
+const createServiceMasterForm = () => ({
+  id: null,
+  nama: '',
+  harga: 0,
+  deskripsi: '',
+  is_active: true,
 });
 
 export function useBengkelApp() {
@@ -39,6 +48,7 @@ export function useBengkelApp() {
   const motorBrands = ref([]);
   const motorTypes = ref([]);
   const engineCapacities = ref([]);
+  const serviceMasters = ref([]);
   const transactions = ref([
     {
       id: 1,
@@ -66,6 +76,9 @@ export function useBengkelApp() {
   const newServiceForm = ref(createServiceForm());
   const invoiceForm = ref(createInvoiceForm());
   const stockForm = ref(createStockForm());
+  const serviceMasterForm = ref(createServiceMasterForm());
+  const showServiceMasterModal = ref(false);
+  const editingServiceMasterId = ref(null);
   const motorTypeLoading = ref(false);
   const errorMessage = ref('');
   const isPrefillingVehicle = ref(false);
@@ -102,13 +115,21 @@ export function useBengkelApp() {
 
   const totalRevenue = computed(() => transactions.value.reduce((sum, transaction) => sum + transaction.total, 0));
 
+  const selectedServiceMaster = computed(() => {
+    if (!invoiceForm.value.serviceMasterId) {
+      return serviceMasters.value.find((service) => service.is_active) || serviceMasters.value[0] || null;
+    }
+
+    return serviceMasters.value.find((service) => service.id === invoiceForm.value.serviceMasterId) || null;
+  });
+
   const selectedSparepart = computed(() => {
     if (!invoiceForm.value.sparepartId) return null;
     return spareparts.value.find((part) => part.id === invoiceForm.value.sparepartId) || null;
   });
 
   const calculatedTotalInvoice = computed(() => {
-    let total = invoiceForm.value.jasaPrice;
+    let total = selectedServiceMaster.value ? selectedServiceMaster.value.harga : 0;
     if (selectedSparepart.value) {
       total += selectedSparepart.value.hargaJual;
     }
@@ -135,11 +156,13 @@ export function useBengkelApp() {
   };
 
   const composeMotorLabel = () => {
-    const brand = motorBrands.value.find((item) => item.id === newServiceForm.value.brandId);
-    const type = motorTypes.value.find((item) => item.id === newServiceForm.value.typeId);
-    const capacity = engineCapacities.value.find((item) => item.id === newServiceForm.value.capacityId);
+    const brand = newServiceForm.value.brandName.trim();
+    const type = newServiceForm.value.typeName.trim();
+    const capacity = engineCapacities.value.find(
+      (item) => item.kapasitas.toLowerCase() === newServiceForm.value.capacityName.trim().toLowerCase()
+    );
 
-    const labelParts = [brand?.nama, type?.nama].filter(Boolean);
+    const labelParts = [brand, type].filter(Boolean);
     const baseLabel = labelParts.join(' ');
     return capacity ? `${baseLabel} (${capacity.kapasitas})` : baseLabel;
   };
@@ -174,6 +197,11 @@ export function useBengkelApp() {
     engineCapacities.value = data;
   };
 
+  const fetchServiceMasters = async () => {
+    const data = await apiGet('/api/master/services');
+    serviceMasters.value = data;
+  };
+
   const fetchMotorTypes = async (brandId) => {
     if (!brandId) {
       motorTypes.value = [];
@@ -195,8 +223,7 @@ export function useBengkelApp() {
       await Promise.all([
         fetchServices(),
         fetchMechanics(),
-        fetchMotorBrands(),
-        fetchEngineCapacities(),
+        fetchServiceMasters(),
       ]);
     } catch (error) {
       errorMessage.value = error.message || 'Gagal memuat data aplikasi.';
@@ -208,9 +235,14 @@ export function useBengkelApp() {
     await loadReferenceData();
   };
 
-  const openAddServiceModal = () => {
+  const openAddServiceModal = async () => {
     newServiceForm.value = createServiceForm();
     motorTypes.value = [];
+    await wait(180);
+    await Promise.all([
+      fetchMotorBrands(),
+      fetchEngineCapacities(),
+    ]);
     showAddServiceModal.value = true;
   };
 
@@ -219,19 +251,109 @@ export function useBengkelApp() {
     showAddStockModal.value = true;
   };
 
-  watch(
-    () => newServiceForm.value.brandId,
-    async (brandId) => {
-      if (!isPrefillingVehicle.value) {
-        newServiceForm.value.typeId = '';
+  const openServiceMasterModal = () => {
+    serviceMasterForm.value = createServiceMasterForm();
+    editingServiceMasterId.value = null;
+    showServiceMasterModal.value = true;
+  };
+
+  const editServiceMaster = (serviceMaster) => {
+    serviceMasterForm.value = {
+      id: serviceMaster.id,
+      nama: serviceMaster.nama,
+      harga: serviceMaster.harga,
+      deskripsi: serviceMaster.deskripsi || '',
+      is_active: serviceMaster.is_active,
+    };
+    editingServiceMasterId.value = serviceMaster.id;
+    showServiceMasterModal.value = true;
+  };
+
+  const saveServiceMaster = async () => {
+    if (!serviceMasterForm.value.nama || serviceMasterForm.value.harga === null || serviceMasterForm.value.harga === '') {
+      alert('Nama dan harga jasa servis wajib diisi.');
+      return;
+    }
+
+    const payload = {
+      nama: serviceMasterForm.value.nama,
+      harga: serviceMasterForm.value.harga,
+      deskripsi: serviceMasterForm.value.deskripsi,
+      is_active: serviceMasterForm.value.is_active,
+    };
+
+    try {
+      const method = editingServiceMasterId.value ? 'PATCH' : 'POST';
+      const url = editingServiceMasterId.value
+        ? `/api/master/services/${editingServiceMasterId.value}`
+        : '/api/master/services';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const payloadError = await response.json().catch(() => ({}));
+        throw new Error(payloadError.error || 'Gagal menyimpan jasa servis.');
       }
 
-      if (!brandId) {
+      await fetchServiceMasters();
+      serviceMasterForm.value = createServiceMasterForm();
+      editingServiceMasterId.value = null;
+      showServiceMasterModal.value = false;
+    } catch (error) {
+      console.error('Error saving service master:', error);
+      alert(error.message || 'Gagal menyimpan jasa servis.');
+    }
+  };
+
+  const deleteServiceMaster = async (serviceMaster) => {
+    const confirmed = confirm(`Hapus jasa servis "${serviceMaster.nama}"?`);
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`/api/master/services/${serviceMaster.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok && response.status !== 204) {
+        const payloadError = await response.json().catch(() => ({}));
+        throw new Error(payloadError.error || 'Gagal menghapus jasa servis.');
+      }
+
+      await fetchServiceMasters();
+    } catch (error) {
+      console.error('Error deleting service master:', error);
+      alert(error.message || 'Gagal menghapus jasa servis.');
+    }
+  };
+
+  watch(
+    () => newServiceForm.value.brandName,
+    async (brandName) => {
+      if (!isPrefillingVehicle.value) {
+        newServiceForm.value.typeName = '';
+        newServiceForm.value.capacityName = '';
+      }
+
+      if (!brandName) {
         motorTypes.value = [];
         return;
       }
 
-      await fetchMotorTypes(brandId);
+      const matchingBrand = motorBrands.value.find(
+        (brand) => brand.nama.toLowerCase() === brandName.trim().toLowerCase()
+      );
+
+      if (matchingBrand) {
+        await fetchMotorTypes(matchingBrand.id);
+      } else {
+        motorTypes.value = [];
+      }
     }
   );
 
@@ -247,14 +369,14 @@ export function useBengkelApp() {
         isPrefillingVehicle.value = true;
         newServiceForm.value.customerName = vehicle.customer.nama;
         newServiceForm.value.phone = vehicle.customer.telepon;
-        newServiceForm.value.brandId = vehicle.brandId || '';
-        newServiceForm.value.capacityId = vehicle.capacityId || '';
+        newServiceForm.value.brandName = vehicle.brandName || '';
+        newServiceForm.value.capacityName = vehicle.capacityName || '';
 
         if (vehicle.brandId) {
           await fetchMotorTypes(vehicle.brandId);
         }
 
-        newServiceForm.value.typeId = vehicle.typeId || '';
+        newServiceForm.value.typeName = vehicle.typeName || '';
       } catch (error) {
         console.error('Error searching vehicle on input:', error);
       } finally {
@@ -264,18 +386,32 @@ export function useBengkelApp() {
   );
 
   const saveNewService = async () => {
-    if (!newServiceForm.value.customerName || !newServiceForm.value.phone || !newServiceForm.value.nopol || !newServiceForm.value.keluhan) {
-      alert('Mohon lengkapi kolom yang wajib diisi!');
+    const errors = [];
+    if (!newServiceForm.value.customerName.trim()) errors.push('Nama pelanggan');
+    if (!newServiceForm.value.phone.trim()) errors.push('Nomor telepon');
+    if (!newServiceForm.value.nopol.trim()) errors.push('Nomor polisi');
+    if (!newServiceForm.value.keluhan.trim()) errors.push('Keluhan');
+
+    if (!newServiceForm.value.brandName.trim()) errors.push('Merk motor');
+    if (!newServiceForm.value.typeName.trim()) errors.push('Tipe motor');
+    if (!newServiceForm.value.capacityName.trim()) errors.push('Kapasitas mesin');
+
+    if (errors.length) {
+      alert(`Harap lengkapi kolom berikut: ${errors.join(', ')}`);
       return;
     }
 
-    if (!newServiceForm.value.brandId || !newServiceForm.value.typeId || !newServiceForm.value.capacityId) {
-      alert('Silakan pilih merk, tipe, dan kapasitas mesin motor.');
+    const nopolRegex = /^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{1,3}$/;
+    if (!nopolRegex.test(newServiceForm.value.nopol.trim().toUpperCase())) {
+      alert('Format nomor polisi tidak valid. Contoh: B 1234 ABC');
       return;
     }
 
     const payload = {
       ...newServiceForm.value,
+      brandName: newServiceForm.value.brandName,
+      typeName: newServiceForm.value.typeName,
+      capacityName: newServiceForm.value.capacityName,
       motorType: composeMotorLabel(),
     };
 
@@ -356,6 +492,7 @@ export function useBengkelApp() {
   const createInvoice = (service) => {
     selectedService.value = service;
     invoiceForm.value = createInvoiceForm();
+    invoiceForm.value.serviceMasterId = selectedServiceMaster.value ? selectedServiceMaster.value.id : '';
     showInvoiceModal.value = true;
   };
 
@@ -375,12 +512,8 @@ export function useBengkelApp() {
 
     selectedService.value.isPaid = true;
 
-    let itemsDesc =
-      invoiceForm.value.jasaPrice === 50000
-        ? 'Servis Ringan'
-        : invoiceForm.value.jasaPrice === 100000
-          ? 'Servis Lengkap'
-          : 'Turun Mesin';
+    const serviceLabel = selectedServiceMaster.value ? selectedServiceMaster.value.nama : 'Jasa Servis';
+    let itemsDesc = serviceLabel;
 
     if (selectedSparepart.value) {
       itemsDesc += ` + Ganti ${selectedSparepart.value.name}`;
@@ -455,13 +588,21 @@ export function useBengkelApp() {
     showInvoiceModal,
     selectedService,
     selectedSparepart,
+    selectedServiceMaster,
     calculatedTotalInvoice,
     invoiceForm,
     stockForm,
     newServiceForm,
+    serviceMasterForm,
     processPayment,
     saveNewService,
     saveStockIn,
+    serviceMasters,
+    showServiceMasterModal,
+    openServiceMasterModal,
+    editServiceMaster,
+    saveServiceMaster,
+    deleteServiceMaster,
     motorTypeLoading,
     errorMessage,
     retryAllData,

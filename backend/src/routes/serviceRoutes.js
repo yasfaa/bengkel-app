@@ -7,6 +7,19 @@ const parseId = (value) => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
+const normalizeText = (value) => {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.trim();
+};
+
+const parsePrice = (value) => {
+  const parsed = Number.parseFloat(value);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
 const buildMotorLabel = (brandName, typeName, capacityName) => {
   const parts = [brandName, typeName].filter(Boolean);
   const base = parts.join(' ');
@@ -37,21 +50,188 @@ const resolveMotorSelection = async (tx, body) => {
     }
   }
 
-  const motorType = typeof body.motorType === 'string' ? body.motorType.trim() : '';
+  const motorType = normalizeText(body.motorType);
   const fallbackParts = motorType.split(/\s+/).filter(Boolean);
-  const brandName = body.brandName || fallbackParts[0] || 'Umum';
-  const capacityName = body.capacityName || '150cc';
-  const typeName = body.typeName || fallbackParts.slice(1).join(' ') || 'Motor';
+  const brandName = normalizeText(body.brandName) || fallbackParts[0] || 'Umum';
+  const capacityName = normalizeText(body.capacityName) || '150cc';
+  const typeName = normalizeText(body.typeName) || fallbackParts.slice(1).join(' ') || 'Motor';
+
+  const resolvedBrand = await tx.motorBrand.upsert({
+    where: { nama: brandName },
+    update: {},
+    create: { nama: brandName },
+  });
+
+  const resolvedType = await tx.motorType.upsert({
+    where: {
+      brand_id_nama: {
+        brand_id: resolvedBrand.id,
+        nama: typeName,
+      },
+    },
+    update: {},
+    create: {
+      brand_id: resolvedBrand.id,
+      nama: typeName,
+    },
+  });
+
+  const resolvedCapacity = await tx.engineCapacity.upsert({
+    where: { kapasitas: capacityName },
+    update: {},
+    create: { kapasitas: capacityName },
+  });
 
   return {
-    brandId: null,
-    typeId: null,
-    capacityId: null,
-    brandName,
-    typeName,
-    capacityName,
+    brandId: resolvedBrand.id,
+    typeId: resolvedType.id,
+    capacityId: resolvedCapacity.id,
+    brandName: resolvedBrand.nama,
+    typeName: resolvedType.nama,
+    capacityName: resolvedCapacity.kapasitas,
   };
 };
+
+// GET /api/master/services - Ambil daftar master jasa servis
+router.get('/master/services', async (req, res) => {
+  try {
+    const services = await prisma.serviceMaster.findMany({
+      orderBy: [
+        { is_active: 'desc' },
+        { nama: 'asc' },
+      ],
+    });
+
+    res.json(services);
+  } catch (error) {
+    console.error('Error fetching service masters:', error);
+    res.status(500).json({ error: 'Gagal mengambil data jasa servis.' });
+  }
+});
+
+// GET /api/master/services/:id - Ambil detail master jasa servis
+router.get('/master/services/:id', async (req, res) => {
+  const serviceMasterId = parseId(req.params.id);
+
+  if (!serviceMasterId) {
+    return res.status(400).json({ error: 'ID jasa servis tidak valid.' });
+  }
+
+  try {
+    const serviceMaster = await prisma.serviceMaster.findUnique({
+      where: { id: serviceMasterId },
+    });
+
+    if (!serviceMaster) {
+      return res.status(404).json({ error: 'Data jasa servis tidak ditemukan.' });
+    }
+
+    res.json(serviceMaster);
+  } catch (error) {
+    console.error('Error fetching service master detail:', error);
+    res.status(500).json({ error: 'Gagal mengambil detail jasa servis.' });
+  }
+});
+
+// POST /api/master/services - Tambah master jasa servis
+router.post('/master/services', async (req, res) => {
+  const nama = normalizeText(req.body.nama);
+  const harga = parsePrice(req.body.harga);
+  const deskripsi = normalizeText(req.body.deskripsi);
+  const isActive = typeof req.body.is_active === 'boolean' ? req.body.is_active : true;
+
+  if (!nama || harga === null) {
+    return res.status(400).json({ error: 'Nama dan harga jasa servis wajib diisi.' });
+  }
+
+  try {
+    const created = await prisma.serviceMaster.create({
+      data: {
+        nama,
+        harga,
+        deskripsi: deskripsi || null,
+        is_active: isActive,
+      },
+    });
+
+    res.status(201).json(created);
+  } catch (error) {
+    console.error('Error creating service master:', error);
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Nama jasa servis sudah digunakan.' });
+    }
+
+    res.status(500).json({ error: 'Gagal menambahkan jasa servis.' });
+  }
+});
+
+// PATCH /api/master/services/:id - Ubah master jasa servis
+router.patch('/master/services/:id', async (req, res) => {
+  const serviceMasterId = parseId(req.params.id);
+
+  if (!serviceMasterId) {
+    return res.status(400).json({ error: 'ID jasa servis tidak valid.' });
+  }
+
+  const data = {};
+  const nama = normalizeText(req.body.nama);
+  const harga = req.body.harga !== undefined ? parsePrice(req.body.harga) : null;
+  const deskripsi = req.body.deskripsi !== undefined ? normalizeText(req.body.deskripsi) : undefined;
+  const isActive = req.body.is_active;
+
+  if (nama) data.nama = nama;
+  if (harga !== null) data.harga = harga;
+  if (deskripsi !== undefined) data.deskripsi = deskripsi || null;
+  if (typeof isActive === 'boolean') data.is_active = isActive;
+
+  if (Object.keys(data).length === 0) {
+    return res.status(400).json({ error: 'Tidak ada data yang perlu diperbarui.' });
+  }
+
+  try {
+    const updated = await prisma.serviceMaster.update({
+      where: { id: serviceMasterId },
+      data,
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating service master:', error);
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'Nama jasa servis sudah digunakan.' });
+    }
+
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Data jasa servis tidak ditemukan.' });
+    }
+
+    res.status(500).json({ error: 'Gagal memperbarui jasa servis.' });
+  }
+});
+
+// DELETE /api/master/services/:id - Hapus master jasa servis
+router.delete('/master/services/:id', async (req, res) => {
+  const serviceMasterId = parseId(req.params.id);
+
+  if (!serviceMasterId) {
+    return res.status(400).json({ error: 'ID jasa servis tidak valid.' });
+  }
+
+  try {
+    await prisma.serviceMaster.delete({
+      where: { id: serviceMasterId },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting service master:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Data jasa servis tidak ditemukan.' });
+    }
+
+    res.status(500).json({ error: 'Gagal menghapus jasa servis.' });
+  }
+});
 
 // GET /api/master/brands - Ambil daftar merk motor
 router.get('/master/brands', async (req, res) => {
