@@ -42,6 +42,10 @@ export function useQueueService(master = {}, ui = {}) {
   const newServiceForm = ref(createServiceForm());
   const isPrefillingVehicle = ref(false);
 
+  // Stage 2: Pit Allocation & Mechanic Assignment State
+  const showAssignModal = ref(false);
+  const selectedServiceForAssign = ref(null);
+
   /* =========================================================================
      Computed Queries
      ========================================================================= */
@@ -160,7 +164,7 @@ export function useQueueService(master = {}, ui = {}) {
   );
 
   /* =========================================================================
-     Queue & PKB Actions
+     Queue & PKB Actions (Stage 1 & 2)
      ========================================================================= */
   const openAddServiceModal = () => {
     newServiceForm.value = createServiceForm();
@@ -209,28 +213,39 @@ export function useQueueService(master = {}, ui = {}) {
     }
   };
 
-  const assignMechanic = async (service) => {
-    const busyMechanics = services.value
-      .filter((item) => item.status === 'Dikerjakan' && item.mechanicName)
-      .map((item) => item.mechanicName);
+  /* =========================================================================
+     Stage 2: Pit Allocation & Mechanic Assignment Actions
+     ========================================================================= */
+  const openAssignModal = (service) => {
+    selectedServiceForAssign.value = service;
+    showAssignModal.value = true;
+  };
 
-    const standbyMechanic = mechanics.value.find((mech) => !busyMechanics.includes(mech.nama));
-    const mechanicName = standbyMechanic ? standbyMechanic.nama : null;
-
-    if (!mechanicName) {
-      showToast('⚠️ Semua mekanik sedang sibuk. Tunggu hingga ada yang tersedia.', 4000);
-      return;
-    }
-
+  const confirmAssignMechanic = async ({ service, mechanicName, pitNumber, allowBusyOverride }) => {
     try {
-      await apiPatch(`/api/services/${service.id}/status`, { status: 'Dikerjakan', mechanicName });
+      await apiPatch(`/api/services/${service.id}/status`, {
+        status: 'Dikerjakan',
+        mechanicName,
+        allowBusyOverride: !!allowBusyOverride,
+      });
+
       await fetchServices();
       await fetchMechanics();
-      SwalSuccess.fire('Mekanik Ditugaskan', `Mekanik <strong>${mechanicName}</strong> mulai mengerjakan motor ${service.nopol}`, 'success');
+      showAssignModal.value = false;
+
+      SwalSuccess.fire({
+        title: 'Servis Dimulai!',
+        html: `Motor <strong>${service.nopol}</strong> dialokasikan ke <strong>${pitNumber}</strong> dan dikerjakan oleh <strong>${mechanicName}</strong>.`,
+        icon: 'success',
+      });
     } catch (e) {
       console.error(e);
-      showToast('❌ Gagal menugaskan mekanik.', 3000);
+      showToast('❌ Gagal mengalokasikan teknisi. ' + (e.message || ''), 4000);
     }
+  };
+
+  const assignMechanic = (service) => {
+    openAssignModal(service);
   };
 
   const completeService = async (service) => {
@@ -267,8 +282,12 @@ export function useQueueService(master = {}, ui = {}) {
     showAddServiceModal,
     showPkbModal,
     selectedPkb,
+    showAssignModal,
+    selectedServiceForAssign,
     openAddServiceModal,
     openPkbModal,
+    openAssignModal,
+    confirmAssignMechanic,
     printPkb,
     saveNewService,
     assignMechanic,

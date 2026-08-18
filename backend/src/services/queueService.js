@@ -74,6 +74,7 @@ class QueueService {
 
   /**
    * Register new service / PKB in a single database transaction
+   * Business Rule: Initial status is ALWAYS 'Menunggu' regardless of mechanic assignment
    * @param {object} payload
    */
   async createService(payload) {
@@ -174,7 +175,8 @@ class QueueService {
       const nomorPkb = await this.generateNomorPkb(tx);
 
       // 5. Create Service / PKB record
-      const status = initialStatus || (mechanic ? 'Dikerjakan' : 'Menunggu');
+      // Business SOP Rule: At Reception (Stage 1), status is ALWAYS 'Menunggu'
+      const status = initialStatus || 'Menunggu';
       const service = await tx.service.create({
         data: {
           nomor_pkb: nomorPkb,
@@ -235,7 +237,8 @@ class QueueService {
   }
 
   /**
-   * Update service status and mechanic assignment
+   * Update service status and mechanic assignment (Stage 2 Pit Allocation)
+   * Validates busy mechanics and reassignments
    * @param {string|number} id
    * @param {object} payload
    */
@@ -245,22 +248,58 @@ class QueueService {
       throw new AppError('ID servis tidak valid.', 400);
     }
 
-    const { status, mechanicName } = payload;
-    let mechanicId = null;
+    const existingService = await prisma.service.findUnique({
+      where: { id: serviceId },
+      include: {
+        mechanic: true,
+        vehicle: true,
+      },
+    });
+
+    if (!existingService) {
+      throw new AppError('Data antrean servis tidak ditemukan.', 404);
+    }
+
+    const { status, mechanicName, allowBusyOverride } = payload;
+    let targetMechanic = existingService.mechanic;
 
     if (mechanicName) {
-      const mechanic = await prisma.mechanic.findFirst({
+      targetMechanic = await prisma.mechanic.findFirst({
         where: { nama: mechanicName },
       });
-      if (mechanic) {
-        mechanicId = mechanic.id;
+      if (!targetMechanic) {
+        throw new AppError(`Mekanik dengan nama "${mechanicName}" tidak ditemukan.`, 404);
+      }
+    }
+
+    // Business Rule 1: Transitioning to 'Dikerjakan' requires an assigned mechanic
+    if (status === 'Dikerjakan' && !targetMechanic) {
+      throw new AppError('Harap pilih teknisi / mekanik terlebih dahulu untuk memulai pengerjaan servis.', 400);
+    }
+
+    // Business Rule 2: Validate if mechanic is currently busy working on another vehicle
+    if (status === 'Dikerjakan' && targetMechanic && !allowBusyOverride) {
+      const busyJob = await prisma.service.findFirst({
+        where: {
+          mechanic_id: targetMechanic.id,
+          status: 'Dikerjakan',
+          id: { not: serviceId },
+        },
+        include: { vehicle: true },
+      });
+
+      if (busyJob) {
+        throw new AppError(
+          `Mekanik ${targetMechanic.nama} saat ini sedang aktif mengerjakan kendaraan [${busyJob.vehicle.nopol}]. Selesaikan servis tersebut terlebih dahulu atau pilih mekanik lain yang sedang Standby.`,
+          400
+        );
       }
     }
 
     const updateData = {};
     if (status) updateData.status = status;
-    if (mechanicId) {
-      updateData.mechanic_id = mechanicId;
+    if (targetMechanic) {
+      updateData.mechanic_id = targetMechanic.id;
     }
     if (status === 'Selesai') {
       updateData.tgl_selesai = new Date();
@@ -295,10 +334,15 @@ class QueueService {
       motorType: buildMotorLabel(brandName, typeName, capacityName),
       customerName: updatedService.vehicle.customer.nama,
       phone: updatedService.vehicle.customer.telepon,
+      warna: updatedService.vehicle.warna,
+      tahunPembuatan: updatedService.vehicle.tahun_pembuatan,
       kmMasuk: updatedService.km_masuk,
       levelBensin: updatedService.level_bensin,
       catatanKondisi: updatedService.catatan_kondisi,
       keluhan: updatedService.keluhan,
+      serviceMasterId: updatedService.service_master_id,
+      servicePackageName: updatedService.serviceMaster ? updatedService.serviceMaster.nama : null,
+      estimasiBiaya: updatedService.estimasi_biaya,
       mechanicName: updatedService.mechanic ? updatedService.mechanic.nama : null,
       mechanicSpecialization: updatedService.mechanic ? updatedService.mechanic.spesialisasi : null,
       status: updatedService.status,

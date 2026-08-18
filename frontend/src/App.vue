@@ -90,7 +90,7 @@
           @open-sparepart-modal="openSparepartModal"
           @edit-sparepart="editSparepart"
           @delete-sparepart="deleteSparepart"
-          @assign-mechanic="assignMechanic"
+          @assign-mechanic="openAssignModal"
           @complete-service="completeService"
           @create-invoice="createInvoice"
         />
@@ -115,6 +115,16 @@
       :service="selectedPkb"
       :format-currency="formatCurrency"
       :get-status-badge-class="getStatusBadgeClass"
+    />
+
+    <AssignMechanicModal
+      v-model="showAssignModal"
+      :service="selectedServiceForAssign"
+      :mechanics="mechanics"
+      :get-mechanic-status="getMechanicStatus"
+      :get-mechanic-active-job="getMechanicActiveJob"
+      :format-currency="formatCurrency"
+      @confirm="confirmAssignMechanic"
     />
 
     <InvoiceModal
@@ -176,6 +186,7 @@ import StokView from './views/StokView.vue';
 import MekanikView from './views/MekanikView.vue';
 import AddServiceModal from './components/AddServiceModal.vue';
 import PkbDetailModal from './components/PkbDetailModal.vue';
+import AssignMechanicModal from './components/AssignMechanicModal.vue';
 import AddStockModal from './components/AddStockModal.vue';
 import InvoiceModal from './components/InvoiceModal.vue';
 import ServiceMasterModal from './components/ServiceMasterModal.vue';
@@ -214,6 +225,10 @@ const {
   printPkb,
   showPkbModal,
   selectedPkb,
+  showAssignModal,
+  selectedServiceForAssign,
+  openAssignModal,
+  confirmAssignMechanic,
   editServiceMaster,
   deleteServiceMaster,
   showAddServiceModal,
