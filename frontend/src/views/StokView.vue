@@ -1,59 +1,101 @@
 <template>
   <div>
-    <!-- Section Header -->
+    <!-- Section Header Card -->
     <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <div>
-        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main);">Manajemen Stok Sparepart</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Katalog barang, harga pokok & jual, serta pencatatan stok masuk</p>
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main);">Master Data Inventaris & Stok Suku Cadang</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+          Katalog sparepart resmi, monitoring batas minimum stok (ROP), dan pencatatan restock barang masuk
+        </p>
       </div>
-      <button class="btn btn-primary" @click="$emit('open-stock-modal')">
-        <i class="ph-bold ph-plus"></i> Catat Stok Masuk
-      </button>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-secondary" @click="$emit('open-sparepart-modal')">
+          <i class="ph-bold ph-plus"></i> Tambah Master Part
+        </button>
+        <button class="btn btn-primary" @click="$emit('open-stock-modal')">
+          <i class="ph-bold ph-arrow-down-left"></i> Input Stok Masuk
+        </button>
+      </div>
     </div>
 
-    <!-- Inventory Data Table -->
+    <!-- Data Table Spareparts -->
     <div class="table-container">
       <table class="custom-table">
         <thead>
           <tr>
-            <th>Nama Sparepart / SKU</th>
-            <th style="text-align: right;">Stok Tersedia</th>
-            <th style="text-align: right;">Harga Beli (HPP)</th>
+            <th>Kode Part & Suku Cadang</th>
+            <th>Kategori</th>
+            <th>Distributor / Supplier</th>
+            <th style="text-align: right;">Harga Pokok (HPP)</th>
             <th style="text-align: right;">Harga Jual</th>
-            <th>Supplier</th>
-            <th style="text-align: center;">Status Stok</th>
+            <th style="text-align: center;">Sisa Stok</th>
+            <th style="text-align: right;">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="part in spareparts" :key="part.id">
             <td>
-              <strong style="color: var(--text-main);">{{ part.name }}</strong>
+              <div class="sku-code" style="font-weight: 700; font-size: 12px; color: var(--primary-color);">
+                {{ part.kode_part || ('PRT-' + part.id) }}
+              </div>
+              <div style="font-weight: 700; color: var(--text-main); margin-top: 2px;">
+                {{ part.nama || part.name }}
+              </div>
             </td>
-            <td class="numeric" style="text-align: right; font-weight: 700; font-size: 14px;">
-              {{ part.stok }} <span style="font-size: 12px; font-weight: 500; color: var(--text-muted);">unit</span>
-            </td>
-            <td class="numeric" style="text-align: right; color: var(--text-secondary);">
-              Rp {{ formatCurrency(part.hargaBeli) }}
-            </td>
-            <td class="numeric" style="text-align: right; font-weight: 700; color: #059669;">
-              Rp {{ formatCurrency(part.hargaJual) }}
-            </td>
-            <td style="color: var(--text-secondary);">{{ part.supplier }}</td>
-            <td style="text-align: center;">
-              <span :class="['badge', part.stok <= 5 ? 'badge-error' : 'badge-done']">
-                <i :class="['ph-bold', part.stok <= 5 ? 'ph-warning' : 'ph-check-circle']"></i>
-                {{ part.stok <= 5 ? 'Menipis' : 'Cukup' }}
+            <td>
+              <span class="badge" style="background: #f1f5f9; color: var(--text-secondary); border-color: var(--border-subtle);">
+                {{ part.kategori || 'FAST_MOVING' }}
               </span>
+            </td>
+            <td>
+              <div style="color: var(--text-secondary); font-weight: 500;">
+                {{ part.supplier || '-' }}
+              </div>
+            </td>
+            <td class="amount numeric" style="text-align: right; color: var(--text-muted);">
+              Rp {{ formatCurrency(part.harga_beli || part.hargaBeli) }}
+            </td>
+            <td class="amount numeric" style="text-align: right; font-weight: 700; color: var(--text-main);">
+              Rp {{ formatCurrency(part.harga_jual || part.hargaJual) }}
+            </td>
+            <td style="text-align: center;">
+              <span v-if="part.stok <= 0" class="badge badge-error">
+                <i class="ph-bold ph-x-circle"></i> Habis (0 unit)
+              </span>
+              <span v-else-if="part.stok <= (part.min_stok || 5)" class="badge badge-pending">
+                <i class="ph-bold ph-warning"></i> Menipis ({{ part.stok }} unit)
+              </span>
+              <span v-else class="badge badge-done">
+                <i class="ph-bold ph-check"></i> Cukup ({{ part.stok }} unit)
+              </span>
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              <button
+                class="btn btn-secondary"
+                style="padding: 6px 10px; font-size: 12px; margin-right: 6px;"
+                title="Ubah Sparepart"
+                @click="$emit('edit-sparepart', part)"
+              >
+                <i class="ph-bold ph-pencil"></i>
+              </button>
+              <button
+                class="btn btn-danger"
+                style="padding: 6px 10px; font-size: 12px;"
+                title="Hapus Sparepart"
+                @click="$emit('delete-sparepart', part)"
+              >
+                <i class="ph-bold ph-trash"></i>
+              </button>
             </td>
           </tr>
           <tr v-if="spareparts.length === 0">
-            <td colspan="6">
+            <td colspan="7">
               <div class="empty-state">
                 <div class="empty-state-illust">📦</div>
-                <div class="empty-state-title">Katalog sparepart kosong</div>
-                <div class="empty-state-desc">Belum ada data barang sparepart yang tercatat.</div>
-                <button class="btn btn-primary" @click="$emit('open-stock-modal')">
-                  <i class="ph-bold ph-plus"></i> Catat Stok Masuk
+                <div class="empty-state-title">Belum ada suku cadang terdaftar</div>
+                <div class="empty-state-desc">Tambahkan master suku cadang pertama bengkel Anda.</div>
+                <button class="btn btn-primary" @click="$emit('open-sparepart-modal')">
+                  <i class="ph-bold ph-plus"></i> Tambah Master Part
                 </button>
               </div>
             </td>
@@ -70,5 +112,5 @@ defineProps({
   formatCurrency: { type: Function, required: true },
 });
 
-defineEmits(['open-stock-modal']);
+defineEmits(['open-stock-modal', 'open-sparepart-modal', 'edit-sparepart', 'delete-sparepart']);
 </script>

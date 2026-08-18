@@ -44,7 +44,7 @@
         </div>
         <div class="user-badge">
           <i class="ph-fill ph-user-circle"></i>
-          <span>Kasir / Operator Bengkel</span>
+          <span>Service Advisor / Kasir</span>
         </div>
       </header>
 
@@ -67,6 +67,7 @@
           :active-services="activeServices"
           :mechanics="mechanics"
           :service-masters="serviceMasters"
+          :suppliers="suppliers"
           :transactions="transactions"
           :spareparts="spareparts"
           :total-revenue="totalRevenue"
@@ -78,10 +79,17 @@
           :get-mechanic-active-job="getMechanicActiveJob"
           @update:search-query="searchQuery = $event"
           @open-service-modal="openAddServiceModal"
+          @open-pkb-modal="openPkbModal"
           @open-stock-modal="openAddStockModal"
           @open-service-master-modal="openServiceMasterModal"
           @edit-service-master="editServiceMaster"
           @delete-service-master="deleteServiceMaster"
+          @open-mechanic-modal="openMechanicModal"
+          @edit-mechanic="editMechanic"
+          @delete-mechanic="deleteMechanic"
+          @open-sparepart-modal="openSparepartModal"
+          @edit-sparepart="editSparepart"
+          @delete-sparepart="deleteSparepart"
           @assign-mechanic="assignMechanic"
           @complete-service="completeService"
           @create-invoice="createInvoice"
@@ -96,9 +104,17 @@
       :brands="motorBrands"
       :types="motorTypes"
       :capacities="engineCapacities"
+      :service-masters="serviceMasters"
       :mechanics="mechanics"
       :motor-type-loading="motorTypeLoading"
       @submit="saveNewService"
+    />
+
+    <PkbDetailModal
+      v-model="showPkbModal"
+      :service="selectedPkb"
+      :format-currency="formatCurrency"
+      :get-status-badge-class="getStatusBadgeClass"
     />
 
     <InvoiceModal
@@ -127,6 +143,19 @@
       @submit="saveServiceMaster"
     />
 
+    <MechanicModal
+      v-model="showMechanicModal"
+      :form="mechanicForm"
+      @submit="saveMechanic"
+    />
+
+    <SparepartModal
+      v-model="showSparepartModal"
+      :form="sparepartForm"
+      :suppliers="suppliers"
+      @submit="saveSparepart"
+    />
+
     <!-- Toast Notification -->
     <Transition name="toast">
       <div v-if="toastMessage" class="toast-notification" @click="clearToast">
@@ -146,9 +175,12 @@ import TransaksiView from './views/TransaksiView.vue';
 import StokView from './views/StokView.vue';
 import MekanikView from './views/MekanikView.vue';
 import AddServiceModal from './components/AddServiceModal.vue';
+import PkbDetailModal from './components/PkbDetailModal.vue';
 import AddStockModal from './components/AddStockModal.vue';
 import InvoiceModal from './components/InvoiceModal.vue';
 import ServiceMasterModal from './components/ServiceMasterModal.vue';
+import MechanicModal from './components/MechanicModal.vue';
+import SparepartModal from './components/SparepartModal.vue';
 
 const {
   activeMenu,
@@ -161,6 +193,7 @@ const {
   motorTypes,
   engineCapacities,
   serviceMasters,
+  suppliers,
   transactions,
   spareparts,
   searchQuery,
@@ -177,6 +210,10 @@ const {
   openAddServiceModal,
   openAddStockModal,
   openServiceMasterModal,
+  openPkbModal,
+  printPkb,
+  showPkbModal,
+  selectedPkb,
   editServiceMaster,
   deleteServiceMaster,
   showAddServiceModal,
@@ -195,6 +232,18 @@ const {
   saveStockIn,
   showServiceMasterModal,
   saveServiceMaster,
+  openMechanicModal,
+  editMechanic,
+  deleteMechanic,
+  saveMechanic,
+  showMechanicModal,
+  mechanicForm,
+  openSparepartModal,
+  editSparepart,
+  deleteSparepart,
+  saveSparepart,
+  showSparepartModal,
+  sparepartForm,
   createInvoice,
   motorTypeLoading,
   errorMessage,

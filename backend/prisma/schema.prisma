@@ -11,105 +11,71 @@ model Customer {
   id       Int       @id @default(autoincrement())
   nama     String
   telepon  String
+  alamat   String?
   vehicles Vehicle[]
 }
 
-model Vehicle {
-  id               Int       @id @default(autoincrement())
-  customer_id      Int
-  customer         Customer  @relation(fields: [customer_id], references: [id])
-  nopol            String    @unique
-  brand_id         Int?
-  motor_type_id    Int?
-  engine_capacity_id Int?
-  brand            MotorBrand? @relation(fields: [brand_id], references: [id])
-  motorTypeMaster  MotorType? @relation(fields: [motor_type_id], references: [id])
-  engineCapacity   EngineCapacity? @relation(fields: [engine_capacity_id], references: [id])
-  merk             String
-  tipe             String
-  kapasitas_mesin  String
-  jenis            String    // e.g. matic, bebek, sport
-  services         Service[]
+model MotorBrand {
+  id    Int         @id @default(autoincrement())
+  nama  String      @unique
+  types MotorType[]
 }
 
-model MotorBrand {
-  id         Int         @id @default(autoincrement())
-  nama       String      @unique
-  types      MotorType[]
-  vehicles   Vehicle[]
+model EngineCapacity {
+  id        Int         @id @default(autoincrement())
+  kapasitas String      @unique
+  types     MotorType[]
+  vehicles  Vehicle[]
 }
 
 model MotorType {
-  id         Int         @id @default(autoincrement())
-  nama       String
-  brand_id   Int
-  brand      MotorBrand  @relation(fields: [brand_id], references: [id])
-  vehicles   Vehicle[]
+  id                 Int             @id @default(autoincrement())
+  nama               String
+  brand_id           Int
+  brand              MotorBrand      @relation(fields: [brand_id], references: [id])
+  jenis              String          @default("matic") // matic, bebek, sport, naked
+  engine_capacity_id Int?
+  engineCapacity     EngineCapacity? @relation(fields: [engine_capacity_id], references: [id])
+  vehicles           Vehicle[]
 
   @@unique([brand_id, nama])
 }
 
-model EngineCapacity {
-  id         Int       @id @default(autoincrement())
-  kapasitas  String    @unique
-  vehicles   Vehicle[]
+model Vehicle {
+  id                 Int            @id @default(autoincrement())
+  customer_id        Int
+  customer           Customer       @relation(fields: [customer_id], references: [id])
+  nopol              String         @unique
+  motor_type_id      Int
+  motorType          MotorType      @relation(fields: [motor_type_id], references: [id])
+  engine_capacity_id Int
+  engineCapacity     EngineCapacity @relation(fields: [engine_capacity_id], references: [id])
+  warna              String?
+  tahun_pembuatan    Int?
+  km_terakhir        Int            @default(0)
+  services           Service[]
 }
 
-model ServiceMaster {
-  id          Int      @id @default(autoincrement())
-  nama        String   @unique
-  harga       Float
-  deskripsi   String?
-  is_active   Boolean  @default(true)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-}
-
-model Mechanic {
-  id          Int       @id @default(autoincrement())
-  nama        String
-  tgl_lahir   DateTime
-  waktu_kerja String    // e.g. "Full-time", "Part-time"
-  services    Service[]
-}
-
-model Service {
-  id           Int           @id @default(autoincrement())
-  vehicle_id   Int
-  vehicle      Vehicle       @relation(fields: [vehicle_id], references: [id])
-  mechanic_id  Int?
-  mechanic     Mechanic?     @relation(fields: [mechanic_id], references: [id])
-  keluhan      String
-  status       String        // e.g. "Menunggu", "Dikerjakan", "Selesai"
-  tgl_masuk    DateTime      @default(now())
-  tgl_selesai  DateTime?
-  serviceItems ServiceItem[]
-  transactions Transaction[]
-}
-
-enum ItemType {
-  SPAREPART
-  JASA
-}
-
-model ServiceItem {
-  id            Int       @id @default(autoincrement())
-  service_id    Int
-  service       Service   @relation(fields: [service_id], references: [id])
-  item_type     ItemType
-  sparepart_id  Int?
-  sparepart     Sparepart? @relation(fields: [sparepart_id], references: [id])
-  quantity      Int
-  harga_saat_ini Float
+model Supplier {
+  id         Int         @id @default(autoincrement())
+  nama       String      @unique
+  telepon    String?
+  alamat     String?
+  spareparts Sparepart[]
+  stockIns   StockIn[]
 }
 
 model Sparepart {
   id           Int           @id @default(autoincrement())
+  kode_part    String        @unique // e.g. "AHM-MPX2-08L"
   nama         String
-  stok         Int
+  kategori     String        @default("FAST_MOVING") // FAST_MOVING, SLOW_MOVING, OLI, BAN
+  stok         Int           @default(0)
+  min_stok     Int           @default(5) // Reorder point
   harga_beli   Float
   harga_jual   Float
-  supplier     String
+  supplier_id  Int?
+  supplier     Supplier?     @relation(fields: [supplier_id], references: [id])
   stockIns     StockIn[]
   serviceItems ServiceItem[]
 }
@@ -118,16 +84,85 @@ model StockIn {
   id           Int       @id @default(autoincrement())
   sparepart_id Int
   sparepart    Sparepart @relation(fields: [sparepart_id], references: [id])
+  supplier_id  Int?
+  supplier     Supplier? @relation(fields: [supplier_id], references: [id])
   jumlah       Int
   tgl_masuk    DateTime  @default(now())
-  supplier     String
+}
+
+model ServiceMaster {
+  id              Int           @id @default(autoincrement())
+  nama            String        @unique
+  harga           Float
+  deskripsi       String?
+  estimasi_durasi Int           @default(30) // dalam menit
+  kategori        String        @default("RINGAN") // RINGAN, LENGKAP, BERAT, TUNE_UP, OLI
+  is_active       Boolean       @default(true)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  services        Service[]
+  serviceItems    ServiceItem[]
+}
+
+model Mechanic {
+  id           Int       @id @default(autoincrement())
+  nama         String
+  tgl_lahir    DateTime
+  waktu_kerja  String    // e.g. "Full-time", "Part-time"
+  spesialisasi String    @default("Umum") // e.g. "Umum", "Mesin & CVT", "Kelistrikan & Injeksi"
+  is_active    Boolean   @default(true)
+  services     Service[]
+}
+
+model Service {
+  id                Int            @id @default(autoincrement())
+  nomor_pkb         String?        @unique // e.g. PKB-20260818-001
+  vehicle_id        Int
+  vehicle           Vehicle        @relation(fields: [vehicle_id], references: [id])
+  mechanic_id       Int?
+  mechanic          Mechanic?      @relation(fields: [mechanic_id], references: [id])
+  service_master_id Int?
+  serviceMaster     ServiceMaster? @relation(fields: [service_master_id], references: [id])
+  km_masuk          Int?           @default(0)
+  level_bensin      String?        // e.g. "1/4", "1/2", "3/4", "Full"
+  catatan_kondisi   String?        // e.g. "Spion lengkap, lecet bodi kiri"
+  keluhan           String
+  estimasi_biaya    Float?         @default(0)
+  estimasi_waktu    DateTime?
+  status            String         // e.g. "Menunggu", "Dikerjakan", "Selesai"
+  tgl_masuk         DateTime       @default(now())
+  tgl_selesai       DateTime?
+  serviceItems      ServiceItem[]
+  transactions      Transaction[]
+}
+
+enum ItemType {
+  SPAREPART
+  JASA
+}
+
+model ServiceItem {
+  id                Int            @id @default(autoincrement())
+  service_id        Int
+  service           Service        @relation(fields: [service_id], references: [id])
+  item_type         ItemType
+  sparepart_id      Int?
+  sparepart         Sparepart?     @relation(fields: [sparepart_id], references: [id])
+  service_master_id Int?
+  serviceMaster     ServiceMaster? @relation(fields: [service_master_id], references: [id])
+  quantity          Int            @default(1)
+  harga_satuan      Float
+  subtotal          Float
 }
 
 model Transaction {
-  id            Int       @id @default(autoincrement())
-  service_id    Int
-  service       Service   @relation(fields: [service_id], references: [id])
-  total         Float
-  tgl_bayar     DateTime  @default(now())
-  metode_bayar  String    // e.g. Tunai, Transfer
+  id              Int      @id @default(autoincrement())
+  no_invoice      String?  @unique // e.g. INV-20260818-001
+  service_id      Int
+  service         Service  @relation(fields: [service_id], references: [id])
+  total_jasa      Float    @default(0)
+  total_sparepart Float    @default(0)
+  total           Float
+  tgl_bayar       DateTime @default(now())
+  metode_bayar    String   // e.g. Tunai, Transfer Mandiri, Transfer BCA, QRIS
 }

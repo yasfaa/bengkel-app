@@ -1,11 +1,23 @@
 const prisma = require('../db');
 const AppError = require('../utils/appError');
 const vehicleService = require('./vehicleService');
-const { parseId, buildMotorLabel } = require('../utils/formatters');
+const { parseId, parsePrice, normalizeText, buildMotorLabel } = require('../utils/formatters');
 
 class QueueService {
   /**
-   * Get all services list formatted for the client
+   * Helper to generate unique PKB number
+   * @param {*} tx
+   */
+  async generateNomorPkb(tx) {
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const countTotal = await tx.service.count();
+    const seq = String(countTotal + 1).padStart(3, '0');
+    return `PKB-${dateStr}-${seq}`;
+  }
+
+  /**
+   * Get all services list formatted for client with PKB metadata and normalized relations
    */
   async getAllServices() {
     const services = await prisma.service.findMany({
@@ -13,40 +25,83 @@ class QueueService {
         vehicle: {
           include: {
             customer: true,
+            motorType: {
+              include: {
+                brand: true,
+              },
+            },
+            engineCapacity: true,
           },
         },
         mechanic: true,
+        serviceMaster: true,
       },
       orderBy: {
         tgl_masuk: 'desc',
       },
     });
 
-    return services.map((s) => ({
-      id: s.id,
-      nopol: s.vehicle.nopol,
-      motorType: `${s.vehicle.merk} ${s.vehicle.tipe} (${s.vehicle.kapasitas_mesin})`,
-      customerName: s.vehicle.customer.nama,
-      phone: s.vehicle.customer.telepon,
-      keluhan: s.keluhan,
-      mechanicName: s.mechanic ? s.mechanic.nama : null,
-      status: s.status,
-      isPaid: false,
-      tgl_masuk: s.tgl_masuk,
-      tgl_selesai: s.tgl_selesai,
-    }));
+    return services.map((s) => {
+      const brandName = s.vehicle?.motorType?.brand?.nama || 'Umum';
+      const typeName = s.vehicle?.motorType?.nama || 'Motor';
+      const capacityName = s.vehicle?.engineCapacity?.kapasitas || '-';
+
+      return {
+        id: s.id,
+        nomorPkb: s.nomor_pkb || `PKB-${s.id}`,
+        nopol: s.vehicle.nopol,
+        motorType: buildMotorLabel(brandName, typeName, capacityName),
+        customerName: s.vehicle.customer.nama,
+        phone: s.vehicle.customer.telepon,
+        warna: s.vehicle.warna,
+        tahunPembuatan: s.vehicle.tahun_pembuatan,
+        kmMasuk: s.km_masuk || 0,
+        levelBensin: s.level_bensin || '-',
+        catatanKondisi: s.catatan_kondisi || '-',
+        keluhan: s.keluhan,
+        serviceMasterId: s.service_master_id,
+        servicePackageName: s.serviceMaster ? s.serviceMaster.nama : null,
+        estimasiBiaya: s.estimasi_biaya || 0,
+        mechanicName: s.mechanic ? s.mechanic.nama : null,
+        mechanicSpecialization: s.mechanic ? s.mechanic.spesialisasi : null,
+        status: s.status,
+        isPaid: false,
+        tgl_masuk: s.tgl_masuk,
+        tgl_selesai: s.tgl_selesai,
+      };
+    });
   }
 
   /**
-   * Register new service in a single database transaction
+   * Register new service / PKB in a single database transaction
    * @param {object} payload
    */
   async createService(payload) {
-    const { customerName, phone, nopol, motorType, keluhan, mechanicName, initialStatus } = payload;
+    const {
+      customerName,
+      phone,
+      nopol,
+      keluhan,
+      mechanicName,
+      initialStatus,
+      kmMasuk,
+      levelBensin,
+      catatanKondisi,
+      serviceMasterId,
+      estimasiBiaya,
+      warna,
+      tahunPembuatan,
+    } = payload;
 
     if (!customerName || !phone || !nopol || !keluhan) {
-      throw new AppError('Semua kolom wajib diisi.', 400);
+      throw new AppError('Nama, telepon, nomor polisi, dan keluhan wajib diisi.', 400);
     }
+
+    const kmNumber = parseId(kmMasuk) || 0;
+    const sMasterId = parseId(serviceMasterId);
+    const parsedEstBiaya = parsePrice(estimasiBiaya) || 0;
+    const parsedTahun = parseId(tahunPembuatan);
+    const normalizedWarna = normalizeText(warna) || null;
 
     const result = await prisma.$transaction(async (tx) => {
       // 1. Find or create Customer
@@ -62,25 +117,47 @@ class QueueService {
       // 2. Find or create Vehicle (nopol is unique)
       let vehicle = await tx.vehicle.findUnique({
         where: { nopol: nopol.toUpperCase() },
+        include: {
+          motorType: {
+            include: { brand: true },
+          },
+          engineCapacity: true,
+        },
       });
 
       if (!vehicle) {
         const motorSelection = await vehicleService.resolveMotorSelection(tx, payload);
-        const vehicleKind = typeof payload.jenis === 'string' && payload.jenis.trim()
-          ? payload.jenis.trim().toLowerCase()
-          : (typeof motorType === 'string' && motorType.toLowerCase().includes('matic') ? 'matic' : 'bebek');
 
         vehicle = await tx.vehicle.create({
           data: {
             customer_id: customer.id,
             nopol: nopol.toUpperCase(),
-            brand_id: motorSelection.brandId,
             motor_type_id: motorSelection.typeId,
             engine_capacity_id: motorSelection.capacityId,
-            merk: motorSelection.brandName,
-            tipe: motorSelection.typeName,
-            kapasitas_mesin: motorSelection.capacityName,
-            jenis: vehicleKind,
+            warna: normalizedWarna,
+            tahun_pembuatan: parsedTahun,
+            km_terakhir: kmNumber,
+          },
+          include: {
+            motorType: {
+              include: { brand: true },
+            },
+            engineCapacity: true,
+          },
+        });
+      } else {
+        const updateVehicleData = { km_terakhir: kmNumber };
+        if (normalizedWarna) updateVehicleData.warna = normalizedWarna;
+        if (parsedTahun) updateVehicleData.tahun_pembuatan = parsedTahun;
+
+        vehicle = await tx.vehicle.update({
+          where: { id: vehicle.id },
+          data: updateVehicleData,
+          include: {
+            motorType: {
+              include: { brand: true },
+            },
+            engineCapacity: true,
           },
         });
       }
@@ -93,36 +170,67 @@ class QueueService {
         });
       }
 
-      // 4. Create Service record
+      // 4. Generate PKB Number
+      const nomorPkb = await this.generateNomorPkb(tx);
+
+      // 5. Create Service / PKB record
       const status = initialStatus || (mechanic ? 'Dikerjakan' : 'Menunggu');
       const service = await tx.service.create({
         data: {
+          nomor_pkb: nomorPkb,
           vehicle_id: vehicle.id,
           mechanic_id: mechanic ? mechanic.id : null,
+          service_master_id: sMasterId || null,
+          km_masuk: kmNumber,
+          level_bensin: normalizeText(levelBensin) || '1/2',
+          catatan_kondisi: normalizeText(catatanKondisi) || null,
           keluhan,
+          estimasi_biaya: parsedEstBiaya,
           status,
         },
         include: {
           vehicle: {
-            include: { customer: true },
+            include: {
+              customer: true,
+              motorType: {
+                include: { brand: true },
+              },
+              engineCapacity: true,
+            },
           },
           mechanic: true,
+          serviceMaster: true,
         },
       });
 
       return service;
     });
 
+    const brandName = result.vehicle?.motorType?.brand?.nama || 'Umum';
+    const typeName = result.vehicle?.motorType?.nama || 'Motor';
+    const capacityName = result.vehicle?.engineCapacity?.kapasitas || '-';
+
     return {
       id: result.id,
+      nomorPkb: result.nomor_pkb,
       nopol: result.vehicle.nopol,
-      motorType: buildMotorLabel(result.vehicle.merk, result.vehicle.tipe, result.vehicle.kapasitas_mesin),
+      motorType: buildMotorLabel(brandName, typeName, capacityName),
       customerName: result.vehicle.customer.nama,
       phone: result.vehicle.customer.telepon,
+      warna: result.vehicle.warna,
+      tahunPembuatan: result.vehicle.tahun_pembuatan,
+      kmMasuk: result.km_masuk,
+      levelBensin: result.level_bensin,
+      catatanKondisi: result.catatan_kondisi,
       keluhan: result.keluhan,
+      serviceMasterId: result.service_master_id,
+      servicePackageName: result.serviceMaster ? result.serviceMaster.nama : null,
+      estimasiBiaya: result.estimasi_biaya,
       mechanicName: result.mechanic ? result.mechanic.nama : null,
+      mechanicSpecialization: result.mechanic ? result.mechanic.spesialisasi : null,
       status: result.status,
       isPaid: false,
+      tgl_masuk: result.tgl_masuk,
     };
   }
 
@@ -163,22 +271,40 @@ class QueueService {
       data: updateData,
       include: {
         vehicle: {
-          include: { customer: true },
+          include: {
+            customer: true,
+            motorType: {
+              include: { brand: true },
+            },
+            engineCapacity: true,
+          },
         },
         mechanic: true,
+        serviceMaster: true,
       },
     });
 
+    const brandName = updatedService.vehicle?.motorType?.brand?.nama || 'Umum';
+    const typeName = updatedService.vehicle?.motorType?.nama || 'Motor';
+    const capacityName = updatedService.vehicle?.engineCapacity?.kapasitas || '-';
+
     return {
       id: updatedService.id,
+      nomorPkb: updatedService.nomor_pkb,
       nopol: updatedService.vehicle.nopol,
-      motorType: buildMotorLabel(updatedService.vehicle.merk, updatedService.vehicle.tipe, updatedService.vehicle.kapasitas_mesin),
+      motorType: buildMotorLabel(brandName, typeName, capacityName),
       customerName: updatedService.vehicle.customer.nama,
       phone: updatedService.vehicle.customer.telepon,
+      kmMasuk: updatedService.km_masuk,
+      levelBensin: updatedService.level_bensin,
+      catatanKondisi: updatedService.catatan_kondisi,
       keluhan: updatedService.keluhan,
       mechanicName: updatedService.mechanic ? updatedService.mechanic.nama : null,
+      mechanicSpecialization: updatedService.mechanic ? updatedService.mechanic.spesialisasi : null,
       status: updatedService.status,
       isPaid: false,
+      tgl_masuk: updatedService.tgl_masuk,
+      tgl_selesai: updatedService.tgl_selesai,
     };
   }
 }

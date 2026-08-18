@@ -2,75 +2,99 @@ const prisma = require('../db');
 
 async function seedMotorMaster() {
   try {
-    const brandCount = await prisma.motorBrand.count();
-    const capacityCount = await prisma.engineCapacity.count();
+    const capacities = [
+      { kapasitas: '110cc' },
+      { kapasitas: '125cc' },
+      { kapasitas: '150cc' },
+      { kapasitas: '155cc' },
+      { kapasitas: '160cc' },
+      { kapasitas: '250cc' },
+      { kapasitas: '300cc' },
+    ];
 
-    if (brandCount === 0) {
-      console.log('Seeding initial motor master data...');
-
-      const brandDefinitions = [
-        {
-          nama: 'Honda',
-          types: ['Beat', 'Vario', 'Scoopy', 'PCX', 'CB150R'],
-        },
-        {
-          nama: 'Yamaha',
-          types: ['Mio', 'NMAX', 'Aerox', 'Lexi', 'XMAX'],
-        },
-        {
-          nama: 'Suzuki',
-          types: ['Address', 'Nex II', 'Satria F150', 'GSX-R150'],
-        },
-        {
-          nama: 'Kawasaki',
-          types: ['Ninja 250', 'KLX 150', 'W175', 'D-Tracker 150'],
-        },
-      ];
-
-      const brandRecords = {};
-
-      for (const brandDefinition of brandDefinitions) {
-        const brand = await prisma.motorBrand.upsert({
-          where: { nama: brandDefinition.nama },
-          update: {},
-          create: { nama: brandDefinition.nama },
-        });
-
-        brandRecords[brand.nama] = brand;
-      }
-
-      const typeRows = brandDefinitions.flatMap((brandDefinition) => {
-        const brand = brandRecords[brandDefinition.nama];
-        return brandDefinition.types.map((typeName) => ({
-          nama: typeName,
-          brand_id: brand.id,
-        }));
+    for (const cap of capacities) {
+      await prisma.engineCapacity.upsert({
+        where: { kapasitas: cap.kapasitas },
+        update: {},
+        create: cap,
       });
-
-      await prisma.motorType.createMany({
-        data: typeRows,
-        skipDuplicates: true,
-      });
-
-      console.log('Initial motor master data seeded successfully.');
     }
 
-    if (capacityCount === 0) {
-      await prisma.engineCapacity.createMany({
-        data: [
-          { kapasitas: '110cc' },
-          { kapasitas: '125cc' },
-          { kapasitas: '150cc' },
-          { kapasitas: '155cc' },
-          { kapasitas: '160cc' },
-          { kapasitas: '250cc' },
-          { kapasitas: '300cc' },
+    const brandDefinitions = [
+      {
+        nama: 'Honda',
+        types: [
+          { nama: 'Beat', jenis: 'matic' },
+          { nama: 'Vario', jenis: 'matic' },
+          { nama: 'Scoopy', jenis: 'matic' },
+          { nama: 'PCX', jenis: 'matic' },
+          { nama: 'Supra X 125', jenis: 'bebek' },
+          { nama: 'Revo', jenis: 'bebek' },
+          { nama: 'CB150R', jenis: 'sport' },
+          { nama: 'CBR150R', jenis: 'sport' },
         ],
-        skipDuplicates: true,
+      },
+      {
+        nama: 'Yamaha',
+        types: [
+          { nama: 'Mio', jenis: 'matic' },
+          { nama: 'NMAX', jenis: 'matic' },
+          { nama: 'Aerox', jenis: 'matic' },
+          { nama: 'Lexi', jenis: 'matic' },
+          { nama: 'XMAX', jenis: 'matic' },
+          { nama: 'Jupiter Z', jenis: 'bebek' },
+          { nama: 'MX King', jenis: 'bebek' },
+          { nama: 'R15', jenis: 'sport' },
+        ],
+      },
+      {
+        nama: 'Suzuki',
+        types: [
+          { nama: 'Address', jenis: 'matic' },
+          { nama: 'Nex II', jenis: 'matic' },
+          { nama: 'Satria F150', jenis: 'bebek' },
+          { nama: 'GSX-R150', jenis: 'sport' },
+        ],
+      },
+      {
+        nama: 'Kawasaki',
+        types: [
+          { nama: 'Ninja 250', jenis: 'sport' },
+          { nama: 'KLX 150', jenis: 'sport' },
+          { nama: 'W175', jenis: 'sport' },
+          { nama: 'D-Tracker 150', jenis: 'sport' },
+        ],
+      },
+    ];
+
+    for (const brandDef of brandDefinitions) {
+      const brand = await prisma.motorBrand.upsert({
+        where: { nama: brandDef.nama },
+        update: {},
+        create: { nama: brandDef.nama },
       });
 
-      console.log('Initial engine capacity master data seeded successfully.');
+      for (const t of brandDef.types) {
+        await prisma.motorType.upsert({
+          where: {
+            brand_id_nama: {
+              brand_id: brand.id,
+              nama: t.nama,
+            },
+          },
+          update: {
+            jenis: t.jenis,
+          },
+          create: {
+            brand_id: brand.id,
+            nama: t.nama,
+            jenis: t.jenis,
+          },
+        });
+      }
     }
+
+    console.log('Motor master (brands, types, capacities) seeded successfully.');
   } catch (error) {
     console.error('Failed to seed motor master:', error);
   }

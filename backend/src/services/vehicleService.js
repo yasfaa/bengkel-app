@@ -12,16 +12,20 @@ class VehicleService {
       throw new AppError('Parameter nopol wajib diisi.', 400);
     }
 
+    const cleanNopol = nopol.trim().toUpperCase();
     const vehicle = await prisma.vehicle.findFirst({
       where: {
         nopol: {
-          contains: nopol,
+          contains: cleanNopol,
         },
       },
       include: {
         customer: true,
-        brand: true,
-        motorTypeMaster: true,
+        motorType: {
+          include: {
+            brand: true,
+          },
+        },
         engineCapacity: true,
       },
     });
@@ -30,14 +34,27 @@ class VehicleService {
       return null;
     }
 
+    const brandName = vehicle.motorType?.brand?.nama || 'Umum';
+    const typeName = vehicle.motorType?.nama || 'Motor';
+    const capacityName = vehicle.engineCapacity?.kapasitas || '-';
+
     return {
-      ...vehicle,
-      brandId: vehicle.brand_id,
+      id: vehicle.id,
+      nopol: vehicle.nopol,
+      merk: brandName,
+      tipe: typeName,
+      kapasitas_mesin: capacityName,
+      jenis: vehicle.motorType?.jenis || 'matic',
+      warna: vehicle.warna,
+      tahunPembuatan: vehicle.tahun_pembuatan,
+      km_terakhir: vehicle.km_terakhir,
+      brandId: vehicle.motorType?.brand_id || null,
       typeId: vehicle.motor_type_id,
       capacityId: vehicle.engine_capacity_id,
-      brandName: vehicle.brand ? vehicle.brand.nama : vehicle.merk,
-      typeName: vehicle.motorTypeMaster ? vehicle.motorTypeMaster.nama : vehicle.tipe,
-      capacityName: vehicle.engineCapacity ? vehicle.engineCapacity.kapasitas : vehicle.kapasitas_mesin,
+      brandName,
+      typeName,
+      capacityName,
+      customer: vehicle.customer,
     };
   }
 
@@ -51,6 +68,7 @@ class VehicleService {
     const typeId = parseId(body.typeId);
     const capacityId = parseId(body.capacityId);
 
+    // 1. Direct IDs provided
     if (brandId && typeId && capacityId) {
       const [brand, type, capacity] = await Promise.all([
         tx.motorBrand.findUnique({ where: { id: brandId } }),
@@ -66,15 +84,20 @@ class VehicleService {
           brandName: brand.nama,
           typeName: type.nama,
           capacityName: capacity.kapasitas,
+          jenis: type.jenis,
         };
       }
     }
 
+    // 2. Resolve via text names (upsert if needed)
     const motorType = normalizeText(body.motorType);
     const fallbackParts = motorType.split(/\s+/).filter(Boolean);
     const brandName = normalizeText(body.brandName) || fallbackParts[0] || 'Umum';
-    const capacityName = normalizeText(body.capacityName) || '150cc';
+    const capacityName = normalizeText(body.capacityName) || '110cc';
     const typeName = normalizeText(body.typeName) || fallbackParts.slice(1).join(' ') || 'Motor';
+    const vehicleJenis = typeof body.jenis === 'string' && body.jenis.trim()
+      ? body.jenis.trim().toLowerCase()
+      : (motorType.toLowerCase().includes('matic') ? 'matic' : 'bebek');
 
     const resolvedBrand = await tx.motorBrand.upsert({
       where: { nama: brandName },
@@ -89,10 +112,13 @@ class VehicleService {
           nama: typeName,
         },
       },
-      update: {},
+      update: {
+        jenis: vehicleJenis,
+      },
       create: {
         brand_id: resolvedBrand.id,
         nama: typeName,
+        jenis: vehicleJenis,
       },
     });
 
@@ -109,6 +135,7 @@ class VehicleService {
       brandName: resolvedBrand.nama,
       typeName: resolvedType.nama,
       capacityName: resolvedCapacity.kapasitas,
+      jenis: resolvedType.jenis,
     };
   }
 }
