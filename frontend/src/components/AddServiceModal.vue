@@ -2,7 +2,7 @@
   <div v-if="modelValue" class="modal-backdrop" @click.self="$emit('update:modelValue', false)">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>Form Catat Servis Baru</h3>
+        <h3>Form Pendaftaran Servis Baru</h3>
         <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
       </div>
       <div class="modal-body">
@@ -28,11 +28,11 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Nomor Telepon <span class="required-star">*</span></label>
+          <label class="form-label">Nomor Telepon / WhatsApp <span class="required-star">*</span></label>
           <input
             v-model="form.phone"
             type="text"
-            class="form-input"
+            class="form-input numeric"
             :class="{ 'has-error': fieldErrors.phone }"
             placeholder="08xxxxxxxxxx"
             @input="clearFieldError('phone')"
@@ -45,15 +45,22 @@
           <input
             v-model="form.nopol"
             type="text"
-            class="form-input"
+            class="form-input nopol-font"
             :class="{ 'has-error': fieldErrors.nopol }"
-            placeholder="B 1234 ABC"
+            placeholder="Contoh: B 1234 ABC"
+            style="text-transform: uppercase;"
             @input="clearFieldError('nopol'); validateNopol()"
           />
           <span v-if="fieldErrors.nopol" class="form-error-msg">{{ fieldErrors.nopol }}</span>
         </div>
 
+        <!-- Spesifikasi Motor Card -->
         <div class="motor-card">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="ph-bold ph-motorcycle" style="color: var(--primary-color);"></i>
+            <span>Spesifikasi Kendaraan</span>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Merk Motor <span class="required-star">*</span></label>
             <input
@@ -62,7 +69,7 @@
               class="form-input"
               :class="{ 'has-error': fieldErrors.brandName }"
               list="brand-options"
-              placeholder="Ketik merk atau pilih dari daftar..."
+              placeholder="Pilih merk motor..."
               @input="clearFieldError('brandName')"
             />
             <datalist id="brand-options">
@@ -79,7 +86,7 @@
               class="form-input"
               :class="{ 'has-error': fieldErrors.typeName }"
               list="type-options"
-              :placeholder="form.brandName.trim() ? 'Ketik tipe atau pilih dari daftar...' : 'Isi merk terlebih dahulu...'"
+              :placeholder="form.brandName.trim() ? 'Pilih tipe motor...' : 'Pilih merk terlebih dahulu...'"
               :disabled="!form.brandName.trim() || motorTypeLoading"
               @input="clearFieldError('typeName'); clearOnTypeChange()"
             />
@@ -97,7 +104,7 @@
               class="form-input"
               :class="{ 'has-error': fieldErrors.capacityName }"
               list="capacity-options"
-              :placeholder="form.typeName.trim() ? 'Ketik kapasitas atau pilih dari daftar...' : 'Isi tipe motor terlebih dahulu...'"
+              :placeholder="form.typeName.trim() ? 'Pilih kapasitas mesin...' : 'Pilih tipe terlebih dahulu...'"
               :disabled="!form.typeName.trim()"
               @input="clearFieldError('capacityName')"
             />
@@ -109,29 +116,31 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Keluhan / Deskripsi Servis <span class="required-star">*</span></label>
+          <label class="form-label">Keluhan / Catatan Servis <span class="required-star">*</span></label>
           <input
             v-model="form.keluhan"
             type="text"
             class="form-input"
             :class="{ 'has-error': fieldErrors.keluhan }"
-            placeholder="Ganti oli, servis rutin, rem blong..."
+            placeholder="Contoh: Ganti oli mesin, cek rem depan..."
             @input="clearFieldError('keluhan')"
           />
           <span v-if="fieldErrors.keluhan" class="form-error-msg">{{ fieldErrors.keluhan }}</span>
         </div>
 
-        <div class="form-group dropdown-wrapper">
-          <label class="form-label">Pilih Mekanik (Opsional)</label>
+        <div class="form-group">
+          <label class="form-label">Penugasan Teknisi / Mekanik (Opsional)</label>
           <select v-model="form.mechanicName" class="form-input">
-            <option value="">-- Pilih Mekanik --</option>
-            <option v-for="mechanic in mechanics" :key="mechanic.id" :value="mechanic.nama">{{ mechanic.nama }} ({{ mechanic.waktu_kerja }})</option>
+            <option value="">-- Tugaskan Nanti (Status Menunggu) --</option>
+            <option v-for="mechanic in mechanics" :key="mechanic.id" :value="mechanic.nama">
+              {{ mechanic.nama }} ({{ mechanic.waktu_kerja }})
+            </option>
           </select>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" @click="$emit('update:modelValue', false)">Batal</button>
-        <button class="btn btn-accent" @click="handleSubmit">Simpan Servis</button>
+        <button class="btn btn-primary" @click="handleSubmit">Simpan Order Servis</button>
       </div>
     </div>
   </div>
@@ -185,7 +194,6 @@ const validateNopol = () => {
 };
 
 const clearOnTypeChange = () => {
-  // Reset capacity saat tipe berubah (kecuali prefilling)
   props.form.capacityName = '';
 };
 
@@ -193,7 +201,6 @@ const handleSubmit = () => {
   let hasError = false;
   const errors = { ...fieldErrors.value };
 
-  // Validasi setiap field
   if (!props.form.customerName.trim()) {
     errors.customerName = 'Nama pelanggan wajib diisi';
     hasError = true;
@@ -229,7 +236,7 @@ const handleSubmit = () => {
   fieldErrors.value = errors;
 
   if (hasError) {
-    submitError.value = 'Harap lengkapi semua kolom yang wajib diisi dengan benar.';
+    submitError.value = 'Harap lengkapi semua kolom wajib dengan benar.';
     return;
   }
 
@@ -237,7 +244,6 @@ const handleSubmit = () => {
   emit('submit');
 };
 
-// Reset errors when modal opens/closes
 watch(() => props.modelValue, (val) => {
   if (val) {
     fieldErrors.value = {
@@ -248,66 +254,3 @@ watch(() => props.modelValue, (val) => {
   }
 });
 </script>
-
-<style scoped>
-/* Tanda bintang merah untuk field wajib */
-.required-star {
-  color: var(--status-error-text);
-}
-
-/* Dropdown wrapper untuk posisi relatif panah custom */
-.dropdown-wrapper {
-  position: relative;
-}
-
-.dropdown-wrapper select.form-input {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  padding-right: 40px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 256 256'%3E%3Cpath fill='%235D6D7E' d='M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80a8 8 0 0 1 11.32-11.32L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 16px;
-  cursor: pointer;
-}
-
-/* Input dengan datalist — tampilan konsisten dengan dropdown */
-input[list].form-input {
-  cursor: auto;
-}
-
-input[list].form-input:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(61, 79, 95, 0.15);
-}
-
-/* Disabled input — terlihat redup */
-input.form-input:disabled,
-select.form-input:disabled {
-  background-color: #F0F2F5;
-  color: #A0AAB8;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-/* Style opsi disabled pada select */
-select.form-input option:disabled {
-  color: #B0B8C4;
-}
-
-/* Hover state untuk option (browser support varies) */
-select.form-input option:hover,
-select.form-input option:checked {
-  background-color: #EDF1F5;
-}
-
-/* Sub-card untuk grup data motor */
-.motor-card {
-  padding: 16px;
-  background: #fdfefe;
-  margin-bottom: 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-}
-</style>

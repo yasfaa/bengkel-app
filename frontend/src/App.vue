@@ -1,5 +1,6 @@
 <template>
   <div class="app-container">
+    <!-- Enterprise Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-brand">
         <i class="ph-bold ph-wrench"></i>
@@ -15,31 +16,48 @@
           >
             <i :class="['ph-fill', menu.icon]"></i>
             <span>{{ menu.name }}</span>
+            <span
+              v-if="menu.id === 'servis' && activeServices.length > 0"
+              class="badge badge-working"
+              style="margin-left: auto; padding: 2px 7px; font-size: 11px;"
+            >
+              {{ activeServices.length }}
+            </span>
+            <span
+              v-if="menu.id === 'stok' && lowStockCount > 0"
+              class="badge badge-error"
+              style="margin-left: auto; padding: 2px 7px; font-size: 11px;"
+            >
+              {{ lowStockCount }}
+            </span>
           </li>
         </ul>
       </nav>
     </aside>
 
+    <!-- Main Content Area -->
     <div class="content-area">
-      <div class="topbar-section">
+      <header class="topbar-section">
         <div>
           <div class="breadcrumbs">BengkelKu / {{ activeMenuName }}</div>
           <h1 class="page-title">{{ activeMenuName }}</h1>
         </div>
         <div class="user-badge">
           <i class="ph-fill ph-user-circle"></i>
-          <span>Kasir/Admin (V1)</span>
+          <span>Kasir / Operator Bengkel</span>
         </div>
-      </div>
+      </header>
 
+      <!-- Global Error Banner -->
       <div v-if="errorMessage" class="error-banner">
         <div class="error-banner-content">
-          <i class="ph-fill ph-warning-circle"></i>
+          <i class="ph-bold ph-warning-circle"></i>
           <span>{{ errorMessage }}</span>
         </div>
         <button class="btn btn-secondary" @click="retryAllData">Coba Lagi</button>
       </div>
 
+      <!-- Active View Content -->
       <main>
         <component
           :is="activeViewComponent"
@@ -71,6 +89,7 @@
       </main>
     </div>
 
+    <!-- Modals -->
     <AddServiceModal
       v-model="showAddServiceModal"
       :form="newServiceForm"
@@ -111,6 +130,7 @@
     <!-- Toast Notification -->
     <Transition name="toast">
       <div v-if="toastMessage" class="toast-notification" @click="clearToast">
+        <i class="ph-bold ph-check-circle" style="color: #4ade80;"></i>
         <span>{{ toastMessage }}</span>
       </div>
     </Transition>

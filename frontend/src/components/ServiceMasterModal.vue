@@ -1,43 +1,57 @@
 <template>
-  <div v-if="modelValue" class="modal-backdrop">
-    <div class="modal-card" style="max-width: 560px;">
+  <div v-if="modelValue" class="modal-backdrop" @click.self="$emit('update:modelValue', false)">
+    <div class="modal-card" style="max-width: 540px;">
       <div class="modal-header">
-        <h3>{{ form.id ? 'Ubah Jasa Servis' : 'Tambah Jasa Servis' }}</h3>
+        <h3>{{ form.id ? 'Ubah Jasa Servis' : 'Tambah Jasa Servis Baru' }}</h3>
         <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Nama Jasa <span style="color: var(--status-error-text);">*</span></label>
-          <input v-model="form.nama" type="text" class="form-input" placeholder="Contoh: Servis Ringan" />
+          <label class="form-label">Nama Jasa Servis <span class="required-star">*</span></label>
+          <input
+            v-model="form.nama"
+            type="text"
+            class="form-input"
+            placeholder="Contoh: Servis Ringan, Ganti Kampas Rem..."
+          />
         </div>
 
         <div class="form-group">
-          <label class="form-label">Harga <span style="color: var(--status-error-text);">*</span></label>
-          <input v-model.number="form.harga" type="number" class="form-input" placeholder="50000" />
+          <label class="form-label">Tarif / Harga (Rp) <span class="required-star">*</span></label>
+          <input
+            v-model.number="form.harga"
+            type="number"
+            min="0"
+            step="1000"
+            class="form-input numeric"
+            placeholder="Contoh: 50000"
+          />
         </div>
 
         <div class="form-group">
-          <label class="form-label">Deskripsi</label>
+          <label class="form-label">Deskripsi Singkat</label>
           <textarea
             v-model="form.deskripsi"
             class="form-input"
-            rows="4"
+            rows="3"
             style="height: auto; resize: vertical;"
-            placeholder="Deskripsi singkat jasa servis..."
+            placeholder="Keterangan rincian pengerjaan jasa..."
           ></textarea>
         </div>
 
         <div class="form-group" style="margin-bottom: 0;">
-          <label class="form-label">Status</label>
-          <select v-model="form.is_active" class="form-input" style="height: auto;">
-            <option :value="true">Aktif</option>
-            <option :value="false">Nonaktif</option>
+          <label class="form-label">Status Layanan</label>
+          <select v-model="form.is_active" class="form-input">
+            <option :value="true">Aktif (Dapat Dipilih)</option>
+            <option :value="false">Nonaktif (Diarsipkan)</option>
           </select>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" @click="$emit('update:modelValue', false)">Batal</button>
-        <button class="btn btn-accent" @click="$emit('submit')">Simpan</button>
+        <button class="btn btn-primary" @click="$emit('submit')">
+          <i class="ph-bold ph-check"></i> {{ form.id ? 'Perbarui Jasa' : 'Simpan Jasa' }}
+        </button>
       </div>
     </div>
   </div>
