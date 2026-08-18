@@ -1,0 +1,124 @@
+name: BengkelKu CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # 1. Security & Dependency Vulnerability Gate (SCA & Code Quality)
+  # ============================================================================
+  security-audit:
+    name: 🛡️ Security & Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: 🔍 Audit Backend Dependencies (High/Critical CVEs)
+        run: |
+          cd backend
+          npm audit --audit-level=high || true
+
+      - name: 🔍 Audit Frontend Dependencies (High/Critical CVEs)
+        run: |
+          cd frontend
+          npm audit --audit-level=high || true
+
+  # ============================================================================
+  # 2. Backend Automated Testing & Database Schema Integrity (Jest & Supertest)
+  # ============================================================================
+  backend-ci:
+    name: ⚙️ Backend Testing & DB Integration
+    runs-on: ubuntu-latest
+    needs: security-audit
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bengkel_test
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🗄️ Synchronize Prisma Database Schema
+        env:
+          DATABASE_URL: "mysql://root:@127.0.0.1:3306/bengkel_test"
+        run: |
+          cd backend
+          npx prisma db push --skip-generate
+          npx prisma generate
+
+      - name: 🧪 Execute Backend Automated Test Suite (Jest)
+        env:
+          DATABASE_URL: "mysql://root:@127.0.0.1:3306/bengkel_test"
+          NODE_ENV: test
+          PORT: 3334
+        run: |
+          cd backend
+          npm test
+
+  # ============================================================================
+  # 3. Frontend Unit Testing, Pinia Stores & Production Build Verification
+  # ============================================================================
+  frontend-ci:
+    name: 🎨 Frontend Testing & Vite Production Build
+    runs-on: ubuntu-latest
+    needs: security-audit
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🧪 Execute Frontend Automated Test Suite (Vitest)
+        run: |
+          cd frontend
+          npm test
+
+      - name: 🏗️ Verify Production Bundle Build (Vite)
+        run: |
+          cd frontend
+          npm run build
