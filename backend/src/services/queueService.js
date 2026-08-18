@@ -5,15 +5,44 @@ const { parseId, parsePrice, normalizeText, buildMotorLabel } = require('../util
 
 class QueueService {
   /**
-   * Helper to generate unique PKB number
-   * @param {*} tx
+   * Helper to generate unique PKB number with daily sequence reset (PKB-YYYYMMDD-XXX)
+   * Tracks daily transactions and resets counter to 001 at the beginning of each day.
+   * @param {*} tx Prisma Transaction Client
    */
   async generateNomorPkb(tx) {
     const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-    const countTotal = await tx.service.count();
-    const seq = String(countTotal + 1).padStart(3, '0');
-    return `PKB-${dateStr}-${seq}`;
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}`;
+    const prefix = `PKB-${dateStr}-`;
+
+    // Cari nomor PKB tertinggi yang sudah tercatat pada hari berjalan
+    const latestPkbToday = await tx.service.findFirst({
+      where: {
+        nomor_pkb: {
+          startsWith: prefix,
+        },
+      },
+      orderBy: {
+        nomor_pkb: 'desc',
+      },
+      select: {
+        nomor_pkb: true,
+      },
+    });
+
+    let nextSeq = 1;
+    if (latestPkbToday && latestPkbToday.nomor_pkb) {
+      const parts = latestPkbToday.nomor_pkb.split('-');
+      const lastNum = parseInt(parts[parts.length - 1], 10);
+      if (!isNaN(lastNum)) {
+        nextSeq = lastNum + 1;
+      }
+    }
+
+    const seq = String(nextSeq).padStart(3, '0');
+    return `${prefix}${seq}`;
   }
 
   /**
