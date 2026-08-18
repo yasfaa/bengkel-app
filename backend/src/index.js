@@ -1,7 +1,6 @@
 require('dotenv').config();
 const app = require('./app');
 const prisma = require('./db');
-const runSeeds = require('./seeds');
 
 const PORT = process.env.PORT || 3000;
 
@@ -13,9 +12,6 @@ const server = app.listen(PORT, async () => {
   console.log(` Swagger Docs: http://localhost:${PORT}/api-docs `);
   console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`===========================================`);
-
-  // Run database seeds
-  await runSeeds();
 });
 
 // Graceful Shutdown Handler
