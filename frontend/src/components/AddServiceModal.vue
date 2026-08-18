@@ -22,7 +22,7 @@
         <div class="section-card">
           <div class="section-card-title">
             <i class="ph-bold ph-user" style="color: var(--primary-color);"></i>
-            <span>1. Data Pelanggan & Kendaraan</span>
+            <span>1. Data Pelanggan & Spesifikasi Motor</span>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
@@ -33,7 +33,7 @@
                 type="text"
                 class="form-input nopol-font"
                 :class="{ 'has-error': fieldErrors.nopol }"
-                placeholder="B 1234 ABC"
+                placeholder="Contoh: B 1234 ABC"
                 style="text-transform: uppercase; font-weight: 700; color: var(--primary-color);"
                 @input="clearFieldError('nopol'); validateNopol()"
               />
@@ -54,53 +54,79 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
-            <div class="form-group">
-              <label class="form-label">No. WhatsApp / HP <span class="required-star">*</span></label>
-              <input
-                v-model="form.phone"
-                type="text"
-                class="form-input numeric"
-                :class="{ 'has-error': fieldErrors.phone }"
-                placeholder="08xxxxxxxxxx"
-                @input="clearFieldError('phone')"
-              />
-              <span v-if="fieldErrors.phone" class="form-error-msg">{{ fieldErrors.phone }}</span>
-            </div>
+          <div class="form-group">
+            <label class="form-label">No. WhatsApp / HP <span class="required-star">*</span></label>
+            <input
+              v-model="form.phone"
+              type="text"
+              class="form-input numeric"
+              :class="{ 'has-error': fieldErrors.phone }"
+              placeholder="08xxxxxxxxxx"
+              @input="clearFieldError('phone')"
+            />
+            <span v-if="fieldErrors.phone" class="form-error-msg">{{ fieldErrors.phone }}</span>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label">Merk Motor <span class="required-star">*</span></label>
-              <input
-                v-model="form.brandName"
-                type="text"
-                class="form-input"
-                :class="{ 'has-error': fieldErrors.brandName }"
-                list="brand-options"
-                placeholder="Pilih merk..."
-                @input="clearFieldError('brandName')"
-              />
-              <datalist id="brand-options">
-                <option v-for="brand in brands" :key="brand.id" :value="brand.nama"></option>
-              </datalist>
-              <span v-if="fieldErrors.brandName" class="form-error-msg">{{ fieldErrors.brandName }}</span>
+          <!-- Styled Brand Selection -->
+          <div class="form-group">
+            <label class="form-label">Pilih Merk Kendaraan <span class="required-star">*</span></label>
+            <div class="brand-pill-grid">
+              <button
+                v-for="brand in brands"
+                :key="brand.id"
+                type="button"
+                :class="['brand-pill-btn', { active: form.brandName.toLowerCase() === brand.nama.toLowerCase() }]"
+                @click="selectBrand(brand.nama)"
+              >
+                <i class="ph-bold ph-motorcycle"></i>
+                <span>{{ brand.nama }}</span>
+              </button>
             </div>
+            <select
+              v-model="form.brandName"
+              class="type-select-dropdown"
+              :class="{ 'has-error': fieldErrors.brandName }"
+              @change="clearFieldError('brandName')"
+            >
+              <option value="">-- Atau Pilih Merk Lainnya --</option>
+              <option v-for="brand in brands" :key="brand.id" :value="brand.nama">
+                {{ brand.nama }}
+              </option>
+            </select>
+            <span v-if="fieldErrors.brandName" class="form-error-msg">{{ fieldErrors.brandName }}</span>
+          </div>
 
+          <!-- Styled Type & Capacity Row -->
+          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px;">
             <div class="form-group">
-              <label class="form-label">Tipe Motor <span class="required-star">*</span></label>
-              <input
-                v-model="form.typeName"
-                type="text"
-                class="form-input"
-                :class="{ 'has-error': fieldErrors.typeName }"
-                list="type-options"
-                :placeholder="form.brandName.trim() ? 'Pilih tipe...' : 'Pilih merk dahulu...'"
-                :disabled="!form.brandName.trim() || motorTypeLoading"
-                @input="clearFieldError('typeName')"
-              />
-              <datalist id="type-options">
-                <option v-for="type in types" :key="type.id" :value="type.nama"></option>
-              </datalist>
+              <label class="form-label">Tipe / Model Motor <span class="required-star">*</span></label>
+              <div class="custom-styled-select-container">
+                <select
+                  v-model="form.typeName"
+                  class="type-select-dropdown"
+                  :class="{ 'has-error': fieldErrors.typeName }"
+                  :disabled="!form.brandName || motorTypeLoading"
+                  @change="clearFieldError('typeName')"
+                >
+                  <option value="">
+                    {{ !form.brandName ? '-- Pilih Merk Terlebih Dahulu --' : (motorTypeLoading ? 'Memuat tipe motor...' : '-- Pilih Tipe Motor --') }}
+                  </option>
+                  <option v-for="t in types" :key="t.id" :value="t.nama">
+                    {{ t.nama }} ({{ t.jenis ? t.jenis.toUpperCase() : 'MATIC' }})
+                  </option>
+                </select>
+              </div>
               <span v-if="fieldErrors.typeName" class="form-error-msg">{{ fieldErrors.typeName }}</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Kapasitas Mesin</label>
+              <select v-model="form.capacityName" class="type-select-dropdown">
+                <option value="">-- Kapasitas (cc) --</option>
+                <option v-for="cap in capacities" :key="cap.id" :value="cap.kapasitas">
+                  {{ cap.kapasitas }}
+                </option>
+              </select>
             </div>
           </div>
         </div>
@@ -152,7 +178,7 @@
               v-model="form.catatanKondisi"
               type="text"
               class="form-input"
-              placeholder="Contoh: Spion lengkap, helm ditinggal di bagasi, lecet bodi samping kanan..."
+              placeholder="Contoh: Spion lengkap, helm ditinggal di bagasi, bodi samping kiri ada lecet..."
             />
           </div>
         </div>
@@ -180,7 +206,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
             <div class="form-group">
               <label class="form-label">Pilih Paket Jasa Servis</label>
-              <select v-model="form.serviceMasterId" class="form-input">
+              <select v-model="form.serviceMasterId" class="type-select-dropdown">
                 <option value="">-- Tanpa Paket Jasa Khusus --</option>
                 <option v-for="service in serviceMasters" :key="service.id" :value="service.id" :disabled="!service.is_active">
                   {{ service.nama }} (±{{ service.estimasi_durasi || 30 }} mnt) — Rp {{ formatCurrency(service.harga) }}
@@ -189,13 +215,16 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Tugaskan Teknisi / Mekanik</label>
-              <select v-model="form.mechanicName" class="form-input">
-                <option value="">-- Masuk Antrean (Status Menunggu) --</option>
+              <label class="form-label">Tugaskan Teknisi (Opsional / Permintaan Pelanggan)</label>
+              <select v-model="form.mechanicName" class="type-select-dropdown">
+                <option value="">-- Belum Ditentukan (Antrean Terbuka) --</option>
                 <option v-for="mech in mechanics" :key="mech.id" :value="mech.nama">
                   {{ mech.nama }} ({{ mech.spesialisasi || 'Umum' }})
                 </option>
               </select>
+              <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">
+                Status awal selalu <strong>Menunggu</strong> sampai teknisi mulai mengerjakan di Pit.
+              </span>
             </div>
           </div>
 
@@ -258,6 +287,11 @@ const fieldErrors = ref({
 const submitError = ref('');
 
 const formatCurrency = (val) => new Intl.NumberFormat('id-ID').format(val || 0);
+
+const selectBrand = (brandName) => {
+  props.form.brandName = brandName;
+  clearFieldError('brandName');
+};
 
 const clearFieldError = (field) => {
   fieldErrors.value[field] = '';
@@ -334,3 +368,116 @@ watch(() => props.modelValue, (val) => {
   }
 });
 </script>
+
+<style scoped>
+.section-card {
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.section-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.brand-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-subtle);
+  background: #ffffff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.brand-pill-btn:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-strong);
+  color: var(--text-main);
+}
+
+.brand-pill-btn.active {
+  background: #eff6ff;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.custom-styled-select-container {
+  position: relative;
+}
+
+.type-select-dropdown {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 13.5px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background-color: #ffffff;
+  color: var(--text-main);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.type-select-dropdown:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.fuel-level-group {
+  display: flex;
+  gap: 8px;
+}
+
+.fuel-btn {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: #ffffff;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.fuel-btn:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--text-muted);
+}
+
+.fuel-btn.active {
+  background: #eff6ff;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+</style>
