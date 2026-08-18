@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./docs/swagger');
 const apiRoutes = require('./routes');
@@ -14,13 +15,40 @@ const app = express();
 app.use(
   helmet({
     contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
   })
 );
 
-// 2. CORS Configuration
-app.use(cors());
+// 2. CORS Configuration (Supports whitelisting via CORS_ORIGIN env)
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
+  : '*';
 
-// 3. Body Parsers with limits
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    credentials: true,
+  })
+);
+
+// 3. Global API Rate Limiting (DDoS & Brute-force defense)
+const apiRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // Max 500 requests per 15 minutes per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: 'fail',
+    error: 'Terlalu banyak permintaan dari IP Anda. Silakan coba lagi beberapa saat.',
+    message: 'Terlalu banyak permintaan dari IP Anda. Silakan coba lagi beberapa saat.',
+  },
+});
+
+app.use('/api', apiRateLimiter);
+
+// 4. Body Parsers with limits (DoS payload size defense)
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 

@@ -8,24 +8,30 @@ generator client {
 }
 
 model Customer {
-  id       Int       @id @default(autoincrement())
-  nama     String
-  telepon  String
-  alamat   String?
-  vehicles Vehicle[]
+  id         Int       @id @default(autoincrement())
+  nama       String
+  telepon    String
+  alamat     String?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now()) @updatedAt
+  vehicles   Vehicle[]
 }
 
 model MotorBrand {
-  id    Int         @id @default(autoincrement())
-  nama  String      @unique
-  types MotorType[]
+  id         Int         @id @default(autoincrement())
+  nama       String      @unique
+  created_at DateTime    @default(now())
+  updated_at DateTime    @default(now()) @updatedAt
+  types      MotorType[]
 }
 
 model EngineCapacity {
-  id        Int         @id @default(autoincrement())
-  kapasitas String      @unique
-  types     MotorType[]
-  vehicles  Vehicle[]
+  id         Int         @id @default(autoincrement())
+  kapasitas  String      @unique
+  created_at DateTime    @default(now())
+  updated_at DateTime    @default(now()) @updatedAt
+  types      MotorType[]
+  vehicles   Vehicle[]
 }
 
 model MotorType {
@@ -36,6 +42,8 @@ model MotorType {
   jenis              String          @default("matic") // matic, bebek, sport, naked
   engine_capacity_id Int?
   engineCapacity     EngineCapacity? @relation(fields: [engine_capacity_id], references: [id])
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @default(now()) @updatedAt
   vehicles           Vehicle[]
 
   @@unique([brand_id, nama])
@@ -53,6 +61,8 @@ model Vehicle {
   warna              String?
   tahun_pembuatan    Int?
   km_terakhir        Int            @default(0)
+  created_at         DateTime       @default(now())
+  updated_at         DateTime       @default(now()) @updatedAt
   services           Service[]
 }
 
@@ -61,6 +71,8 @@ model Supplier {
   nama       String      @unique
   telepon    String?
   alamat     String?
+  created_at DateTime    @default(now())
+  updated_at DateTime    @default(now()) @updatedAt
   spareparts Sparepart[]
   stockIns   StockIn[]
 }
@@ -76,6 +88,8 @@ model Sparepart {
   harga_jual   Float
   supplier_id  Int?
   supplier     Supplier?     @relation(fields: [supplier_id], references: [id])
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @default(now()) @updatedAt
   stockIns     StockIn[]
   serviceItems ServiceItem[]
 }
@@ -88,6 +102,8 @@ model StockIn {
   supplier     Supplier? @relation(fields: [supplier_id], references: [id])
   jumlah       Int
   tgl_masuk    DateTime  @default(now())
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now()) @updatedAt
 }
 
 model ServiceMaster {
@@ -99,7 +115,7 @@ model ServiceMaster {
   kategori        String        @default("RINGAN") // RINGAN, LENGKAP, BERAT, TUNE_UP, OLI
   is_active       Boolean       @default(true)
   created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
+  updated_at      DateTime      @default(now()) @updatedAt
   services        Service[]
   serviceItems    ServiceItem[]
 }
@@ -111,6 +127,8 @@ model Mechanic {
   waktu_kerja  String    // e.g. "Full-time", "Part-time"
   spesialisasi String    @default("Umum") // e.g. "Umum", "Mesin & CVT", "Kelistrikan & Injeksi"
   is_active    Boolean   @default(true)
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @default(now()) @updatedAt
   services     Service[]
 }
 
@@ -132,6 +150,8 @@ model Service {
   status            String         // e.g. "Menunggu", "Dikerjakan", "Selesai"
   tgl_masuk         DateTime       @default(now())
   tgl_selesai       DateTime?
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @default(now()) @updatedAt
   serviceItems      ServiceItem[]
   transactions      Transaction[]
 }
@@ -153,6 +173,8 @@ model ServiceItem {
   quantity          Int            @default(1)
   harga_satuan      Float
   subtotal          Float
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @default(now()) @updatedAt
 }
 
 model Transaction {
@@ -165,4 +187,6 @@ model Transaction {
   total           Float
   tgl_bayar       DateTime @default(now())
   metode_bayar    String   // e.g. Tunai, Transfer Mandiri, Transfer BCA, QRIS
+  created_at      DateTime @default(now())
+  updated_at      DateTime @default(now()) @updatedAt
 }
