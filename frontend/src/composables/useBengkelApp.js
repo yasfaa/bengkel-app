@@ -1,38 +1,36 @@
 /**
- * Root Facade Composable for BengkelKu
- * Aggregates modular domain composables (UI, Master Data, Queue/PKB, and Transactions)
+ * Root Facade Composable for BengkelKu powered by Pinia Stores
+ * Connects UI, Master Data, Queue/PKB, and Transactions Pinia Stores
  */
 import { onMounted } from 'vue';
-import { useUiState } from './useUiState';
-import { useMasterData } from './useMasterData';
-import { useQueueService } from './useQueueService';
-import { useTransactions } from './useTransactions';
+import { storeToRefs } from 'pinia';
+import { useUiStore } from '../stores/uiStore';
+import { useMasterStore } from '../stores/masterStore';
+import { useQueueStore } from '../stores/queueStore';
+import { useTransactionStore } from '../stores/transactionStore';
 import { formatCurrency, getStatusBadgeClass } from '../utils/formatters';
 
 export function useBengkelApp() {
-  // 1. UI Navigation & Notifications State
-  const ui = useUiState();
+  const uiStore = useUiStore();
+  const masterStore = useMasterStore();
+  const queueStore = useQueueStore();
+  const transactionStore = useTransactionStore();
 
-  // 2. Master Data & Catalog CRUD
-  const master = useMasterData(ui);
+  const uiRefs = storeToRefs(uiStore);
+  const masterRefs = storeToRefs(masterStore);
+  const queueRefs = storeToRefs(queueStore);
+  const transactionRefs = storeToRefs(transactionStore);
 
-  // 3. Service Queue & PKB Operations
-  const queue = useQueueService(master, ui);
-
-  // 4. Invoicing, Billing & Stock Transactions
-  const transactions = useTransactions(master, queue, ui);
-
-  // Initial Data Fetch
   const fetchAllData = async () => {
-    ui.errorMessage.value = '';
+    uiStore.errorMessage = '';
     try {
       await Promise.all([
-        master.fetchAllMasterData(),
-        queue.fetchServices(),
+        masterStore.fetchAllMasterData(),
+        queueStore.fetchServices(),
       ]);
     } catch (e) {
-      console.error(e);
-      ui.errorMessage.value = 'Gagal terhubung ke backend server. Periksa koneksi atau server.';
+      console.error('Error fetching all initial data:', e);
+      uiStore.errorMessage = 'Gagal terhubung ke backend server. Periksa koneksi atau server.';
     }
   };
 
@@ -43,19 +41,56 @@ export function useBengkelApp() {
   });
 
   return {
-    // UI & Navigation
-    ...ui,
+    // UI Store State & Actions
+    ...uiRefs,
+    showToast: uiStore.showToast,
+    clearToast: uiStore.clearToast,
     retryAllData,
     formatCurrency,
     getStatusBadgeClass,
 
-    // Master Data
-    ...master,
+    // Master Store State & Actions
+    ...masterRefs,
+    fetchBrands: masterStore.fetchBrands,
+    fetchMotorTypes: masterStore.fetchMotorTypes,
+    fetchCapacities: masterStore.fetchCapacities,
+    fetchServiceMasters: masterStore.fetchServiceMasters,
+    fetchSuppliers: masterStore.fetchSuppliers,
+    fetchSpareparts: masterStore.fetchSpareparts,
+    fetchMechanics: masterStore.fetchMechanics,
+    fetchAllMasterData: masterStore.fetchAllMasterData,
+    openServiceMasterModal: masterStore.openServiceMasterModal,
+    editServiceMaster: masterStore.editServiceMaster,
+    deleteServiceMaster: masterStore.deleteServiceMaster,
+    saveServiceMaster: masterStore.saveServiceMaster,
+    openMechanicModal: masterStore.openMechanicModal,
+    editMechanic: masterStore.editMechanic,
+    deleteMechanic: masterStore.deleteMechanic,
+    saveMechanic: masterStore.saveMechanic,
+    openSparepartModal: masterStore.openSparepartModal,
+    editSparepart: masterStore.editSparepart,
+    deleteSparepart: masterStore.deleteSparepart,
+    saveSparepart: masterStore.saveSparepart,
 
-    // Queue & PKB
-    ...queue,
+    // Queue Store State & Actions
+    ...queueRefs,
+    getMechanicStatus: queueStore.getMechanicStatus,
+    getMechanicActiveJob: queueStore.getMechanicActiveJob,
+    fetchServices: queueStore.fetchServices,
+    openAddServiceModal: queueStore.openAddServiceModal,
+    openPkbModal: queueStore.openPkbModal,
+    openAssignModal: queueStore.openAssignModal,
+    confirmAssignMechanic: queueStore.confirmAssignMechanic,
+    printPkb: queueStore.printPkb,
+    saveNewService: queueStore.saveNewService,
+    assignMechanic: queueStore.assignMechanic,
+    completeService: queueStore.completeService,
 
-    // Billing & Transactions
-    ...transactions,
+    // Transaction Store State & Actions
+    ...transactionRefs,
+    createInvoice: transactionStore.createInvoice,
+    processPayment: transactionStore.processPayment,
+    openAddStockModal: transactionStore.openAddStockModal,
+    saveStockIn: transactionStore.saveStockIn,
   };
 }

@@ -47,18 +47,20 @@
                 IDENTITAS PELANGGAN
               </div>
               <table class="box-table">
-                <tr>
-                  <td style="width: 105px;">Nama Pemilik</td>
-                  <td>: <strong>{{ service.customerName }}</strong></td>
-                </tr>
-                <tr>
-                  <td>No. Telepon / WA</td>
-                  <td>: <span class="numeric">{{ service.phone }}</span></td>
-                </tr>
-                <tr>
-                  <td>Tipe Konsumen</td>
-                  <td>: Konsumen Umum / Reguler</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td style="width: 105px;">Nama Pemilik</td>
+                    <td>: <strong>{{ service.customerName }}</strong></td>
+                  </tr>
+                  <tr>
+                    <td>No. Telepon / WA</td>
+                    <td>: <span class="numeric">{{ service.phone }}</span></td>
+                  </tr>
+                  <tr>
+                    <td>Tipe Konsumen</td>
+                    <td>: Konsumen Umum / Reguler</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
 
@@ -68,18 +70,20 @@
                 DATA KENDARAAN (UNIT)
               </div>
               <table class="box-table">
-                <tr>
-                  <td style="width: 105px;">Nomor Polisi</td>
-                  <td>: <strong class="nopol-font" style="font-size: 14px; color: #000000;">{{ service.nopol }}</strong></td>
-                </tr>
-                <tr>
-                  <td>Merk / Tipe Motor</td>
-                  <td>: {{ service.motorType }}</td>
-                </tr>
-                <tr>
-                  <td>Warna / Tahun</td>
-                  <td>: {{ service.warna || '-' }} / {{ service.tahunPembuatan || '-' }}</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td style="width: 105px;">Nomor Polisi</td>
+                    <td>: <strong class="nopol-font" style="font-size: 14px; color: #000000;">{{ service.nopol }}</strong></td>
+                  </tr>
+                  <tr>
+                    <td>Merk / Tipe Motor</td>
+                    <td>: {{ service.motorType }}</td>
+                  </tr>
+                  <tr>
+                    <td>Warna / Tahun</td>
+                    <td>: {{ service.warna || '-' }} / {{ service.tahunPembuatan || '-' }}</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
           </div>
@@ -91,18 +95,20 @@
                 CHECKLIST RECEPTION & FISIK
               </div>
               <table class="box-table">
-                <tr>
-                  <td style="width: 105px;">KM Odometer</td>
-                  <td>: <strong class="numeric">{{ formatNumber(service.kmMasuk || service.km_masuk || 0) }} KM</strong></td>
-                </tr>
-                <tr>
-                  <td>Indikator BBM</td>
-                  <td>: <span class="fuel-badge">{{ service.levelBensin || service.level_bensin || '1/2' }}</span></td>
-                </tr>
-                <tr>
-                  <td>Catatan Fisik</td>
-                  <td>: {{ service.catatanKondisi || service.catatan_kondisi || 'Tidak ada catatan khusus' }}</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td style="width: 105px;">KM Odometer</td>
+                    <td>: <strong class="numeric">{{ formatNumber(service.kmMasuk || service.km_masuk || 0) }} KM</strong></td>
+                  </tr>
+                  <tr>
+                    <td>Indikator BBM</td>
+                    <td>: <span class="fuel-badge">{{ service.levelBensin || service.level_bensin || '1/2' }}</span></td>
+                  </tr>
+                  <tr>
+                    <td>Catatan Fisik</td>
+                    <td>: {{ service.catatanKondisi || service.catatan_kondisi || 'Tidak ada catatan khusus' }}</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
 
@@ -111,18 +117,20 @@
                 ALOKASI KERJA & TEKNISI
               </div>
               <table class="box-table">
-                <tr>
-                  <td style="width: 105px;">Teknisi Pelaksana</td>
-                  <td>: <strong>{{ service.mechanicName || 'Belum Ditugaskan (Antrean)' }}</strong></td>
-                </tr>
-                <tr>
-                  <td>Keahlian / Spesialis</td>
-                  <td>: {{ service.mechanicSpecialization || 'Umum & Tune Up' }}</td>
-                </tr>
-                <tr>
-                  <td>Estimasi Durasi</td>
-                  <td>: ± 30 - 45 Menit</td>
-                </tr>
+                <tbody>
+                  <tr>
+                    <td style="width: 105px;">Teknisi Pelaksana</td>
+                    <td>: <strong>{{ service.mechanicName || 'Belum Ditugaskan (Antrean)' }}</strong></td>
+                  </tr>
+                  <tr>
+                    <td>Keahlian / Spesialis</td>
+                    <td>: {{ service.mechanicSpecialization || 'Umum & Tune Up' }}</td>
+                  </tr>
+                  <tr>
+                    <td>Estimasi Durasi</td>
+                    <td>: ± 30 - 45 Menit</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
           </div>
