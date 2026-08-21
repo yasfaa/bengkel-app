@@ -16,10 +16,18 @@
             Master Jasa Servis & Tarif
           </h3>
           <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px">
-            Katalog paket jasa servis bengkel yang digunakan saat pembuatan invoice
+            {{
+              authStore.isAdmin
+                ? 'Katalog paket jasa servis bengkel yang digunakan saat penerimaan PKB dan invoice kasir'
+                : 'Katalog paket jasa servis resmi dan daftar tarif standar bengkel'
+            }}
           </p>
         </div>
-        <button class="btn btn-primary" @click="$emit('open-service-master-modal')">
+        <button
+          v-if="authStore.isAdmin"
+          class="btn btn-primary"
+          @click="$emit('open-service-master-modal')"
+        >
           <i class="ph-bold ph-plus"></i> Tambah Jasa Servis
         </button>
       </div>
@@ -32,7 +40,7 @@
               <th style="text-align: right">Tarif / Harga</th>
               <th>Deskripsi Singkat</th>
               <th style="text-align: center">Status</th>
-              <th style="text-align: right">Aksi</th>
+              <th v-if="authStore.isAdmin" style="text-align: right">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -52,7 +60,7 @@
                   {{ service.is_active ? 'Aktif' : 'Nonaktif' }}
                 </span>
               </td>
-              <td style="text-align: right">
+              <td v-if="authStore.isAdmin" style="text-align: right">
                 <button
                   class="btn btn-secondary"
                   style="padding: 5px 10px; font-size: 12px; margin-right: 6px"
@@ -70,14 +78,22 @@
               </td>
             </tr>
             <tr v-if="serviceMasters.length === 0">
-              <td colspan="5">
+              <td :colspan="authStore.isAdmin ? 5 : 4">
                 <div class="empty-state">
                   <div class="empty-state-illust">🧰</div>
                   <div class="empty-state-title">Katalog jasa servis masih kosong</div>
                   <div class="empty-state-desc">
-                    Tambahkan paket jasa servis agar dapat dipilih pada tagihan kasir.
+                    {{
+                      authStore.isAdmin
+                        ? 'Tambahkan paket jasa servis agar dapat dipilih pada tagihan kasir.'
+                        : 'Belum ada paket jasa servis yang terdaftar.'
+                    }}
                   </div>
-                  <button class="btn btn-primary" @click="$emit('open-service-master-modal')">
+                  <button
+                    v-if="authStore.isAdmin"
+                    class="btn btn-primary"
+                    @click="$emit('open-service-master-modal')"
+                  >
                     <i class="ph-bold ph-plus"></i> Tambah Jasa Servis
                   </button>
                 </div>
@@ -104,40 +120,51 @@
           <thead>
             <tr>
               <th>No. Invoice</th>
-              <th>Waktu Bayar</th>
-              <th>Kendaraan</th>
-              <th>Rincian Layanan</th>
-              <th style="text-align: right">Total Bayar</th>
+              <th>No. Polisi / Unit</th>
+              <th>Pelanggan</th>
               <th>Metode</th>
+              <th style="text-align: right">Total Bayar</th>
+              <th>Waktu Transaksi</th>
               <th style="text-align: center">Status</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="transaction in transactions" :key="transaction.id">
+            <tr v-for="trx in transactions" :key="trx.id">
               <td>
-                <span class="sku-code" style="font-weight: 700; color: var(--primary-color)">
-                  {{ transaction.invoiceNo }}
+                <span
+                  class="pkb-font"
+                  style="font-weight: 800; font-size: 13px; color: var(--primary-color)"
+                >
+                  {{ trx.nomorInvoice || 'INV-' + trx.id }}
                 </span>
               </td>
-              <td class="numeric" style="color: var(--text-secondary); font-size: 13px">
-                {{ transaction.date }}
+              <td>
+                <span class="nopol-font" style="font-weight: 700; color: var(--text-main)">
+                  {{ trx.nopol }}
+                </span>
               </td>
               <td>
-                <div class="nopol-font" style="font-weight: 700">{{ transaction.nopol }}</div>
-                <div style="font-size: 12px; color: var(--text-muted)">{{ transaction.motor }}</div>
+                <div style="font-weight: 600; color: var(--text-main)">{{ trx.customerName }}</div>
               </td>
-              <td style="color: var(--text-secondary)">{{ transaction.servicesText }}</td>
+              <td>
+                <span class="badge" style="background: #f1f5f9; color: var(--text-secondary)">
+                  {{ trx.metodePembayaran || 'TUNAI' }}
+                </span>
+              </td>
               <td
                 class="numeric"
-                style="text-align: right; font-weight: 800; color: #059669; font-size: 14px"
+                style="text-align: right; font-weight: 800; color: var(--text-main)"
               >
-                Rp {{ formatCurrency(transaction.total) }}
+                Rp {{ formatCurrency(trx.totalBayar) }}
               </td>
-              <td>
-                <span class="badge badge-working">{{ transaction.paymentMethod }}</span>
+              <td style="font-size: 12px; color: var(--text-secondary)">
+                {{ formatDate(trx.createdAt) }}
               </td>
               <td style="text-align: center">
-                <span class="badge badge-done"> <i class="ph-bold ph-check"></i> Lunas </span>
+                <span class="badge badge-done">
+                  <i class="ph-bold ph-check"></i>
+                  {{ trx.status || 'LUNAS' }}
+                </span>
               </td>
             </tr>
             <tr v-if="transactions.length === 0">
@@ -146,7 +173,7 @@
                   <div class="empty-state-illust">🧾</div>
                   <div class="empty-state-title">Belum ada riwayat transaksi</div>
                   <div class="empty-state-desc">
-                    Belum ada pembayaran kasir yang diselesaikan hari ini.
+                    Transaksi pembayaran dari kasir akan tercatat di sini secara otomatis.
                   </div>
                 </div>
               </td>
@@ -159,11 +186,19 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '../stores/authStore';
+import { formatCurrency, formatDate } from '../utils/formatters';
+
+const authStore = useAuthStore();
+
 defineProps({
-  transactions: { type: Array, required: true },
   serviceMasters: { type: Array, required: true },
-  formatCurrency: { type: Function, required: true },
+  transactions: { type: Array, required: true },
 });
 
-defineEmits(['open-service-master-modal', 'edit-service-master', 'delete-service-master']);
+defineEmits([
+  'open-service-master-modal',
+  'edit-service-master',
+  'delete-service-master',
+]);
 </script>

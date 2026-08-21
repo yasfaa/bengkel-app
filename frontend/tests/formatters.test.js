@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import {
   formatCurrency,
+  formatDate,
   formatDateTime,
   getStatusBadgeClass,
   buildMotorLabel,
@@ -33,5 +33,11 @@ describe('Frontend Formatters Utility Tests', () => {
     const formatted = formatDateTime('2026-08-19T08:30:00Z');
     expect(typeof formatted).toBe('string');
     expect(formatted.length).toBeGreaterThan(5);
+
+    expect(formatDate(null)).toBe('-');
+    expect(formatDate('invalid')).toBe('-');
+    const dFormatted = formatDate('2026-08-19T08:30:00Z');
+    expect(typeof dFormatted).toBe('string');
+    expect(dFormatted.length).toBeGreaterThan(5);
   });
 });
