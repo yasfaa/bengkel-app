@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, formatDateTime, getStatusBadgeClass, buildMotorLabel } from '../src/utils/formatters';
+import {
+  formatCurrency,
+  formatDateTime,
+  getStatusBadgeClass,
+  buildMotorLabel,
+} from '../src/utils/formatters';
 
 describe('Frontend Formatters Utility Tests', () => {
   it('should format currency to Indonesian Rupiah standard format', () => {

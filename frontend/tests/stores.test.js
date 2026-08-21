@@ -29,12 +29,8 @@ describe('Pinia State Management Stores Tests', () => {
     const master = useMasterStore();
     const transactions = useTransactionStore();
 
-    master.serviceMasters = [
-      { id: 1, nama: 'Servis Ringan', harga: 50000, is_active: true },
-    ];
-    master.spareparts = [
-      { id: 10, nama: 'Oli MPX2', hargaJual: 52000, stok: 10 },
-    ];
+    master.serviceMasters = [{ id: 1, nama: 'Servis Ringan', harga: 50000, is_active: true }];
+    master.spareparts = [{ id: 10, nama: 'Oli MPX2', hargaJual: 52000, stok: 10 }];
 
     transactions.invoiceForm.serviceMasterId = 1;
     transactions.invoiceForm.sparepartId = 10;
