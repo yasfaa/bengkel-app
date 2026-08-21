@@ -7,6 +7,22 @@ describe('🚀 End-to-End (E2E) Workshop Operational Lifecycle Integration Test'
   let generatedNomorPkb = null;
   let testMechanicName = null;
 
+  beforeAll(async () => {
+    let mechanic = await prisma.mechanic.findFirst({ where: { is_active: true } });
+    if (!mechanic) {
+      mechanic = await prisma.mechanic.create({
+        data: {
+          nama: 'Asep',
+          tgl_lahir: new Date('1995-05-15'),
+          waktu_kerja: 'Full-time',
+          spesialisasi: 'Mesin & CVT',
+          is_active: true,
+        },
+      });
+    }
+    testMechanicName = mechanic.nama;
+  });
+
   afterAll(async () => {
     await prisma.$disconnect();
   });

@@ -102,11 +102,12 @@ jobs:
           cd backend
           npm ci
 
-      - name: 🗄️ Synchronize Prisma Database Schema
+      - name: 🗄️ Synchronize Prisma Database Schema & Seed Data
         run: |
           cd backend
           npx prisma db push --skip-generate
           npx prisma generate
+          npm run db:seed
 
       - name: 🧪 Execute Backend Automated Test Suite with Coverage (Jest)
         run: |
