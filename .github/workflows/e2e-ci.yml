@@ -85,18 +85,9 @@ jobs:
           cd backend
           npm test -- tests/e2e-workflow.test.js
 
-  # ============================================================================
-  # 2. Discord Real-Time Status Alerts (E2E Integration)
-  # ============================================================================
-  notify-e2e-success:
-    name: 💬 E2E Success Notification
-    runs-on: ubuntu-latest
-    needs: e2e-integration-tests
-    if: needs.e2e-integration-tests.result == 'success'
-    steps:
-      - name: 📢 Send Discord Notification (E2E Success)
+      - name: 📢 Discord Alert (E2E Success)
         uses: sarisia/actions-status-discord@v1
-        if: env.DISCORD_WEBHOOK_URL != ''
+        if: success() && env.DISCORD_WEBHOOK_URL != ''
         with:
           webhook: ${{ env.DISCORD_WEBHOOK_URL }}
           title: "🚀 Full E2E & Workshop Integration: PASSED"
@@ -112,15 +103,9 @@ jobs:
             • **Commit**: `${{ github.event.head_commit.message }}`
             • [📊 Lihat Detail Eksekusi](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
 
-  notify-e2e-failure:
-    name: 💬 E2E Failure Notification
-    runs-on: ubuntu-latest
-    needs: e2e-integration-tests
-    if: needs.e2e-integration-tests.result == 'failure'
-    steps:
-      - name: 🚨 Send Discord Notification (E2E Failure)
+      - name: 🚨 Discord Alert (E2E Failure)
         uses: sarisia/actions-status-discord@v1
-        if: env.DISCORD_WEBHOOK_URL != ''
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
         with:
           webhook: ${{ env.DISCORD_WEBHOOK_URL }}
           title: "❌ Full E2E & Workshop Integration: FAILED"

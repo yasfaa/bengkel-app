@@ -69,6 +69,24 @@ jobs:
           cd backend
           npm run format:check
 
+      - name: 🚨 Discord Alert (Lint / Audit Failure)
+        uses: sarisia/actions-status-discord@v1
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "❌ Backend Audit & Lint Gate: FAILED"
+          nodetail: false
+          color: 0xE74C3C
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            ⚠️ **ESLint atau Prettier code check pada Backend mengalami error!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [🔍 Buka Log Linting](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
+
   # ============================================================================
   # 2. Backend Automated Testing, DB Integration & Test Coverage
   # ============================================================================
@@ -133,18 +151,9 @@ jobs:
           fail_ci_if_error: false
           verbose: true
 
-  # ============================================================================
-  # 3. Discord Real-Time Status Alerts (Backend)
-  # ============================================================================
-  notify-backend-success:
-    name: 💬 Backend Success Notification
-    runs-on: ubuntu-latest
-    needs: backend-test
-    if: needs.backend-test.result == 'success'
-    steps:
-      - name: 📢 Send Discord Notification (Backend Success)
+      - name: 📢 Discord Alert (Backend Success)
         uses: sarisia/actions-status-discord@v1
-        if: env.DISCORD_WEBHOOK_URL != ''
+        if: success() && env.DISCORD_WEBHOOK_URL != ''
         with:
           webhook: ${{ env.DISCORD_WEBHOOK_URL }}
           title: "✅ Backend CI & Database Gate: PASSED"
@@ -160,15 +169,9 @@ jobs:
             • **Commit**: `${{ github.event.head_commit.message }}`
             • [📊 Lihat Detail Eksekusi & Coverage](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
 
-  notify-backend-failure:
-    name: 💬 Backend Failure Notification
-    runs-on: ubuntu-latest
-    needs: backend-test
-    if: needs.backend-test.result == 'failure'
-    steps:
-      - name: 🚨 Send Discord Notification (Backend Failure)
+      - name: 🚨 Discord Alert (Backend Test Failure)
         uses: sarisia/actions-status-discord@v1
-        if: env.DISCORD_WEBHOOK_URL != ''
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
         with:
           webhook: ${{ env.DISCORD_WEBHOOK_URL }}
           title: "❌ Backend CI & Database Gate: FAILED"

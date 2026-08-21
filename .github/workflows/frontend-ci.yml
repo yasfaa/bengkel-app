@@ -64,6 +64,24 @@ jobs:
           cd frontend
           npm run format:check
 
+      - name: 🚨 Discord Alert (Lint / Audit Failure)
+        uses: sarisia/actions-status-discord@v1
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "❌ Frontend Audit & Lint Gate: FAILED"
+          nodetail: false
+          color: 0xE74C3C
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            ⚠️ **ESLint atau Prettier code check pada Frontend mengalami error!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [🔍 Buka Log Linting](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
+
   # ============================================================================
   # 2. Frontend Unit Testing, Pinia Stores, Coverage & Production Build
   # ============================================================================
@@ -118,18 +136,9 @@ jobs:
           cd frontend
           npm run build
 
-  # ============================================================================
-  # 3. Discord Real-Time Status Alerts (Frontend)
-  # ============================================================================
-  notify-frontend-success:
-    name: 💬 Frontend Success Notification
-    runs-on: ubuntu-latest
-    needs: frontend-test-build
-    if: needs.frontend-test-build.result == 'success'
-    steps:
-      - name: 📢 Send Discord Notification (Frontend Success)
+      - name: 📢 Discord Alert (Frontend Success)
         uses: sarisia/actions-status-discord@v1
-        if: env.DISCORD_WEBHOOK_URL != ''
+        if: success() && env.DISCORD_WEBHOOK_URL != ''
         with:
           webhook: ${{ env.DISCORD_WEBHOOK_URL }}
           title: "🎨 Frontend CI & Build: PASSED"
@@ -145,15 +154,9 @@ jobs:
             • **Commit**: `${{ github.event.head_commit.message }}`
             • [📊 Lihat Detail Eksekusi & Coverage](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
 
-  notify-frontend-failure:
-    name: 💬 Frontend Failure Notification
-    runs-on: ubuntu-latest
-    needs: frontend-test-build
-    if: needs.frontend-test-build.result == 'failure'
-    steps:
-      - name: 🚨 Send Discord Notification (Frontend Failure)
+      - name: 🚨 Discord Alert (Frontend Test / Build Failure)
         uses: sarisia/actions-status-discord@v1
-        if: env.DISCORD_WEBHOOK_URL != ''
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
         with:
           webhook: ${{ env.DISCORD_WEBHOOK_URL }}
           title: "❌ Frontend CI & Build: FAILED"
