@@ -1,9 +1,110 @@
+import { useAuthStore } from '../stores/authStore';
+
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function onRefreshed(newAccessToken) {
+  refreshSubscribers.forEach((callback) => callback(newAccessToken));
+  refreshSubscribers = [];
+}
+
+function addRefreshSubscriber(callback) {
+  refreshSubscribers.push(callback);
+}
+
 /**
- * Central HTTP client helper with standardized error parsing
+ * Execute silent refresh against /api/auth/refresh
  */
+async function performSilentRefresh(authStore) {
+  try {
+    const res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      authStore.logout();
+      return null;
+    }
+
+    const data = await res.json();
+    const newAccessToken = data.data.accessToken;
+    authStore.setToken(newAccessToken);
+    if (data.data.user) {
+      authStore.setUser(data.data.user);
+    }
+    return newAccessToken;
+  } catch {
+    authStore.logout();
+    return null;
+  }
+}
+
+/**
+ * Central fetch wrapper with automatic Authorization headers & silent 401 retry
+ */
+export async function apiFetch(url, options = {}) {
+  let authStore = null;
+  try {
+    authStore = useAuthStore();
+  } catch {
+    // AuthStore not yet initialized (e.g. before Pinia setup)
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  if (authStore && authStore.accessToken) {
+    headers.Authorization = `Bearer ${authStore.accessToken}`;
+  }
+
+  const config = {
+    ...options,
+    headers,
+    credentials: 'include',
+  };
+
+  let res = await fetch(url, config);
+
+  // If 401 Unauthorized received and authStore is active, attempt silent refresh
+  if (
+    res.status === 401 &&
+    authStore &&
+    authStore.isAuthenticated &&
+    url !== '/api/auth/login' &&
+    url !== '/api/auth/refresh'
+  ) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      const newToken = await performSilentRefresh(authStore);
+      isRefreshing = false;
+
+      if (newToken) {
+        onRefreshed(newToken);
+        // Retry original request with new token
+        headers.Authorization = `Bearer ${newToken}`;
+        return fetch(url, { ...config, headers });
+      }
+    } else {
+      // Queue incoming requests while refresh is underway
+      const retryOriginal = new Promise((resolve) => {
+        addRefreshSubscriber((newToken) => {
+          headers.Authorization = `Bearer ${newToken}`;
+          resolve(fetch(url, { ...config, headers }));
+        });
+      });
+      res = await retryOriginal;
+    }
+  }
+
+  return res;
+}
 
 export async function apiGet(url) {
-  const res = await fetch(url);
+  const res = await apiFetch(url, { method: 'GET' });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || err.message || 'Gagal mengambil data dari server.');
@@ -12,9 +113,8 @@ export async function apiGet(url) {
 }
 
 export async function apiPost(url, data) {
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -25,9 +125,20 @@ export async function apiPost(url, data) {
 }
 
 export async function apiPatch(url, data) {
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || err.message || 'Gagal memperbarui data di server.');
+  }
+  return res.status === 204 ? null : res.json();
+}
+
+export async function apiPut(url, data) {
+  const res = await apiFetch(url, {
+    method: 'PUT',
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -38,7 +149,7 @@ export async function apiPatch(url, data) {
 }
 
 export async function apiDelete(url) {
-  const res = await fetch(url, {
+  const res = await apiFetch(url, {
     method: 'DELETE',
   });
   if (!res.ok) {

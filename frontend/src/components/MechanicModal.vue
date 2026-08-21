@@ -19,6 +19,7 @@
             type="text"
             class="form-input"
             placeholder="Contoh: Asep Supriadi"
+            required
           />
         </div>
 
@@ -31,19 +32,28 @@
             type="text"
             class="form-input"
             placeholder="Contoh: Mesin & CVT, Kelistrikan & Injeksi..."
+            required
           />
         </div>
 
-        <div class="form-group">
-          <label class="form-label"
-            >Jadwal / Waktu Kerja <span class="required-star">*</span></label
-          >
-          <select v-model="form.waktu_kerja" class="form-input">
-            <option value="Full-time (08:00 - 17:00)">Full-time (08:00 - 17:00)</option>
-            <option value="Part-time (08:00 - 13:00)">Part-time Pagi (08:00 - 13:00)</option>
-            <option value="Part-time (13:00 - 18:00)">Part-time Siang (13:00 - 18:00)</option>
-            <option value="Shift Malam (17:00 - 22:00)">Shift Malam (17:00 - 22:00)</option>
-          </select>
+        <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+          <div class="form-group">
+            <label class="form-label">Tanggal Bergabung (Masuk)</label>
+            <input
+              v-model="form.tgl_masuk"
+              type="date"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tanggal Lahir</label>
+            <input
+              v-model="form.tgl_lahir"
+              type="date"
+              class="form-input"
+            />
+          </div>
         </div>
 
         <div class="form-group" style="margin-bottom: 0">

@@ -1,173 +1,99 @@
-# 🏍️ BengkelKu - Enterprise Workshop Management System
+# 🔧 Wrenchly — Smart Workshop Management
 
-**BengkelKu** adalah sistem Enterprise Resource Planning (ERP) dan manajemen operasional bengkel sepeda motor modern berbasis **Vue 3, Express.js, Prisma ORM, dan MySQL (3NF Normalized)**. 
-
-Aplikasi ini dirancang mengikuti **Standard Operating Procedure (SOP) Bengkel Otomotif Resmi** (AHASS, Yamaha, dsb) untuk menghubungkan peran Service Advisor (SA), Kepala Bengkel, Teknisi/Mekanik, Petugas Gudang (*Partman*), dan Kasir dalam satu alur kerja yang terintegrasi dan akuntabel.
+**Wrenchly** adalah aplikasi manajemen operasional dan kasir (POS/ERP) modern untuk bengkel sepeda motor. Dirancang untuk merampingkan seluruh alur kerja bengkel—mulai dari penerimaan servis (PKB), penugasan teknisi, permintaan suku cadang, hingga kasir dan rekap performa bisnis eksekutif.
 
 ---
 
-## 🚀 Alur Operasional Bengkel (End-to-End Workflow)
+## ✨ Fitur Utama
 
-Sistem mengadopsi 6 tahapan siklus layanan bengkel standar industri:
-
-```mermaid
-flowchart LR
-    A["1. Reception (SA) & Cetak PKB"] --> B["2. Alokasi Pit & Teknisi"]
-    B --> C["3. Pengerjaan & Part Requisition"]
-    C --> D["4. Final QC & Test Ride"]
-    D --> E["5. Kasir, Billing & Potong Stok"]
-    E --> F["6. Serah Terima & Garansi"]
-```
-
-### 1. Tahap 1: Penerimaan (Reception) & Penerbitan PKB
-* **Petugas**: *Service Advisor (SA)* / Frontdesk.
-* **Fitur & Prosedur**:
-  - Auto-lookup data riwayat kendaraan berdasarkan Nomor Polisi (Nopol).
-  - Pemilihan Merk (Pill selector), Tipe Motor (dengan badge jenis transmisi Matic/Bebek/Sport), dan Kapasitas Mesin (cc).
-  - Checklist inspeksi fisik (KM Odometer, indikator level bensin visual, catatan fisik & barang bawaan).
-  - Diagnosa keluhan pelanggan dan rekomendasi paket jasa servis (*Service Master*).
-  - Cetak dokumen resmi **Perintah Kerja Bengkel (PKB) / Work Order** (Format A4 Monokrom Resmi dengan Surat Kuasa & 3 Kolom Tanda Tangan).
-  - **Aturan Bisnis**: Status awal servis selalu strictly **`Menunggu`**.
-
-### 2. Tahap 2: Alokasi Pit & Penugasan Teknisi Pelaksana
-* **Petugas**: Kepala Bengkel / Service Advisor.
-* **Fitur & Prosedur**:
-  - Modal interaktif alokasi Pit Kerja (`Pit 1 - General`, `Pit 2 - Regular & CVT`, `Pit 3 - Quick Service`, `Pit 4 - Heavy Repair`).
-  - Penugasan teknisi dengan status ketersediaan *real-time* (🟢 *Standby* vs 🔵 *Bekerja*).
-  - **Validasi Bisnis 1 (Mekanik Sibuk)**: Mencegah alokasi ke mekanik yang sedang aktif mengerjakan motor lain tanpa persetujuan eksplisit.
-  - **Validasi Bisnis 2 (Pengalihan Pilihan Pelanggan)**: Konfirmasi SweetAlert2 jika mekanik yang dipilih dialihkan dari permintaan awal konsumen saat reception.
-  - Transisi status: **`Menunggu` ➔ `Dikerjakan`**.
-
-### 3. Tahap 3: Pengerjaan & Permintaan Suku Cadang (*Part Requisition*)
-* **Petugas**: Teknisi & Petugas Gudang (*Partman*).
-* **Fitur & Prosedur**:
-  - Pengerjaan unit sesuai instruksi keluhan pada lembar PKB.
-  - Pengambilan suku cadang (*sparepart*) yang dibutuhkan.
-  - Konfirmasi persetujuan konsumen (*customer approval*) jika ditemukan kerusakan ekstra di luar keluhan awal.
-
-### 4. Tahap 4: Pemeriksaan Akhir (*Final Inspection / QC*)
-* **Petugas**: Kepala Mekanik / SA.
-* **Fitur & Prosedur**:
-  - Uji fungsi pengereman, kelistrikan, dan uji jalan (*road test*).
-  - Pengumpulan suku cadang bekas sebagai bukti fisik penggantian untuk konsumen.
-  - Transisi status: **`Dikerjakan` ➔ `Selesai` (Siap Masuk Billing/Kasir)**.
-
-### 5. Tahap 5: Kasir, Billing & Pemotongan Stok
-* **Petugas**: Kasir / Finance.
-* **Fitur & Prosedur**:
-  - Pembuatan Invoice otomatis dengan penggabungan biaya jasa servis + suku cadang yang digunakan.
-  - Pemilihan multi-metode pembayaran (Tunai, Transfer Bank, QRIS).
-  - Pemotongan stok gudang secara otomatis dan pencatatan riwayat transaksi.
-
-### 6. Tahap 6: Serah Terima & Garansi Servis
-* **Petugas**: Kasir / SA.
-* **Fitur & Prosedur**:
-  - Penyerahan kunci, unit kendaraan, dan sparepart bekas kepada konsumen.
-  - Penjelasan kartu garansi servis dan pengingat servis berkala berikutnya (*Service Reminder*).
+- **Penerimaan & PKB (Work Order)**: Pencatatan kendaraan dengan auto-lookup nopol, checklist inspeksi fisik, dan cetak dokumen PKB standar A4.
+- **Manajemen Pit & Antrean**: Alokasi teknisi fleksibel—bisa ditugaskan untuk antre terlebih dahulu atau langsung mulai dikerjakan di pit.
+- **Pengajuan Part & Jasa Ekstra**: Mekanik dapat mengajukan suku cadang dan jasa tambahan secara langsung dari pit, lengkap dengan alur persetujuan konsumen (*customer approval*).
+- **Kasir & Billing**: Penggabungan tagihan jasa + part, dukungan multi-metode pembayaran (Tunai, Transfer, QRIS), dan pemotongan stok otomatis.
+- **Executive Dashboard**: Rekapitulasi omzet harian, rata-rata transaksi, produktivitas teknisi, serta peringatan stok menipis (*Reorder Point*).
+- **Keamanan & RBAC Granular**: Pembagian hak akses terisolasi menggunakan dual-token JWT (In-Memory Access Token + HttpOnly Refresh Cookie).
 
 ---
 
-## 🛠️ Arsitektur & Tech Stack
+## 👥 Hak Akses Pengguna
 
-### Frontend
-- **Framework**: Vue 3 (Composition API, `<script setup>`) + Vite.
-- **Styling**: Vanilla CSS ERP Design System (Scoped CSS, High-Contrast Typography, JetBrains Mono Tabular Figures).
-- **Icons & Dialogs**: Phosphor Icons, SweetAlert2.
-- **Arsitektur Modular Composables**:
-  - `src/utils/api.js`: Centralized HTTP REST Client.
-  - `src/utils/swal.js`: SweetAlert2 custom ERP theme mixins.
-  - `src/utils/formatters.js`: Currency (IDR), format tanggal & label motor.
-  - `src/composables/useUiState.js`: Navigasi & global toast state.
-  - `src/composables/useMasterData.js`: State & CRUD data master.
-  - `src/composables/useQueueService.js`: State antrean PKB, Reception & Alokasi Pit (Tahap 1 & 2).
-  - `src/composables/useTransactions.js`: Billing, kasir, invoice & stok masuk.
-  - `src/composables/useBengkelApp.js`: Facade aggregator terpadu.
-
-### Backend
-- **Runtime**: Node.js & Express.js.
-- **ORM & Database**: Prisma ORM dengan MySQL Database (Normalisasi 3NF/BCNF).
-- **Dokumentasi API**: OpenAPI 3.0 & Swagger UI (`http://localhost:3333/api-docs`).
-- **Pola Arsitektur**: Controller-Service-Repository dengan Centralized Async Error Handling.
+| Peran | Tanggung Jawab & Akses |
+| :--- | :--- |
+| **SA / Admin** | Penerimaan servis (PKB), alokasi teknisi, kasir/billing, approval part dengan konsumen, dan kelola stok suku cadang. |
+| **Mekanik** | Melihat daftar tugas servis sendiri, mengajukan part/jasa tambahan, menyelesaikan servis, dan cek sisa stok gudang (*view-only*). |
+| **Kepala Bengkel** | Akses Executive Dashboard, manajemen akun/user RBAC, kelola data teknisi, serta monitoring antrean dan master data (*view-only*). |
 
 ---
 
-## 🗄️ Struktur Database (3NF Normalized)
+## 🛠️ Tech Stack
 
-- **`MotorBrand`**: Master merk motor (`Honda`, `Yamaha`, `Suzuki`, `Kawasaki`, `Vespa`).
-- **`MotorType`**: Master model/tipe motor berelasi ke brand (`Beat`, `Vario`, `NMAX`, `Aerox`, `PCX`, dll).
-- **`EngineCapacity`**: Master kapasitas mesin (`110cc`, `125cc`, `150cc`, `155cc`, `160cc`, `250cc`).
-- **`Customer`**: Data pemilik kendaraan unik berdasarkan nomor telepon.
-- **`Vehicle`**: Data spesifikasi kendaraan fisik unik berdasarkan Nomor Polisi (Nopol).
-- **`ServiceMaster`**: Master paket jasa servis & estimasi biaya/durasi standar.
-- **`Mechanic`**: Data teknisi, spesialisasi keahlian, dan status ketersediaan.
-- **`Supplier`**: Pemasok distributor suku cadang resmi.
-- **`Sparepart`**: Master suku cadang, stok gudang, harga beli, harga jual, dan batas *minimum stock*.
-- **`Service`**: Entitas transaksi servis & nomor PKB resmi (`PKB-YYYYMMDD-XXX`).
-- **`Transaction` & `TransactionItem`**: Riwayat billing, pembayaran kasir, dan detail item suku cadang/jasa.
+- **Frontend**: Vue 3 (Composition API), Pinia, Vite, Vanilla CSS Design System, Phosphor Icons, SweetAlert2.
+- **Backend**: Node.js, Express.js, Prisma ORM, MySQL (3NF Normalized).
+- **Keamanan**: Dual-Token JWT (Access Token 5m + Refresh Token 7d httpOnly Cookie), bcryptjs, CORS, Helmet.
+- **Testing**: Vitest, Jest, Supertest, ESLint, Swagger OpenAPI 3.0.
 
 ---
 
-## ⚙️ Panduan Instalasi & Menjalankan Aplikasi
+## 🚀 Panduan Memulai
 
 ### 1. Prasyarat
-- Node.js versi 18 atau lebih tinggi.
-- MySQL Server aktif pada port `3333` / `3306`.
+- Node.js (v18+)
+- MySQL Server aktif
 
-### 2. Konfigurasi Environment Backend
-Sesuaikan file `backend/.env`:
-```env
-DATABASE_URL="mysql://root:@localhost:3306/bengkel"
-PORT=3333
-```
-
-### 3. Instalasi Dependensi & Migrasi Database
+### 2. Setup Backend
 ```bash
-# Terminal 1 - Backend
 cd backend
 npm install
-npx prisma migrate dev --name init_workshop_db
 
-# Terminal 2 - Frontend
-cd frontend
-npm install
-```
+# Buat file .env dan sesuaikan kredensial database
+cp .env.example .env
 
-### 4. Menjalankan Aplikasi
-```bash
-# Jalankan Backend API Server (Port 3333)
-cd backend
-npm run dev
+# Sinkronisasi skema database dan seed data awal
+npx prisma db push
+npm run seed
 
-# Jalankan Frontend Development Server (Port 8080)
-cd frontend
+# Jalankan server API backend (port 3333)
 npm run dev
 ```
 
-Akses aplikasi di browser:
-- **Frontend App**: `http://localhost:8080`
-- **Backend API**: `http://localhost:3333`
-- **Dokumentasi Swagger API**: `http://localhost:3333/api-docs`
+### 3. Setup Frontend
+```bash
+cd frontend
+npm install
+
+# Jalankan development server frontend (port 8080)
+npm run dev
+```
+
+Buka aplikasi di browser melalui **`http://localhost:8080`**.
 
 ---
 
-## 📋 Endpoint API Utama
+## 🔑 Akun Demo
 
-| Method | Endpoint | Deskripsi |
-| :--- | :--- | :--- |
-| **GET** | `/api/master/brands` | Mengambil seluruh master merk motor |
-| **GET** | `/api/master/types?brandId=...` | Mengambil tipe motor berdasarkan merk terpilih |
-| **GET** | `/api/master/capacities` | Mengambil daftar kapasitas mesin |
-| **GET/POST/PUT/DELETE** | `/api/master/service-masters` | CRUD master paket jasa servis |
-| **GET/POST/PUT/DELETE** | `/api/master/spareparts` | CRUD master suku cadang & stok |
-| **GET/POST/PUT/DELETE** | `/api/master/suppliers` | CRUD master pemasok / supplier |
-| **GET/POST/PUT/DELETE** | `/api/mechanics` | CRUD master teknisi / mekanik |
-| **GET** | `/api/vehicles/search?nopol=...` | Pencarian auto-lookup data kendaraan |
-| **GET** | `/api/services` | Mengambil seluruh antrean servis / PKB |
-| **POST** | `/api/services` | Registrasi PKB baru (Reception Tahap 1) |
-| **PATCH** | `/api/services/:id/status` | Alokasi Pit & Penugasan Teknisi (Tahap 2) & Update Status |
-| **POST** | `/api/transactions` | Proses pembayaran kasir & cetak invoice (Tahap 5) |
+Gunakan akun berikut untuk mencoba alur sistem berdasarkan peran:
+
+| Peran | Username | Password | Akses Utama |
+| :--- | :--- | :--- | :--- |
+| **SA / Admin** | `admin` | `admin123` | PKB, Pit Bay, Kasir, Stok Sparepart |
+| **Mekanik** | `asep` | `asep123` | Tugas Servis Saya, Input Part/Jasa |
+| **Kepala Bengkel** | `kepala` | `kepala123` | Executive Dashboard, User RBAC, Kelola Teknisi |
 
 ---
 
-## 📄 Lisensi & Hak Cipta
-Dikembangkan untuk sistem manajemen operasional bengkel motor modern berstandar enterprise.
+## 📖 Dokumentasi API
+
+Dokumentasi interaktif OpenAPI/Swagger dapat diakses saat server backend berjalan:
+👉 **`http://localhost:3333/api-docs`**
+
+---
+
+## 🧪 Menjalankan Pengujian
+
+```bash
+# Backend Integration Tests
+cd backend && npm test
+
+# Frontend Unit & Component Tests
+cd frontend && npm test
+```

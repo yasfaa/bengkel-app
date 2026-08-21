@@ -221,7 +221,8 @@ export function useMasterData(ui = {}) {
     mechanicForm.value = {
       id: null,
       nama: '',
-      waktu_kerja: 'Full-time (08:00 - 17:00)',
+      tgl_masuk: new Date().toISOString().split('T')[0],
+      tgl_lahir: '1995-01-01',
       spesialisasi: 'Mesin & CVT',
       is_active: true,
     };
@@ -231,7 +232,14 @@ export function useMasterData(ui = {}) {
 
   const editMechanic = (mechanic) => {
     editingMechanicId.value = mechanic.id;
-    mechanicForm.value = { ...mechanic };
+    mechanicForm.value = {
+      id: mechanic.id,
+      nama: mechanic.nama,
+      tgl_masuk: mechanic.tglMasuk ? new Date(mechanic.tglMasuk).toISOString().split('T')[0] : '',
+      tgl_lahir: mechanic.tglLahir ? new Date(mechanic.tglLahir).toISOString().split('T')[0] : '',
+      spesialisasi: mechanic.spesialisasi,
+      is_active: typeof mechanic.isActive === 'boolean' ? mechanic.isActive : true,
+    };
     showMechanicModal.value = true;
   };
 

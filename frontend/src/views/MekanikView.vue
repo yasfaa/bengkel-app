@@ -15,11 +15,18 @@
           Master Data & Kapasitas Teknisi Mekanik
         </h3>
         <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px">
-          Kelola data teknisi, jadwal kerja, spesialisasi servis, dan status aktivitas pengerjaan
-          unit
+          {{
+            authStore.isKepalaBengkel
+              ? 'Kelola data teknisi, akun pengguna, spesialisasi servis, dan status aktivitas pengerjaan unit'
+              : 'Informasi daftar teknisi mekanik, masa kerja, spesialisasi, dan status ketersediaan di Pit'
+          }}
         </p>
       </div>
-      <button class="btn btn-primary" @click="$emit('open-mechanic-modal')">
+      <button
+        v-if="authStore.isKepalaBengkel"
+        class="btn btn-primary"
+        @click="$emit('open-mechanic-modal')"
+      >
         <i class="ph-bold ph-plus"></i> Tambah Teknisi Baru
       </button>
     </div>
@@ -88,8 +95,14 @@
             "
           >
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px">
-              <span style="color: var(--text-muted)">Jadwal Kerja:</span>
-              <strong style="color: var(--text-secondary)">{{ mechanic.waktu_kerja }}</strong>
+              <span style="color: var(--text-muted)">Masa Kerja:</span>
+              <strong style="color: var(--text-secondary)">{{ mechanic.masaKerja || mechanic.waktuKerja || '-' }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px">
+              <span style="color: var(--text-muted)">Tgl Masuk:</span>
+              <span style="color: var(--text-secondary); font-size: 12px">
+                {{ mechanic.tglMasuk ? new Date(mechanic.tglMasuk).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }) : '-' }}
+              </span>
             </div>
             <div style="display: flex; justify-content: space-between">
               <span style="color: var(--text-muted)">Tugas Aktif:</span>
@@ -105,7 +118,9 @@
           </div>
         </div>
 
+        <!-- Action Buttons (Only for Kepala Bengkel) -->
         <div
+          v-if="authStore.isKepalaBengkel"
           style="
             display: flex;
             justify-content: flex-end;
@@ -136,6 +151,10 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '../stores/authStore';
+
+const authStore = useAuthStore();
+
 defineProps({
   mechanics: { type: Array, required: true },
   getMechanicStatus: { type: Function, required: true },

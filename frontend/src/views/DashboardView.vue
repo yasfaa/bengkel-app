@@ -59,13 +59,25 @@
       >
         <div>
           <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main)">
-            Antrean Servis Aktif & Status Pit
+            {{
+              authStore.isMechanic
+                ? 'Tugas Servis Aktif Saya di Pit'
+                : 'Antrean Servis Aktif & Status Pit'
+            }}
           </h3>
           <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px">
-            Daftar motor yang sedang ditangani atau mengantre di bengkel
+            {{
+              authStore.isMechanic
+                ? 'Daftar motor yang sedang Anda tangani atau siap dikerjakan di bengkel'
+                : 'Daftar motor yang sedang ditangani atau mengantre di bengkel'
+            }}
           </p>
         </div>
-        <button class="btn btn-primary" @click="$emit('open-service-modal')">
+        <button
+          v-if="authStore.isAdmin"
+          class="btn btn-primary"
+          @click="$emit('open-service-modal')"
+        >
           <i class="ph-bold ph-plus"></i> Catat Servis / Buat PKB
         </button>
       </div>
@@ -161,7 +173,7 @@
                     color: var(--primary-color);
                     border-color: var(--primary-color);
                   "
-                  title="Kelola Permintaan Suku Cadang & Jasa Tambahan (Tahap 3)"
+                  title="Lihat / Kelola Suku Cadang & Jasa PKB"
                   @click="$emit('open-part-modal', service)"
                 >
                   <i class="ph-bold ph-wrench"></i> Part & Jasa
@@ -182,22 +194,46 @@
                 >
                   <i class="ph-bold ph-file-text"></i> PKB
                 </button>
-                <button
-                  v-if="service.status === 'Menunggu'"
-                  class="btn btn-secondary"
-                  style="padding: 6px 12px; font-size: 12px"
-                  @click="$emit('assign-mechanic', service)"
-                >
-                  <i class="ph-bold ph-play"></i> Mulai
-                </button>
-                <button
-                  v-else-if="service.status === 'Dikerjakan'"
-                  class="btn btn-primary"
-                  style="padding: 6px 12px; font-size: 12px"
-                  @click="$emit('complete-service', service)"
-                >
-                  <i class="ph-bold ph-check"></i> Selesai
-                </button>
+
+                <!-- Status Action Buttons Scoped per Role -->
+                <template v-if="service.status === 'Menunggu'">
+                  <button
+                    v-if="authStore.isAdmin"
+                    :class="['btn', service.mechanicName ? 'btn-primary' : 'btn-secondary']"
+                    style="padding: 6px 12px; font-size: 12px"
+                    @click="$emit('assign-mechanic', service)"
+                  >
+                    <i :class="['ph-bold', service.mechanicName ? 'ph-play' : 'ph-user-plus']"></i>
+                    {{ service.mechanicName ? 'Mulai / Alokasi' : 'Tugaskan' }}
+                  </button>
+                  <button
+                    v-else-if="authStore.isMechanic"
+                    class="btn btn-primary"
+                    style="padding: 6px 12px; font-size: 12px"
+                    @click="$emit('assign-mechanic', service)"
+                  >
+                    <i class="ph-bold ph-play"></i> Mulai Servis
+                  </button>
+                </template>
+
+                <template v-else-if="service.status === 'Dikerjakan'">
+                  <button
+                    v-if="authStore.isMechanic"
+                    class="btn btn-primary"
+                    style="padding: 6px 12px; font-size: 12px"
+                    title="Selesaikan pengerjaan servis motor ini"
+                    @click="$emit('complete-service', service)"
+                  >
+                    <i class="ph-bold ph-check"></i> Selesai
+                  </button>
+                  <span
+                    v-else
+                    class="badge badge-working"
+                    style="font-size: 11px; padding: 5px 10px"
+                  >
+                    <i class="ph-bold ph-gear"></i> Dikerjakan
+                  </span>
+                </template>
               </td>
             </tr>
             <tr v-if="activeServices.length === 0">
@@ -219,6 +255,10 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '../stores/authStore';
+
+const authStore = useAuthStore();
+
 defineProps({
   activeServices: { type: Array, required: true },
   mechanics: { type: Array, required: true },

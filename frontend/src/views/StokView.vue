@@ -15,11 +15,14 @@
           Master Data Inventaris & Stok Suku Cadang
         </h3>
         <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px">
-          Katalog sparepart resmi, monitoring batas minimum stok (ROP), dan pencatatan restock
-          barang masuk
+          {{
+            authStore.isAdmin
+              ? 'Katalog sparepart resmi, monitoring batas minimum stok (ROP), dan pencatatan restock barang masuk'
+              : 'Katalog sparepart resmi dan informasi ketersediaan sisa stok fisik di gudang'
+          }}
         </p>
       </div>
-      <div style="display: flex; gap: 10px">
+      <div v-if="authStore.isAdmin" style="display: flex; gap: 10px">
         <button class="btn btn-secondary" @click="$emit('open-sparepart-modal')">
           <i class="ph-bold ph-plus"></i> Tambah Master Part
         </button>
@@ -40,7 +43,7 @@
             <th style="text-align: right">Harga Pokok (HPP)</th>
             <th style="text-align: right">Harga Jual</th>
             <th style="text-align: center">Sisa Stok</th>
-            <th style="text-align: right">Aksi</th>
+            <th v-if="authStore.isAdmin" style="text-align: right">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -93,7 +96,7 @@
                 <i class="ph-bold ph-check"></i> Cukup ({{ part.stok }} unit)
               </span>
             </td>
-            <td style="text-align: right; white-space: nowrap">
+            <td v-if="authStore.isAdmin" style="text-align: right; white-space: nowrap">
               <button
                 class="btn btn-secondary"
                 style="padding: 6px 10px; font-size: 12px; margin-right: 6px"
@@ -113,14 +116,22 @@
             </td>
           </tr>
           <tr v-if="spareparts.length === 0">
-            <td colspan="7">
+            <td :colspan="authStore.isAdmin ? 7 : 6">
               <div class="empty-state">
                 <div class="empty-state-illust">📦</div>
                 <div class="empty-state-title">Belum ada suku cadang terdaftar</div>
                 <div class="empty-state-desc">
-                  Tambahkan master suku cadang pertama bengkel Anda.
+                  {{
+                    authStore.isAdmin
+                      ? 'Tambahkan master suku cadang pertama bengkel Anda.'
+                      : 'Katalog suku cadang saat ini masih kosong.'
+                  }}
                 </div>
-                <button class="btn btn-primary" @click="$emit('open-sparepart-modal')">
+                <button
+                  v-if="authStore.isAdmin"
+                  class="btn btn-primary"
+                  @click="$emit('open-sparepart-modal')"
+                >
                   <i class="ph-bold ph-plus"></i> Tambah Master Part
                 </button>
               </div>
@@ -133,6 +144,10 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '../stores/authStore';
+
+const authStore = useAuthStore();
+
 defineProps({
   spareparts: { type: Array, required: true },
   formatCurrency: { type: Function, required: true },

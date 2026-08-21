@@ -237,10 +237,17 @@ export const useQueueStore = defineStore('queue', () => {
     showAssignModal.value = true;
   };
 
-  const confirmAssignMechanic = async ({ service, mechanicName, pitNumber, allowBusyOverride }) => {
+  const confirmAssignMechanic = async ({
+    service,
+    mechanicName,
+    pitNumber,
+    startWorking,
+    allowBusyOverride,
+  }) => {
     try {
+      const targetStatus = startWorking ? 'Dikerjakan' : 'Menunggu';
       await apiPatch(`/api/services/${service.id}/status`, {
-        status: 'Dikerjakan',
+        status: targetStatus,
         mechanicName,
         allowBusyOverride: !!allowBusyOverride,
       });
@@ -249,14 +256,22 @@ export const useQueueStore = defineStore('queue', () => {
       await masterStore.fetchMechanics();
       showAssignModal.value = false;
 
-      SwalSuccess.fire({
-        title: 'Servis Dimulai!',
-        html: `Motor <strong>${service.nopol}</strong> dialokasikan ke <strong>${pitNumber}</strong> dan dikerjakan oleh <strong>${mechanicName}</strong>.`,
-        icon: 'success',
-      });
+      if (startWorking) {
+        SwalSuccess.fire({
+          title: 'Servis Dimulai!',
+          html: `Motor <strong>${service.nopol}</strong> dialokasikan ke <strong>${pitNumber || 'Pit'}</strong> dan mulai dikerjakan oleh <strong>${mechanicName}</strong>.`,
+          icon: 'success',
+        });
+      } else {
+        SwalSuccess.fire({
+          title: 'Teknisi Ditugaskan!',
+          html: `Motor <strong>${service.nopol}</strong> berhasil dijadwalkan untuk teknisi <strong>${mechanicName}</strong> (Status tetap Menunggu).`,
+          icon: 'success',
+        });
+      }
     } catch (e) {
       console.error(e);
-      uiStore.showToast('❌ Gagal mengalokasikan teknisi. ' + (e.message || ''), 4000);
+      uiStore.showToast('❌ Gagal mengalokasikan teknisi: ' + (e.message || ''), 4000);
     }
   };
 
