@@ -1,0 +1,170 @@
+name: 🎨 Frontend CI Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [ main, master, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  NODE_ENV: test
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN || 'placeholder-codecov-token' }}
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL || '' }}
+
+jobs:
+  # ============================================================================
+  # 1. Frontend Security Audit, Linting & Code Formatting Gate
+  # ============================================================================
+  frontend-lint-audit:
+    name: 🛡️ Frontend Audit & Linting Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🔍 Validate Frontend Environment Template
+        run: |
+          test -f frontend/.env.example || { echo "Missing frontend/.env.example"; exit 1; }
+
+      - name: 🛡️ Dependency Vulnerability Audit (High/Critical CVEs)
+        run: |
+          cd frontend
+          npm audit --audit-level=high || true
+
+      - name: 🧹 Frontend Linting Check (ESLint & Vue)
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: 📐 Frontend Code Formatting Check (Prettier)
+        run: |
+          cd frontend
+          npm run format:check
+
+  # ============================================================================
+  # 2. Frontend Unit Testing, Pinia Stores, Coverage & Production Build
+  # ============================================================================
+  frontend-test-build:
+    name: 🎨 Frontend Testing, Coverage & Build
+    runs-on: ubuntu-latest
+    needs: frontend-lint-audit
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🧪 Execute Frontend Automated Test Suite with Coverage (Vitest)
+        run: |
+          cd frontend
+          npm run test:coverage
+
+      - name: 📊 Upload Frontend Test Coverage Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-coverage
+          path: frontend/coverage/
+          retention-days: 14
+
+      - name: ☂️ Upload Frontend Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN || env.CODECOV_TOKEN }}
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: codecov-frontend
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: 🏗️ Verify Production Bundle Build (Vite)
+        env:
+          NODE_ENV: production
+        run: |
+          cd frontend
+          npm run build
+
+  # ============================================================================
+  # 3. Discord Real-Time Status Alerts (Frontend)
+  # ============================================================================
+  notify-frontend-success:
+    name: 💬 Frontend Success Notification
+    runs-on: ubuntu-latest
+    needs: frontend-test-build
+    if: needs.frontend-test-build.result == 'success'
+    steps:
+      - name: 📢 Send Discord Notification (Frontend Success)
+        uses: sarisia/actions-status-discord@v1
+        if: env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "🎨 Frontend CI & Build: PASSED"
+          nodetail: false
+          color: 0x3498DB
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            🎉 **Vitest Component Tests, Pinia Stores & Production Bundle Build Berhasil!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [📊 Lihat Detail Eksekusi & Coverage](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
+
+  notify-frontend-failure:
+    name: 💬 Frontend Failure Notification
+    runs-on: ubuntu-latest
+    needs: frontend-test-build
+    if: needs.frontend-test-build.result == 'failure'
+    steps:
+      - name: 🚨 Send Discord Notification (Frontend Failure)
+        uses: sarisia/actions-status-discord@v1
+        if: env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "❌ Frontend CI & Build: FAILED"
+          nodetail: false
+          color: 0xE74C3C
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            ⚠️ **Frontend Vitest atau Vite Production Build Mengalami Kegagalan!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [🔍 Buka Log Analisis Kegagalan](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
