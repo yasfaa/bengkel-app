@@ -26,11 +26,7 @@
           }}
         </p>
       </div>
-      <button
-        v-if="authStore.isAdmin"
-        class="btn btn-primary"
-        @click="$emit('open-service-modal')"
-      >
+      <button v-if="authStore.isAdmin" class="btn btn-primary" @click="$emit('open-service-modal')">
         <i class="ph-bold ph-plus"></i> Catat Servis / Buat PKB
       </button>
     </div>
@@ -220,7 +216,11 @@
                   v-if="authStore.isAdmin"
                   :class="['btn', service.mechanicName ? 'btn-primary' : 'btn-secondary']"
                   style="padding: 6px 12px; font-size: 12px"
-                  :title="service.mechanicName ? 'Mulai pengerjaan atau alihkan teknisi' : 'Tugaskan teknisi pelaksana'"
+                  :title="
+                    service.mechanicName
+                      ? 'Mulai pengerjaan atau alihkan teknisi'
+                      : 'Tugaskan teknisi pelaksana'
+                  "
                   @click="$emit('assign-mechanic', service)"
                 >
                   <i :class="['ph-bold', service.mechanicName ? 'ph-play' : 'ph-user-plus']"></i>
@@ -268,11 +268,7 @@
                 >
                   <i class="ph-bold ph-receipt"></i> Kasir
                 </button>
-                <span
-                  v-else
-                  class="badge badge-pending"
-                  style="font-size: 11px; padding: 5px 10px"
-                >
+                <span v-else class="badge badge-pending" style="font-size: 11px; padding: 5px 10px">
                   Belum Lunas
                 </span>
               </template>

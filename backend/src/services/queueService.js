@@ -359,7 +359,11 @@ class QueueService {
         if (user.role === 'KEPALA_BENGKEL') {
           throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
         }
-        if (user.role === 'MEKANIK' && existingService.mechanic_id && existingService.mechanic_id !== user.mechanicId) {
+        if (
+          user.role === 'MEKANIK' &&
+          existingService.mechanic_id &&
+          existingService.mechanic_id !== user.mechanicId
+        ) {
           throw new AppError('Anda hanya dapat menyelesaikan servis yang ditugaskan ke Anda.', 403);
         }
       }

@@ -96,12 +96,22 @@
           >
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px">
               <span style="color: var(--text-muted)">Masa Kerja:</span>
-              <strong style="color: var(--text-secondary)">{{ mechanic.masaKerja || mechanic.waktuKerja || '-' }}</strong>
+              <strong style="color: var(--text-secondary)">{{
+                mechanic.masaKerja || mechanic.waktuKerja || '-'
+              }}</strong>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px">
               <span style="color: var(--text-muted)">Tgl Masuk:</span>
               <span style="color: var(--text-secondary); font-size: 12px">
-                {{ mechanic.tglMasuk ? new Date(mechanic.tglMasuk).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }) : '-' }}
+                {{
+                  mechanic.tglMasuk
+                    ? new Date(mechanic.tglMasuk).toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    : '-'
+                }}
               </span>
             </div>
             <div style="display: flex; justify-content: space-between">

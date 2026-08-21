@@ -77,7 +77,10 @@ class MechanicService {
     const result = await prisma.$transaction(async (tx) => {
       // If no userId supplied, automatically create parent User account
       if (!userId) {
-        const baseUsername = nama.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 15);
+        const baseUsername = nama
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '_')
+          .slice(0, 15);
         let uniqueUsername = baseUsername || 'mekanik';
         let counter = 1;
 
@@ -107,7 +110,10 @@ class MechanicService {
         });
         if (!existingUser) throw new AppError('Pengguna tidak ditemukan.', 404);
         if (existingUser.mechanic) {
-          throw new AppError(`Pengguna "${existingUser.username}" sudah terdaftar sebagai mekanik.`, 400);
+          throw new AppError(
+            `Pengguna "${existingUser.username}" sudah terdaftar sebagai mekanik.`,
+            400
+          );
         }
 
         // Update user fields
@@ -161,7 +167,8 @@ class MechanicService {
       userData.tgl_masuk = new Date(payload.tgl_masuk || payload.tglMasuk);
     }
 
-    if (payload.spesialisasi !== undefined) mechData.spesialisasi = normalizeText(payload.spesialisasi);
+    if (payload.spesialisasi !== undefined)
+      mechData.spesialisasi = normalizeText(payload.spesialisasi);
     if (typeof payload.is_active === 'boolean') {
       mechData.is_active = payload.is_active;
       userData.is_active = payload.is_active;

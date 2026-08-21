@@ -139,8 +139,16 @@ class ServiceItemService {
       });
       if (!service) throw new AppError('Data antrean servis / PKB tidak ditemukan.', 404);
 
-      if (user && user.role === 'MEKANIK' && service.mechanic_id && service.mechanic_id !== user.mechanicId) {
-        throw new AppError('Anda hanya dapat mengisi part/jasa pada motor yang ditugaskan ke Anda.', 403);
+      if (
+        user &&
+        user.role === 'MEKANIK' &&
+        service.mechanic_id &&
+        service.mechanic_id !== user.mechanicId
+      ) {
+        throw new AppError(
+          'Anda hanya dapat mengisi part/jasa pada motor yang ditugaskan ke Anda.',
+          403
+        );
       }
 
       let namaItem = '';

@@ -196,9 +196,5 @@ defineProps({
   transactions: { type: Array, required: true },
 });
 
-defineEmits([
-  'open-service-master-modal',
-  'edit-service-master',
-  'delete-service-master',
-]);
+defineEmits(['open-service-master-modal', 'edit-service-master', 'delete-service-master']);
 </script>

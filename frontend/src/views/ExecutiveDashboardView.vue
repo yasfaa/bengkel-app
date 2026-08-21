@@ -15,7 +15,14 @@
     >
       <div>
         <div style="display: flex; align-items: center; gap: 8px">
-          <span class="badge" style="background: rgba(37, 99, 235, 0.3); color: #93c5fd; border: 1px solid rgba(147, 197, 253, 0.3)">
+          <span
+            class="badge"
+            style="
+              background: rgba(37, 99, 235, 0.3);
+              color: #93c5fd;
+              border: 1px solid rgba(147, 197, 253, 0.3);
+            "
+          >
             Executive Portal
           </span>
           <span style="font-size: 12px; color: #94a3b8">Update Real-Time</span>
@@ -24,7 +31,8 @@
           Executive Dashboard & Rekapitulasi Operasional
         </h3>
         <p style="font-size: 13px; color: #94a3b8; margin-top: 2px">
-          Ringkasan performa finansial, utilisasi teknisi, kesehatan stok, dan alur pengerjaan bengkel
+          Ringkasan performa finansial, utilisasi teknisi, kesehatan stok, dan alur pengerjaan
+          bengkel
         </p>
       </div>
 
@@ -50,13 +58,8 @@
 
     <!-- 2. Dual Column: Revenue Breakdown & Queue Status Funnel -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px">
-      <ExecutiveRevenueRecap
-        :transactions="transactions"
-        :total-revenue="totalRevenue"
-      />
-      <ExecutiveQueueRecap
-        :services="services"
-      />
+      <ExecutiveRevenueRecap :transactions="transactions" :total-revenue="totalRevenue" />
+      <ExecutiveQueueRecap :services="services" />
     </div>
 
     <!-- 3. Dual Column: Mechanic Productivity & Inventory Health -->
@@ -67,9 +70,7 @@
         :get-mechanic-status="getMechanicStatus"
         :get-mechanic-active-job="getMechanicActiveJob"
       />
-      <ExecutiveInventoryRecap
-        :spareparts="spareparts"
-      />
+      <ExecutiveInventoryRecap :spareparts="spareparts" />
     </div>
   </div>
 </template>

@@ -35,10 +35,19 @@ const swaggerSpec = {
   },
   tags: [
     { name: 'Health', description: 'Pemeriksaan status server dan database' },
-    { name: 'Authentication', description: 'Autentikasi, login, silent refresh token, dan profile' },
-    { name: 'User Management (RBAC)', description: 'Pengelolaan akun pengguna oleh Kepala Bengkel' },
+    {
+      name: 'Authentication',
+      description: 'Autentikasi, login, silent refresh token, dan profile',
+    },
+    {
+      name: 'User Management (RBAC)',
+      description: 'Pengelolaan akun pengguna oleh Kepala Bengkel',
+    },
     { name: 'Services (PKB & Antrean)', description: 'Pendaftaran & alur pengerjaan servis' },
-    { name: 'Service Items (Stage 3)', description: 'Permintaan suku cadang & persetujuan konsumen' },
+    {
+      name: 'Service Items (Stage 3)',
+      description: 'Permintaan suku cadang & persetujuan konsumen',
+    },
     { name: 'Mechanics', description: 'Data mekanik/teknisi bengkel' },
     { name: 'Master - Services', description: 'Katalog master jasa servis dan tarif' },
     { name: 'Master - Spareparts', description: 'Katalog master suku cadang & persediaan' },
@@ -61,7 +70,8 @@ const swaggerSpec = {
       post: {
         tags: ['Authentication'],
         summary: 'Login akun pengguna',
-        description: 'Memverifikasi username & password, mengembalikan short-lived Access Token (5m) dan menyetel httpOnly Refresh Token cookie (7d).',
+        description:
+          'Memverifikasi username & password, mengembalikan short-lived Access Token (5m) dan menyetel httpOnly Refresh Token cookie (7d).',
         requestBody: {
           required: true,
           content: {
@@ -87,7 +97,8 @@ const swaggerSpec = {
       post: {
         tags: ['Authentication'],
         summary: 'Silent Refresh Access Token',
-        description: 'Membaca httpOnly cookie refreshToken, melakukan rotasi token di database, dan mengembalikan Access Token baru (5 menit).',
+        description:
+          'Membaca httpOnly cookie refreshToken, melakukan rotasi token di database, dan mengembalikan Access Token baru (5 menit).',
         responses: {
           200: { description: 'Token berhasil diperbarui' },
           401: { description: 'Sesi kedaluwarsa atau token tidak valid' },
@@ -164,7 +175,11 @@ const swaggerSpec = {
                   password: { type: 'string', example: 'password123' },
                   nama: { type: 'string', example: 'Andi Pratama' },
                   email: { type: 'string', example: 'andi@bengkelku.id' },
-                  role: { type: 'string', enum: ['ADMIN', 'MEKANIK', 'KEPALA_BENGKEL'], example: 'ADMIN' },
+                  role: {
+                    type: 'string',
+                    enum: ['ADMIN', 'MEKANIK', 'KEPALA_BENGKEL'],
+                    example: 'ADMIN',
+                  },
                   mechanicId: { type: 'integer', nullable: true, example: null },
                 },
               },
@@ -205,7 +220,8 @@ const swaggerSpec = {
       get: {
         tags: ['Services (PKB & Antrean)'],
         summary: 'Daftar antrean servis & PKB',
-        description: 'Jika login sebagai MEKANIK, data otomatis terfilter hanya untuk servis yang ditugaskan kepadanya.',
+        description:
+          'Jika login sebagai MEKANIK, data otomatis terfilter hanya untuk servis yang ditugaskan kepadanya.',
         security: [{ bearerAuth: [] }],
         responses: { 200: { description: 'Daftar servis' } },
       },

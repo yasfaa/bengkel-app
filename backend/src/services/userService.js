@@ -172,7 +172,10 @@ class UserService {
       }
 
       // If linking new mechanic
-      if (typeof mechanicId !== 'undefined' && (role === 'MEKANIK' || existing.role === 'MEKANIK')) {
+      if (
+        typeof mechanicId !== 'undefined' &&
+        (role === 'MEKANIK' || existing.role === 'MEKANIK')
+      ) {
         const mId = parseId(mechanicId);
         if (mId) {
           const targetMech = await tx.mechanic.findUnique({ where: { id: mId } });

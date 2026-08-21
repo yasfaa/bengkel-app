@@ -36,13 +36,41 @@ describe('Executive Dashboard & Recap Components Tests', () => {
   ];
 
   const sampleTransactions = [
-    { id: 1, nomorInvoice: 'INV-001', totalBayar: 150000, metodePembayaran: 'TUNAI', status: 'LUNAS' },
-    { id: 2, nomorInvoice: 'INV-002', totalBayar: 200000, metodePembayaran: 'QRIS', status: 'LUNAS' },
+    {
+      id: 1,
+      nomorInvoice: 'INV-001',
+      totalBayar: 150000,
+      metodePembayaran: 'TUNAI',
+      status: 'LUNAS',
+    },
+    {
+      id: 2,
+      nomorInvoice: 'INV-002',
+      totalBayar: 200000,
+      metodePembayaran: 'QRIS',
+      status: 'LUNAS',
+    },
   ];
 
   const sampleSpareparts = [
-    { id: 1, kode_part: 'KMP-01', nama: 'Kampas Rem', harga_beli: 30000, harga_jual: 45000, stok: 2, min_stok: 5 },
-    { id: 2, kode_part: 'OLI-01', nama: 'Oli Mesin MPX', harga_beli: 40000, harga_jual: 60000, stok: 20, min_stok: 5 },
+    {
+      id: 1,
+      kode_part: 'KMP-01',
+      nama: 'Kampas Rem',
+      harga_beli: 30000,
+      harga_jual: 45000,
+      stok: 2,
+      min_stok: 5,
+    },
+    {
+      id: 2,
+      kode_part: 'OLI-01',
+      nama: 'Oli Mesin MPX',
+      harga_beli: 40000,
+      harga_jual: 60000,
+      stok: 20,
+      min_stok: 5,
+    },
   ];
 
   it('should render ExecutiveDashboardView with all recap sections', () => {

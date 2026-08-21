@@ -2,8 +2,15 @@
   <!-- 1. Initializing Splash Screen -->
   <div v-if="authStore.isInitializing" class="splash-screen">
     <div class="splash-content">
-      <WrenchlyLogo :emblem-size="56" :is-stacked="true" custom-title-size="28px" custom-tagline-size="12px" />
-      <p style="margin-top: 14px; font-size: 13px; color: #94a3b8">Memverifikasi sesi keamanan...</p>
+      <WrenchlyLogo
+        :emblem-size="56"
+        :is-stacked="true"
+        custom-title-size="28px"
+        custom-tagline-size="12px"
+      />
+      <p style="margin-top: 14px; font-size: 13px; color: #94a3b8">
+        Memverifikasi sesi keamanan...
+      </p>
     </div>
   </div>
 
@@ -371,7 +378,10 @@ const activeViewComponent = computed(() => {
     users: UserManagementView,
   };
 
-  return viewMap[activeMenu.value] || (authStore.isKepalaBengkel ? ExecutiveDashboardView : DashboardView);
+  return (
+    viewMap[activeMenu.value] ||
+    (authStore.isKepalaBengkel ? ExecutiveDashboardView : DashboardView)
+  );
 });
 </script>
 
