@@ -1,6 +1,6 @@
 import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { apiGet, apiPost, apiPatch } from '../utils/api';
+import { apiGet, apiPost, apiPatch, apiDelete } from '../utils/api';
 import { SwalConfirm, SwalSuccess } from '../utils/swal';
 import { formatCurrency } from '../utils/formatters';
 import { useUiStore } from './uiStore';
@@ -39,6 +39,10 @@ export const useQueueStore = defineStore('queue', () => {
   // Stage 2: Pit Allocation & Mechanic Assignment State
   const showAssignModal = ref(false);
   const selectedServiceForAssign = ref(null);
+
+  // Stage 3: Work Order Items & Part Requisition State
+  const showPartModal = ref(false);
+  const selectedServiceForPart = ref(null);
 
   /* =========================================================================
      Computed Queries
@@ -285,6 +289,37 @@ export const useQueueStore = defineStore('queue', () => {
     }
   };
 
+  /* =========================================================================
+     Stage 3: Work Order Items & Part Requisition Actions
+     ========================================================================= */
+  const openPartModal = (service) => {
+    selectedServiceForPart.value = service;
+    showPartModal.value = true;
+  };
+
+  const fetchServiceItems = async (serviceId) => {
+    return await apiGet(`/api/services/${serviceId}/items`);
+  };
+
+  const addServiceItem = async (serviceId, payload) => {
+    const created = await apiPost(`/api/services/${serviceId}/items`, payload);
+    await fetchServices();
+    await masterStore.fetchSpareparts();
+    return created;
+  };
+
+  const updateServiceItem = async (serviceId, itemId, payload) => {
+    const updated = await apiPatch(`/api/services/${serviceId}/items/${itemId}`, payload);
+    await fetchServices();
+    return updated;
+  };
+
+  const removeServiceItem = async (serviceId, itemId) => {
+    const result = await apiDelete(`/api/services/${serviceId}/items/${itemId}`);
+    await fetchServices();
+    return result;
+  };
+
   return {
     services,
     activeServices,
@@ -300,9 +335,16 @@ export const useQueueStore = defineStore('queue', () => {
     selectedPkb,
     showAssignModal,
     selectedServiceForAssign,
+    showPartModal,
+    selectedServiceForPart,
     openAddServiceModal,
     openPkbModal,
     openAssignModal,
+    openPartModal,
+    fetchServiceItems,
+    addServiceItem,
+    updateServiceItem,
+    removeServiceItem,
     confirmAssignMechanic,
     printPkb,
     saveNewService,

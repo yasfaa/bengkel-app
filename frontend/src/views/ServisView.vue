@@ -163,6 +163,30 @@
 
             <!-- Actions -->
             <td style="text-align: right; white-space: nowrap">
+              <!-- Tombol Kelola Part & Jasa PKB (Tahap 3) -->
+              <button
+                v-if="service.status !== 'Selesai' || !service.isPaid"
+                class="btn btn-secondary"
+                style="
+                  padding: 6px 10px;
+                  font-size: 12px;
+                  margin-right: 6px;
+                  color: var(--primary-color);
+                  border-color: var(--primary-color);
+                "
+                title="Kelola Permintaan Suku Cadang & Jasa Tambahan (Tahap 3)"
+                @click="$emit('open-part-modal', service)"
+              >
+                <i class="ph-bold ph-wrench"></i> Part & Jasa
+                <span
+                  v-if="service.serviceItems && service.serviceItems.length > 0"
+                  class="badge badge-primary"
+                  style="padding: 1px 5px; font-size: 10px; margin-left: 3px; border-radius: 10px"
+                >
+                  {{ service.serviceItems.length }}
+                </span>
+              </button>
+
               <!-- Tombol Lihat / Cetak PKB -->
               <button
                 class="btn btn-secondary"
@@ -233,6 +257,7 @@ defineEmits([
   'update:searchQuery',
   'open-service-modal',
   'open-pkb-modal',
+  'open-part-modal',
   'assign-mechanic',
   'complete-service',
   'create-invoice',

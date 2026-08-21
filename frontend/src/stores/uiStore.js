@@ -8,16 +8,16 @@ export const useUiStore = defineStore('ui', () => {
   const toastMessage = ref('');
   let toastTimer = null;
 
-  const menus = [
+  const menus = ref([
     { id: 'dashboard', name: 'Dashboard & Antrean', icon: 'ph-gauge' },
     { id: 'servis', name: 'Penerimaan Servis (PKB)', icon: 'ph-wrench' },
     { id: 'transaksi', name: 'Kasir & Billing', icon: 'ph-receipt' },
     { id: 'stok', name: 'Stok Suku Cadang', icon: 'ph-package' },
     { id: 'mekanik', name: 'Data Teknisi Mekanik', icon: 'ph-users-three' },
-  ];
+  ]);
 
   const activeMenuName = computed(() => {
-    const found = menus.find((m) => m.id === activeMenu.value);
+    const found = menus.value.find((m) => m.id === activeMenu.value);
     return found ? found.name : 'Dashboard';
   });
 

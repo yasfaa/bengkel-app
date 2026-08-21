@@ -174,31 +174,95 @@
               <thead>
                 <tr>
                   <th style="width: 40px; text-align: center">No</th>
-                  <th>Uraian Pekerjaan / Paket Jasa Servis</th>
-                  <th style="width: 120px; text-align: center">Estimasi Waktu</th>
-                  <th style="width: 150px; text-align: right">Estimasi Biaya</th>
+                  <th>Uraian Pekerjaan / Suku Cadang</th>
+                  <th style="width: 80px; text-align: center">Tipe</th>
+                  <th style="width: 60px; text-align: center">Qty</th>
+                  <th style="width: 130px; text-align: right">Harga Satuan</th>
+                  <th style="width: 140px; text-align: right">Subtotal</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
+                <!-- Base Package -->
+                <tr v-if="service.servicePackageName">
                   <td style="text-align: center">1</td>
                   <td>
-                    <strong>{{
-                      service.servicePackageName || 'Servis & Perbaikan Berkala'
-                    }}</strong>
+                    <strong>{{ service.servicePackageName }}</strong>
                     <div style="font-size: 11px; color: #4b5563">
-                      Inspeksi keluhan: {{ service.keluhan }}
+                      Diagnosa awal: {{ service.keluhan }}
                     </div>
                   </td>
-                  <td style="text-align: center" class="numeric">± 30 Menit</td>
+                  <td style="text-align: center">
+                    <span class="badge badge-secondary" style="font-size: 10px">JASA</span>
+                  </td>
+                  <td style="text-align: center" class="numeric">1</td>
                   <td style="text-align: right" class="numeric">
-                    Rp {{ formatCurrency(service.estimasiBiaya || service.estimasi_biaya || 0) }}
+                    Rp {{ formatCurrency(basePackagePrice) }}
+                  </td>
+                  <td style="text-align: right" class="numeric">
+                    Rp {{ formatCurrency(basePackagePrice) }}
+                  </td>
+                </tr>
+
+                <!-- Service Items -->
+                <tr v-for="(item, idx) in service.serviceItems || []" :key="item.id">
+                  <td style="text-align: center">
+                    {{ (service.servicePackageName ? 2 : 1) + idx }}
+                  </td>
+                  <td>
+                    <strong>{{ item.namaItem }}</strong>
+                    <span v-if="item.kodePart" style="font-size: 11px; color: #64748b">
+                      ({{ item.kodePart }})</span
+                    >
+                    <div
+                      v-if="item.catatan"
+                      style="font-size: 10.5px; color: #0284c7; font-style: italic"
+                    >
+                      "{{ item.catatan }}"
+                    </div>
+                    <span
+                      v-if="item.approvalStatus === 'DITOLAK'"
+                      class="badge badge-danger"
+                      style="font-size: 9.5px; margin-left: 4px"
+                    >
+                      Ditolak Konsumen
+                    </span>
+                    <span
+                      v-else-if="item.approvalStatus === 'MENUNGGU_KONFIRMASI'"
+                      class="badge"
+                      style="
+                        font-size: 9.5px;
+                        margin-left: 4px;
+                        background: #fef3c7;
+                        color: #b45309;
+                        border: 1px solid #fde68a;
+                      "
+                    >
+                      Menunggu Konfirmasi
+                    </span>
+                  </td>
+                  <td style="text-align: center">
+                    <span
+                      :class="[
+                        'badge',
+                        item.itemType === 'SPAREPART' ? 'badge-primary' : 'badge-secondary',
+                      ]"
+                      style="font-size: 10px"
+                    >
+                      {{ item.itemType === 'SPAREPART' ? 'PART' : 'JASA' }}
+                    </span>
+                  </td>
+                  <td style="text-align: center" class="numeric">{{ item.quantity }}</td>
+                  <td style="text-align: right" class="numeric">
+                    Rp {{ formatCurrency(item.hargaSatuan) }}
+                  </td>
+                  <td style="text-align: right" class="numeric">
+                    Rp {{ formatCurrency(item.subtotal) }}
                   </td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
-                  <th colspan="3" style="text-align: right">TOTAL ESTIMASI BIAYA AWAL JASA:</th>
+                  <th colspan="5" style="text-align: right">TOTAL ESTIMASI BIAYA PKB:</th>
                   <th style="text-align: right" class="numeric total-amount">
                     Rp {{ formatCurrency(service.estimasiBiaya || service.estimasi_biaya || 0) }}
                   </th>
@@ -270,7 +334,10 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+import { useMasterStore } from '../stores/masterStore';
+
+const props = defineProps({
   modelValue: { type: Boolean, default: false },
   service: { type: Object, default: null },
   formatCurrency: {
@@ -281,6 +348,20 @@ defineProps({
 });
 
 defineEmits(['update:modelValue']);
+
+const masterStore = useMasterStore();
+
+const basePackagePrice = computed(() => {
+  if (!props.service) return 0;
+  if (props.service.serviceMasterId) {
+    const pkg = masterStore.serviceMasters.find((s) => s.id === props.service.serviceMasterId);
+    if (pkg) return pkg.harga;
+  }
+  if (!props.service.serviceItems || props.service.serviceItems.length === 0) {
+    return props.service.estimasiBiaya || props.service.estimasi_biaya || 0;
+  }
+  return 0;
+});
 
 const formatDateTime = (dateStr) => {
   if (!dateStr) return '-';

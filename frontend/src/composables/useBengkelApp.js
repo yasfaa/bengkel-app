@@ -77,6 +77,7 @@ export function useBengkelApp() {
     openAddServiceModal: queueStore.openAddServiceModal,
     openPkbModal: queueStore.openPkbModal,
     openAssignModal: queueStore.openAssignModal,
+    openPartModal: queueStore.openPartModal,
     confirmAssignMechanic: queueStore.confirmAssignMechanic,
     printPkb: queueStore.printPkb,
     saveNewService: queueStore.saveNewService,

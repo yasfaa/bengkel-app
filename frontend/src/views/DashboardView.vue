@@ -151,6 +151,29 @@
                 </span>
               </td>
               <td style="text-align: right; white-space: nowrap">
+                <!-- Tombol Part & Jasa (Tahap 3) -->
+                <button
+                  class="btn btn-secondary"
+                  style="
+                    padding: 6px 10px;
+                    font-size: 12px;
+                    margin-right: 6px;
+                    color: var(--primary-color);
+                    border-color: var(--primary-color);
+                  "
+                  title="Kelola Permintaan Suku Cadang & Jasa Tambahan (Tahap 3)"
+                  @click="$emit('open-part-modal', service)"
+                >
+                  <i class="ph-bold ph-wrench"></i> Part & Jasa
+                  <span
+                    v-if="service.serviceItems && service.serviceItems.length > 0"
+                    class="badge badge-primary"
+                    style="padding: 1px 5px; font-size: 10px; margin-left: 3px; border-radius: 10px"
+                  >
+                    {{ service.serviceItems.length }}
+                  </span>
+                </button>
+
                 <button
                   class="btn btn-secondary"
                   style="padding: 6px 10px; font-size: 12px; margin-right: 6px"
@@ -206,5 +229,11 @@ defineProps({
   formatCurrency: { type: Function, required: true },
 });
 
-defineEmits(['open-service-modal', 'open-pkb-modal', 'assign-mechanic', 'complete-service']);
+defineEmits([
+  'open-service-modal',
+  'open-pkb-modal',
+  'open-part-modal',
+  'assign-mechanic',
+  'complete-service',
+]);
 </script>

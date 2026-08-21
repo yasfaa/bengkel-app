@@ -80,6 +80,7 @@
           @update:search-query="searchQuery = $event"
           @open-service-modal="openAddServiceModal"
           @open-pkb-modal="openPkbModal"
+          @open-part-modal="openPartModal"
           @open-stock-modal="openAddStockModal"
           @open-service-master-modal="openServiceMasterModal"
           @edit-service-master="editServiceMaster"
@@ -127,6 +128,8 @@
       @confirm="confirmAssignMechanic"
     />
 
+    <PartRequisitionModal v-model="showPartModal" :service="selectedServiceForPart" />
+
     <InvoiceModal
       v-model="showInvoiceModal"
       :selected-service="selectedService"
@@ -142,14 +145,16 @@
 
     <AddStockModal
       v-model="showAddStockModal"
-      :stock-form="stockForm"
+      :form="stockForm"
       :spareparts="spareparts"
+      :suppliers="suppliers"
       @submit="saveStockIn"
     />
 
     <ServiceMasterModal
       v-model="showServiceMasterModal"
       :form="serviceMasterForm"
+      :selected-service-master="selectedServiceMaster"
       @submit="saveServiceMaster"
     />
 
@@ -157,6 +162,7 @@
 
     <SparepartModal
       v-model="showSparepartModal"
+      :selected-sparepart="selectedSparepart"
       :form="sparepartForm"
       :suppliers="suppliers"
       @submit="saveSparepart"
@@ -183,6 +189,7 @@ import MekanikView from './views/MekanikView.vue';
 import AddServiceModal from './components/AddServiceModal.vue';
 import PkbDetailModal from './components/PkbDetailModal.vue';
 import AssignMechanicModal from './components/AssignMechanicModal.vue';
+import PartRequisitionModal from './components/PartRequisitionModal.vue';
 import AddStockModal from './components/AddStockModal.vue';
 import InvoiceModal from './components/InvoiceModal.vue';
 import ServiceMasterModal from './components/ServiceMasterModal.vue';
@@ -223,6 +230,9 @@ const {
   selectedServiceForAssign,
   openAssignModal,
   confirmAssignMechanic,
+  showPartModal,
+  selectedServiceForPart,
+  openPartModal,
   editServiceMaster,
   deleteServiceMaster,
   showAddServiceModal,
