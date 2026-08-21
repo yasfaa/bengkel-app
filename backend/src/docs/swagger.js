@@ -1,23 +1,20 @@
 /**
- * OpenAPI 3.0 Specification for BengkelKu API (Complete Master Data CRUD)
+ * OpenAPI 3.0 Specification for BengkelKu API
+ * Includes Complete Master Data, Auth (JWT + Cookie), RBAC User Management, and Service Items (Stage 3)
  */
 const swaggerSpec = {
   openapi: '3.0.3',
   info: {
-    title: 'BengkelKu REST API Documentation',
+    title: 'Wrenchly REST API Documentation',
     version: '1.0.0',
-    description: `API Documentation for BengkelKu Workshop Management System.
-    
-Terdiri dari modul:
-- **Master Jasa Servis**: CRUD katalog jasa servis, tarif, estimasi durasi, dan kategori.
-- **Master Pemasok (Supplier)**: CRUD pemasok / distributor suku cadang.
-- **Master Suku Cadang (Sparepart)**: CRUD katalog suku cadang, stok, harga beli/jual, dan supplier.
-- **Master Motor**: CRUD merk (Brand), tipe (Type), dan kapasitas mesin (Engine Capacity).
-- **Master Teknisi (Mechanic)**: CRUD teknisi bengkel, spesialisasi, dan status kerja.
-- **Kendaraan (Vehicle)**: Pencarian dan resolusi spesifikasi motor.
-- **Antrean Servis (PKB)**: Pendaftaran servis/PKB baru, inspeksi awal, penugasan teknisi, dan pembaruan status.`,
+    description: `Dokumentasi API Terpadu Wrenchly - Smart Workshop Management & POS ERP.
+
+### Arsitektur Keamanan:
+- **Autentikasi**: Dual-Token JWT (Access Token 5m in-memory + Refresh Token 7d httpOnly Cookie).
+- **Otorisasi (RBAC)**: Tiga peran pengguna (**ADMIN**, **MEKANIK**, **KEPALA_BENGKEL**).
+- **Format Header**: \`Authorization: Bearer <access_token>\`.`,
     contact: {
-      name: 'BengkelKu Engineering Team',
+      name: 'Wrenchly Engineering Team',
     },
   },
   servers: [
@@ -26,29 +23,274 @@ Terdiri dari modul:
       description: 'Development Server (Default)',
     },
   ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Masukkan Access Token JWT yang didapatkan saat login.',
+      },
+    },
+  },
   tags: [
-    { name: 'Health', description: 'System status and health check' },
-    { name: 'Master - Services', description: 'Katalog master jasa servis dan tarif' },
-    { name: 'Master - Suppliers', description: 'Katalog master pemasok / distributor suku cadang' },
-    { name: 'Master - Spareparts', description: 'Katalog master suku cadang & persediaan' },
-    { name: 'Master - Motor', description: 'Master merk, tipe, dan kapasitas mesin motor' },
+    { name: 'Health', description: 'Pemeriksaan status server dan database' },
+    { name: 'Authentication', description: 'Autentikasi, login, silent refresh token, dan profile' },
+    { name: 'User Management (RBAC)', description: 'Pengelolaan akun pengguna oleh Kepala Bengkel' },
+    { name: 'Services (PKB & Antrean)', description: 'Pendaftaran & alur pengerjaan servis' },
+    { name: 'Service Items (Stage 3)', description: 'Permintaan suku cadang & persetujuan konsumen' },
     { name: 'Mechanics', description: 'Data mekanik/teknisi bengkel' },
-    { name: 'Vehicles', description: 'Pencarian dan data kendaraan pelanggan' },
-    { name: 'Services (PKB & Antrean)', description: 'Pendaftaran & pengelolaan antrean servis' },
+    { name: 'Master - Services', description: 'Katalog master jasa servis dan tarif' },
+    { name: 'Master - Spareparts', description: 'Katalog master suku cadang & persediaan' },
+    { name: 'Master - Suppliers', description: 'Katalog master pemasok / distributor' },
+    { name: 'Master - Motor', description: 'Master merk, tipe, dan kapasitas mesin motor' },
+    { name: 'Vehicles', description: 'Pencarian data kendaraan pelanggan' },
   ],
   paths: {
+    // Health Check
     '/api/health': {
       get: {
         tags: ['Health'],
-        summary: 'Pemeriksaan status server',
-        responses: {
-          200: {
-            description: 'Server berjalan normal.',
+        summary: 'Pemeriksaan status server & database',
+        responses: { 200: { description: 'Server berjalan normal' } },
+      },
+    },
+
+    // Authentication Endpoints
+    '/api/auth/login': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Login akun pengguna',
+        description: 'Memverifikasi username & password, mengembalikan short-lived Access Token (5m) dan menyetel httpOnly Refresh Token cookie (7d).',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['username', 'password'],
+                properties: {
+                  username: { type: 'string', example: 'admin' },
+                  password: { type: 'string', example: 'admin123' },
+                },
+              },
+            },
           },
+        },
+        responses: {
+          200: { description: 'Login berhasil' },
+          401: { description: 'Username atau password salah' },
         },
       },
     },
-    // Services
+    '/api/auth/refresh': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Silent Refresh Access Token',
+        description: 'Membaca httpOnly cookie refreshToken, melakukan rotasi token di database, dan mengembalikan Access Token baru (5 menit).',
+        responses: {
+          200: { description: 'Token berhasil diperbarui' },
+          401: { description: 'Sesi kedaluwarsa atau token tidak valid' },
+        },
+      },
+    },
+    '/api/auth/logout': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Logout pengguna & pencabutan sesi',
+        description: 'Menghapus refreshToken dari database dan membersihkan cookie browser.',
+        responses: { 200: { description: 'Logout berhasil' } },
+      },
+    },
+    '/api/auth/me': {
+      get: {
+        tags: ['Authentication'],
+        summary: 'Mendapatkan profil pengguna aktif',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Profil pengguna' },
+          401: { description: 'Sesi tidak terautentikasi' },
+        },
+      },
+    },
+    '/api/auth/change-password': {
+      post: {
+        tags: ['Authentication'],
+        summary: 'Ganti password pengguna aktif',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['oldPassword', 'newPassword'],
+                properties: {
+                  oldPassword: { type: 'string', example: 'admin123' },
+                  newPassword: { type: 'string', example: 'newsecret123' },
+                },
+              },
+            },
+          },
+        },
+        responses: { 200: { description: 'Password berhasil diubah' } },
+      },
+    },
+
+    // User Management (RBAC - Kepala Bengkel Only)
+    '/api/users': {
+      get: {
+        tags: ['User Management (RBAC)'],
+        summary: 'Daftar semua akun pengguna (Kepala Bengkel)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: 'Daftar pengguna' },
+          403: { description: 'Akses ditolak (Khusus Kepala Bengkel)' },
+        },
+      },
+      post: {
+        tags: ['User Management (RBAC)'],
+        summary: 'Tambah akun pengguna baru (Kepala Bengkel)',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['username', 'password', 'nama', 'role'],
+                properties: {
+                  username: { type: 'string', example: 'sa_andi' },
+                  password: { type: 'string', example: 'password123' },
+                  nama: { type: 'string', example: 'Andi Pratama' },
+                  email: { type: 'string', example: 'andi@bengkelku.id' },
+                  role: { type: 'string', enum: ['ADMIN', 'MEKANIK', 'KEPALA_BENGKEL'], example: 'ADMIN' },
+                  mechanicId: { type: 'integer', nullable: true, example: null },
+                },
+              },
+            },
+          },
+        },
+        responses: { 201: { description: 'Akun berhasil dibuat' } },
+      },
+    },
+    '/api/users/{id}': {
+      put: {
+        tags: ['User Management (RBAC)'],
+        summary: 'Perbarui data akun pengguna (Kepala Bengkel)',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Akun berhasil diperbarui' } },
+      },
+      delete: {
+        tags: ['User Management (RBAC)'],
+        summary: 'Hapus akun pengguna (Kepala Bengkel)',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Akun berhasil dihapus' } },
+      },
+    },
+    '/api/users/{id}/toggle-status': {
+      patch: {
+        tags: ['User Management (RBAC)'],
+        summary: 'Aktifkan / Nonaktifkan status akun pengguna',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Status akun berhasil diubah' } },
+      },
+    },
+
+    // Services (PKB & Antrean)
+    '/api/services': {
+      get: {
+        tags: ['Services (PKB & Antrean)'],
+        summary: 'Daftar antrean servis & PKB',
+        description: 'Jika login sebagai MEKANIK, data otomatis terfilter hanya untuk servis yang ditugaskan kepadanya.',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Daftar servis' } },
+      },
+      post: {
+        tags: ['Services (PKB & Antrean)'],
+        summary: 'Pendaftaran servis baru & pembuatan PKB (Reception SA)',
+        security: [{ bearerAuth: [] }],
+        responses: { 201: { description: 'PKB berhasil dibuat' } },
+      },
+    },
+    '/api/services/{id}/status': {
+      patch: {
+        tags: ['Services (PKB & Antrean)'],
+        summary: 'Pembaruan status servis & penugasan mekanik',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Status berhasil diperbarui' } },
+      },
+    },
+
+    // Stage 3: Service Items (Part Requisition & Approvals)
+    '/api/services/{id}/items': {
+      get: {
+        tags: ['Service Items (Stage 3)'],
+        summary: 'Daftar rincian part & jasa pada PKB',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Daftar item PKB' } },
+      },
+      post: {
+        tags: ['Service Items (Stage 3)'],
+        summary: 'Pengajuan permintaan part dari gudang atau jasa ekstra',
+        description: 'Mengecek ketersediaan stok gudang secara otomatis sebelum part dialokasikan.',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['itemType'],
+                properties: {
+                  itemType: { type: 'string', enum: ['SPAREPART', 'JASA'], example: 'SPAREPART' },
+                  sparepartId: { type: 'integer', example: 1 },
+                  serviceMasterId: { type: 'integer', nullable: true, example: null },
+                  quantity: { type: 'integer', example: 1 },
+                  approvalStatus: {
+                    type: 'string',
+                    enum: ['MENUNGGU_KONFIRMASI', 'DISETUJUI', 'DITOLAK'],
+                    example: 'MENUNGGU_KONFIRMASI',
+                  },
+                  catatan: { type: 'string', example: 'Kampas rem tipis' },
+                },
+              },
+            },
+          },
+        },
+        responses: { 201: { description: 'Item berhasil ditambahkan ke PKB' } },
+      },
+    },
+    '/api/services/{id}/items/{itemId}': {
+      patch: {
+        tags: ['Service Items (Stage 3)'],
+        summary: 'Ubah kuantitas atau status persetujuan konsumen (Disetujui / Ditolak)',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+          { name: 'itemId', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: { 200: { description: 'Item berhasil diperbarui' } },
+      },
+      delete: {
+        tags: ['Service Items (Stage 3)'],
+        summary: 'Hapus item pengerjaan dari PKB',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
+          { name: 'itemId', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: { 200: { description: 'Item berhasil dihapus' } },
+      },
+    },
+
+    // Master Data Endpoints
     '/api/master/services': {
       get: {
         tags: ['Master - Services'],
@@ -81,7 +323,6 @@ Terdiri dari modul:
         responses: { 204: { description: 'Deleted' } },
       },
     },
-    // Suppliers
     '/api/master/suppliers': {
       get: {
         tags: ['Master - Suppliers'],
@@ -108,7 +349,6 @@ Terdiri dari modul:
         responses: { 204: { description: 'Deleted' } },
       },
     },
-    // Spareparts
     '/api/master/spareparts': {
       get: {
         tags: ['Master - Spareparts'],
@@ -141,7 +381,6 @@ Terdiri dari modul:
         responses: { 204: { description: 'Deleted' } },
       },
     },
-    // Motor Brands
     '/api/master/brands': {
       get: {
         tags: ['Master - Motor'],
@@ -168,7 +407,6 @@ Terdiri dari modul:
         responses: { 204: { description: 'Deleted' } },
       },
     },
-    // Motor Types
     '/api/master/types': {
       get: {
         tags: ['Master - Motor'],
@@ -195,7 +433,6 @@ Terdiri dari modul:
         responses: { 204: { description: 'Deleted' } },
       },
     },
-    // Engine Capacities
     '/api/master/capacities': {
       get: {
         tags: ['Master - Motor'],
@@ -222,7 +459,6 @@ Terdiri dari modul:
         responses: { 204: { description: 'Deleted' } },
       },
     },
-    // Mechanics
     '/api/mechanics': {
       get: {
         tags: ['Mechanics'],
@@ -255,34 +491,12 @@ Terdiri dari modul:
         responses: { 204: { description: 'Deleted' } },
       },
     },
-    // Vehicles
     '/api/vehicles/search': {
       get: {
         tags: ['Vehicles'],
         summary: 'Cari kendaraan berdasarkan nomor polisi (Nopol)',
         parameters: [{ name: 'nopol', in: 'query', required: true, schema: { type: 'string' } }],
         responses: { 200: { description: 'Success' } },
-      },
-    },
-    // Services / PKB
-    '/api/services': {
-      get: {
-        tags: ['Services (PKB & Antrean)'],
-        summary: 'Daftar antrean servis & PKB',
-        responses: { 200: { description: 'Success' } },
-      },
-      post: {
-        tags: ['Services (PKB & Antrean)'],
-        summary: 'Pendaftaran servis baru & pembuatan PKB (Reception SA)',
-        responses: { 201: { description: 'Created' } },
-      },
-    },
-    '/api/services/{id}/status': {
-      patch: {
-        tags: ['Services (PKB & Antrean)'],
-        summary: 'Pembaruan status servis & penugasan mekanik',
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
-        responses: { 200: { description: 'Updated' } },
       },
     },
   },

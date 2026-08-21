@@ -10,7 +10,7 @@ class ServiceItemController {
 
   // POST /api/services/:id/items
   addServiceItem = asyncHandler(async (req, res) => {
-    const created = await serviceItemService.addServiceItem(req.params.id, req.body);
+    const created = await serviceItemService.addServiceItem(req.params.id, req.body, req.user);
     res.status(201).json(created);
   });
 
@@ -19,14 +19,19 @@ class ServiceItemController {
     const updated = await serviceItemService.updateServiceItem(
       req.params.id,
       req.params.itemId,
-      req.body
+      req.body,
+      req.user
     );
     res.status(200).json(updated);
   });
 
   // DELETE /api/services/:id/items/:itemId
   removeServiceItem = asyncHandler(async (req, res) => {
-    const result = await serviceItemService.removeServiceItem(req.params.id, req.params.itemId);
+    const result = await serviceItemService.removeServiceItem(
+      req.params.id,
+      req.params.itemId,
+      req.user
+    );
     res.status(200).json(result);
   });
 }

@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./docs/swagger');
+const cookieParser = require('cookie-parser');
 const apiRoutes = require('./routes');
 const requestLogger = require('./middlewares/requestLogger');
 const notFoundHandler = require('./middlewares/notFoundMiddleware');
@@ -19,14 +20,28 @@ app.use(
   })
 );
 
-// 2. CORS Configuration (Supports whitelisting via CORS_ORIGIN env)
+// 2. Cookie Parser
+app.use(cookieParser());
+
+// 3. CORS Configuration (Supports credentials for httpOnly refresh cookies)
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((origin) => origin.trim())
-  : '*';
+  : [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:8080',
+      'http://127.0.0.1:8080',
+    ];
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     credentials: true,

@@ -6,6 +6,8 @@ const masterRoutes = require('./masterRoutes');
 const mechanicRoutes = require('./mechanicRoutes');
 const vehicleRoutes = require('./vehicleRoutes');
 const queueRoutes = require('./queueRoutes');
+const authRoutes = require('./authRoutes');
+const userRoutes = require('./userRoutes');
 
 // Health & Readiness Check Endpoint
 router.get('/health', async (req, res) => {
@@ -28,6 +30,8 @@ router.get('/health', async (req, res) => {
 });
 
 // Mount Sub-routes
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/master', masterRoutes);
 router.use('/mechanics', mechanicRoutes);
 router.use('/vehicles', vehicleRoutes);

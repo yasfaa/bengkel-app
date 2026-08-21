@@ -4,6 +4,7 @@ const seedMotorMaster = require('./motorMasterSeed');
 const seedServiceMaster = require('./serviceMasterSeed');
 const seedMechanics = require('./mechanicSeed');
 const seedSpareparts = require('./sparepartSeed');
+const seedUsers = require('./userSeed');
 
 /**
  * Run all database seeds in dependency order
@@ -15,6 +16,7 @@ async function runSeeds() {
   await seedServiceMaster();
   await seedMechanics();
   await seedSpareparts();
+  await seedUsers();
   console.log('[Seed] All database seeds completed successfully.');
 }
 

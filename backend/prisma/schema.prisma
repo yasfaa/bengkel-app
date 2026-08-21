@@ -122,9 +122,8 @@ model ServiceMaster {
 
 model Mechanic {
   id           Int       @id @default(autoincrement())
-  nama         String
-  tgl_lahir    DateTime
-  waktu_kerja  String    // e.g. "Full-time", "Part-time"
+  user_id      Int       @unique
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   spesialisasi String    @default("Umum") // e.g. "Umum", "Mesin & CVT", "Kelistrikan & Injeksi"
   is_active    Boolean   @default(true)
   created_at   DateTime  @default(now())
@@ -199,4 +198,35 @@ model Transaction {
   metode_bayar    String   // e.g. Tunai, Transfer Mandiri, Transfer BCA, QRIS
   created_at      DateTime @default(now())
   updated_at      DateTime @default(now()) @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MEKANIK
+  KEPALA_BENGKEL
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  email         String?        @unique
+  password      String         // Hash bcrypt
+  nama          String
+  tgl_lahir     DateTime?
+  tgl_masuk     DateTime       @default(now())
+  role          Role           @default(ADMIN)
+  is_active     Boolean        @default(true)
+  mechanic      Mechanic?
+  refreshTokens RefreshToken[]
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @default(now()) @updatedAt
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique @db.VarChar(500)
+  user_id    Int
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  expires_at DateTime
+  created_at DateTime @default(now())
 }

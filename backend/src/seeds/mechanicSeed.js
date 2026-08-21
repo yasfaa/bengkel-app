@@ -1,53 +1,108 @@
+const bcrypt = require('bcryptjs');
 const prisma = require('../db');
 
 async function seedMechanics() {
   try {
+    const passwordHash = await bcrypt.hash('password123', 10);
+    const asepPassword = await bcrypt.hash('asep123', 10);
+    const budiPassword = await bcrypt.hash('budi123', 10);
+
     const mechanics = [
       {
-        nama: 'Asep',
+        username: 'asep',
+        password: asepPassword,
+        nama: 'Asep Hidayat',
+        email: 'asep@bengkelku.id',
         tgl_lahir: new Date('1995-05-10'),
-        waktu_kerja: 'Full-time (08:00 - 17:00)',
+        tgl_masuk: new Date('2023-01-15'),
         spesialisasi: 'Mesin & CVT',
       },
       {
-        nama: 'Budi',
+        username: 'budi',
+        password: budiPassword,
+        nama: 'Budi Santoso',
+        email: 'budi@bengkelku.id',
         tgl_lahir: new Date('1996-08-15'),
-        waktu_kerja: 'Full-time (08:00 - 17:00)',
+        tgl_masuk: new Date('2023-06-01'),
         spesialisasi: 'Kelistrikan & Injeksi',
       },
       {
-        nama: 'Cecep',
+        username: 'cecep',
+        password: passwordHash,
+        nama: 'Cecep Supriadi',
+        email: 'cecep@bengkelku.id',
         tgl_lahir: new Date('1997-12-20'),
-        waktu_kerja: 'Full-time (08:00 - 17:00)',
+        tgl_masuk: new Date('2024-02-10'),
         spesialisasi: 'Servis Ringan & Tune Up',
       },
       {
-        nama: 'Dedi',
+        username: 'dedi',
+        password: passwordHash,
+        nama: 'Dedi Kurniawan',
+        email: 'dedi@bengkelku.id',
         tgl_lahir: new Date('1998-03-05'),
-        waktu_kerja: 'Part-time (13:00 - 18:00)',
+        tgl_masuk: new Date('2024-05-20'),
         spesialisasi: 'Overhaul & Kaki-kaki',
       },
     ];
 
     for (const mech of mechanics) {
-      const existing = await prisma.mechanic.findFirst({ where: { nama: mech.nama } });
-      if (!existing) {
-        await prisma.mechanic.create({ data: mech });
+      let user = await prisma.user.findUnique({ where: { username: mech.username } });
+      if (!user) {
+        user = await txOrPrisma(prisma).user.create({
+          data: {
+            username: mech.username,
+            password: mech.password,
+            nama: mech.nama,
+            email: mech.email,
+            tgl_lahir: mech.tgl_lahir,
+            tgl_masuk: mech.tgl_masuk,
+            role: 'MEKANIK',
+            is_active: true,
+          },
+        });
+      } else {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            nama: mech.nama,
+            email: mech.email,
+            tgl_lahir: mech.tgl_lahir,
+            tgl_masuk: mech.tgl_masuk,
+            role: 'MEKANIK',
+            is_active: true,
+          },
+        });
+      }
+
+      const existingMech = await prisma.mechanic.findUnique({ where: { user_id: user.id } });
+      if (!existingMech) {
+        await prisma.mechanic.create({
+          data: {
+            user_id: user.id,
+            spesialisasi: mech.spesialisasi,
+            is_active: true,
+          },
+        });
       } else {
         await prisma.mechanic.update({
-          where: { id: existing.id },
+          where: { id: existingMech.id },
           data: {
             spesialisasi: mech.spesialisasi,
-            waktu_kerja: mech.waktu_kerja,
+            is_active: true,
           },
         });
       }
     }
 
-    console.log('Initial mechanics seeded successfully.');
+    console.log('Initial mechanics and their user accounts seeded successfully.');
   } catch (error) {
     console.error('Failed to seed mechanics:', error);
   }
+}
+
+function txOrPrisma(p) {
+  return p;
 }
 
 module.exports = seedMechanics;

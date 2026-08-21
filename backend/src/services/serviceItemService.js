@@ -100,8 +100,21 @@ class ServiceItemService {
    * By default, status is 'MENUNGGU_KONFIRMASI'
    * @param {string|number} serviceId
    * @param {object} payload
+   * @param {object} [user]
    */
-  async addServiceItem(serviceId, payload) {
+  async addServiceItem(serviceId, payload, user = null) {
+    if (user) {
+      if (user.role === 'ADMIN') {
+        throw new AppError(
+          'Pengajuan suku cadang dan jasa teknis hanya dapat dilakukan oleh teknisi mekanik.',
+          403
+        );
+      }
+      if (user.role === 'KEPALA_BENGKEL') {
+        throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
+      }
+    }
+
     const sId = parseId(serviceId);
     if (!sId) throw new AppError('ID servis tidak valid.', 400);
 
@@ -125,6 +138,10 @@ class ServiceItemService {
         where: { id: sId },
       });
       if (!service) throw new AppError('Data antrean servis / PKB tidak ditemukan.', 404);
+
+      if (user && user.role === 'MEKANIK' && service.mechanic_id && service.mechanic_id !== user.mechanicId) {
+        throw new AppError('Anda hanya dapat mengisi part/jasa pada motor yang ditugaskan ke Anda.', 403);
+      }
 
       let namaItem = '';
       let hargaSatuan = 0;
@@ -303,8 +320,21 @@ class ServiceItemService {
    * Remove a service item from a PKB
    * @param {string|number} serviceId
    * @param {string|number} itemId
+   * @param {object} [user]
    */
-  async removeServiceItem(serviceId, itemId) {
+  async removeServiceItem(serviceId, itemId, user = null) {
+    if (user) {
+      if (user.role === 'ADMIN') {
+        throw new AppError(
+          'Penghapusan item pengerjaan hanya dapat dilakukan oleh teknisi mekanik.',
+          403
+        );
+      }
+      if (user.role === 'KEPALA_BENGKEL') {
+        throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
+      }
+    }
+
     const sId = parseId(serviceId);
     const itId = parseId(itemId);
     if (!sId || !itId) throw new AppError('ID servis atau ID item tidak valid.', 400);
@@ -324,7 +354,7 @@ class ServiceItemService {
       await this.recalculateServiceEstimate(tx, sId);
     });
 
-    return { success: true, message: 'Item pengerjaan PKB berhasil dihapus.' };
+    return { success: true, message: 'Item berhasil dihapus dari PKB.' };
   }
 }
 

@@ -46,10 +46,27 @@ class QueueService {
   }
 
   /**
-   * Get all services list formatted for client with PKB metadata and normalized relations
+   * Get all services formatted for client with PKB metadata and normalized relations
+   * Role Scoping:
+   * - ADMIN: Sees ALL services (including unassigned mechanic_id: null)
+   * - MEKANIK: Only sees services explicitly assigned to their mechanicId (where.mechanic_id = user.mechanicId)
+   * - KEPALA_BENGKEL: Sees all assigned services for business recap (unassigned services only appear for Admin)
+   * @param {object} [user] - Active authenticated user
    */
-  async getAllServices() {
+  async getAllServices(user = null) {
+    const where = {};
+
+    if (user) {
+      if (user.role === 'MEKANIK') {
+        where.mechanic_id = user.mechanicId ? user.mechanicId : -1;
+      } else if (user.role === 'KEPALA_BENGKEL') {
+        where.mechanic_id = { not: null };
+      }
+      // ADMIN sees everything (including mechanic_id: null)
+    }
+
     const services = await prisma.service.findMany({
+      where,
       include: {
         vehicle: {
           include: {
@@ -62,7 +79,11 @@ class QueueService {
             engineCapacity: true,
           },
         },
-        mechanic: true,
+        mechanic: {
+          include: {
+            user: true,
+          },
+        },
         serviceMaster: true,
         serviceItems: {
           include: {
@@ -119,7 +140,7 @@ class QueueService {
         serviceMasterId: s.service_master_id,
         servicePackageName: s.serviceMaster ? s.serviceMaster.nama : null,
         estimasiBiaya: s.estimasi_biaya || 0,
-        mechanicName: s.mechanic ? s.mechanic.nama : null,
+        mechanicName: s.mechanic ? s.mechanic.user?.nama || null : null,
         mechanicSpecialization: s.mechanic ? s.mechanic.spesialisasi : null,
         status: s.status,
         isPaid: false,
@@ -225,7 +246,8 @@ class QueueService {
       let mechanic = null;
       if (mechanicName) {
         mechanic = await tx.mechanic.findFirst({
-          where: { nama: mechanicName },
+          where: { user: { nama: mechanicName } },
+          include: { user: true },
         });
       }
 
@@ -258,7 +280,9 @@ class QueueService {
               engineCapacity: true,
             },
           },
-          mechanic: true,
+          mechanic: {
+            include: { user: true },
+          },
           serviceMaster: true,
         },
       });
@@ -286,7 +310,7 @@ class QueueService {
       serviceMasterId: result.service_master_id,
       servicePackageName: result.serviceMaster ? result.serviceMaster.nama : null,
       estimasiBiaya: result.estimasi_biaya,
-      mechanicName: result.mechanic ? result.mechanic.nama : null,
+      mechanicName: result.mechanic ? result.mechanic.user?.nama || null : null,
       mechanicSpecialization: result.mechanic ? result.mechanic.spesialisasi : null,
       status: result.status,
       isPaid: false,
@@ -295,12 +319,13 @@ class QueueService {
   }
 
   /**
-   * Update service status and mechanic assignment (Stage 2 Pit Allocation)
-   * Validates busy mechanics and reassignments
+   * Update service status and mechanic assignment (Stage 2 Pit Allocation & Stage 4 Finish)
+   * Validates busy mechanics, reassignments, and role permissions
    * @param {string|number} id
    * @param {object} payload
+   * @param {object} [user]
    */
-  async updateServiceStatus(id, payload) {
+  async updateServiceStatus(id, payload, user = null) {
     const serviceId = parseId(id);
     if (!serviceId) {
       throw new AppError('ID servis tidak valid.', 400);
@@ -309,7 +334,9 @@ class QueueService {
     const existingService = await prisma.service.findUnique({
       where: { id: serviceId },
       include: {
-        mechanic: true,
+        mechanic: {
+          include: { user: true },
+        },
         vehicle: true,
       },
     });
@@ -321,9 +348,27 @@ class QueueService {
     const { status, mechanicName, allowBusyOverride } = payload;
     let targetMechanic = existingService.mechanic;
 
+    if (user) {
+      if (status === 'Selesai') {
+        if (user.role === 'ADMIN') {
+          throw new AppError(
+            'Penyelesaian servis hanya dapat dilakukan oleh teknisi mekanik pelaksana.',
+            403
+          );
+        }
+        if (user.role === 'KEPALA_BENGKEL') {
+          throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
+        }
+        if (user.role === 'MEKANIK' && existingService.mechanic_id && existingService.mechanic_id !== user.mechanicId) {
+          throw new AppError('Anda hanya dapat menyelesaikan servis yang ditugaskan ke Anda.', 403);
+        }
+      }
+    }
+
     if (mechanicName) {
       targetMechanic = await prisma.mechanic.findFirst({
-        where: { nama: mechanicName },
+        where: { user: { nama: mechanicName } },
+        include: { user: true },
       });
       if (!targetMechanic) {
         throw new AppError(`Mekanik dengan nama "${mechanicName}" tidak ditemukan.`, 404);
@@ -350,8 +395,9 @@ class QueueService {
       });
 
       if (busyJob) {
+        const mechName = targetMechanic.user?.nama || 'Mekanik';
         throw new AppError(
-          `Mekanik ${targetMechanic.nama} saat ini sedang aktif mengerjakan kendaraan [${busyJob.vehicle.nopol}]. Selesaikan servis tersebut terlebih dahulu atau pilih mekanik lain yang sedang Standby.`,
+          `Mekanik ${mechName} saat ini sedang aktif mengerjakan kendaraan [${busyJob.vehicle.nopol}]. Selesaikan servis tersebut terlebih dahulu atau pilih mekanik lain yang sedang Standby.`,
           400
         );
       }
@@ -379,7 +425,9 @@ class QueueService {
             engineCapacity: true,
           },
         },
-        mechanic: true,
+        mechanic: {
+          include: { user: true },
+        },
         serviceMaster: true,
         serviceItems: {
           include: {
@@ -396,7 +444,7 @@ class QueueService {
     const capacityName = updatedService.vehicle?.engineCapacity?.kapasitas || '-';
 
     const items = (updatedService.serviceItems || []).map((item) => {
-      const status =
+      const itemStatus =
         item.approval_status || (item.is_approved ? 'DISETUJUI' : 'MENUNGGU_KONFIRMASI');
       return {
         id: item.id,
@@ -410,8 +458,8 @@ class QueueService {
         currentStock: item.sparepart ? item.sparepart.stok : null,
         hargaSatuan: item.harga_satuan,
         subtotal: item.subtotal,
-        approvalStatus: status,
-        isApproved: status === 'DISETUJUI',
+        approvalStatus: itemStatus,
+        isApproved: itemStatus === 'DISETUJUI',
         catatan: item.catatan,
       };
     });
@@ -432,7 +480,7 @@ class QueueService {
       serviceMasterId: updatedService.service_master_id,
       servicePackageName: updatedService.serviceMaster ? updatedService.serviceMaster.nama : null,
       estimasiBiaya: updatedService.estimasi_biaya,
-      mechanicName: updatedService.mechanic ? updatedService.mechanic.nama : null,
+      mechanicName: updatedService.mechanic ? updatedService.mechanic.user?.nama || null : null,
       mechanicSpecialization: updatedService.mechanic ? updatedService.mechanic.spesialisasi : null,
       status: updatedService.status,
       isPaid: false,

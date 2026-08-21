@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const queueController = require('../controllers/queueController');
 const serviceItemController = require('../controllers/serviceItemController');
+const authMiddleware = require('../middlewares/authMiddleware');
 const validate = require('../middlewares/validate');
 const {
   createServiceSchema,
@@ -11,6 +12,9 @@ const {
   addServiceItemSchema,
   updateServiceItemSchema,
 } = require('../validations/serviceItemValidation');
+
+// Global optional authentication across queue routes
+router.use(authMiddleware.optional);
 
 router
   .route('/')
