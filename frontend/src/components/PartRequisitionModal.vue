@@ -28,8 +28,9 @@
 
       <!-- Modal Body -->
       <div class="modal-body" style="max-height: 75vh; overflow-y: auto">
-        <!-- Form Section: Tambah Item (Card) -->
+        <!-- Form Section: Tambah Item (Hanya untuk MEKANIK) -->
         <div
+          v-if="authStore.isMechanic"
           class="card"
           style="background: var(--bg-surface-secondary); margin-bottom: 16px; padding: 14px 18px"
         >
@@ -162,6 +163,50 @@
           </div>
         </div>
 
+        <!-- Notice untuk ADMIN (Service Advisor): Approval & Konsultasi Konsumen -->
+        <div
+          v-else-if="authStore.isAdmin"
+          class="card"
+          style="
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12.5px;
+            color: #1e40af;
+          "
+        >
+          <i class="ph-bold ph-shield-check" style="font-size: 22px; flex-shrink: 0"></i>
+          <div>
+            <strong>Mode Service Advisor (Approval Konsumen):</strong> Pengisian suku cadang & jasa tambahan diajukan oleh teknisi mekanik. Anda dapat mengonfirmasi persetujuan konsumen dengan mengeklik status pada kolom <strong>Status Persetujuan</strong> di bawah.
+          </div>
+        </div>
+
+        <!-- Notice untuk KEPALA BENGKEL: View Only -->
+        <div
+          v-else
+          class="card"
+          style="
+            background: #f8fafc;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+          "
+        >
+          <i class="ph-bold ph-eye" style="font-size: 22px; flex-shrink: 0"></i>
+          <div>
+            <strong>Mode Rekap (View Only):</strong> Rincian item pengerjaan dan permintaan suku cadang ditampilkan untuk monitoring operasional bengkel.
+          </div>
+        </div>
+
         <!-- Tabel Rincian Service Items -->
         <div style="margin-top: 12px">
           <div
@@ -220,7 +265,7 @@
                     </div>
                     <div
                       v-if="item.catatan"
-                      style="font-size: 11px; color: var(--primary-color); font-style: italic"
+                      style="font-size: 11px; color: var(--text-muted); font-style: italic"
                     >
                       "{{ item.catatan }}"
                     </div>
@@ -260,15 +305,17 @@
                     </div>
                   </td>
                   <td style="text-align: center">
-                    <!-- Interactive Approval Status Button -->
+                    <!-- Interactive Approval Status Button (Disabled for Kepala Bengkel) -->
                     <button
                       :class="['approval-badge-btn', getApprovalButtonClass(item.approvalStatus)]"
-                      title="Klik untuk mengubah persetujuan konsumen"
-                      @click="handleApprovalClick(item)"
+                      :style="{ cursor: authStore.isKepalaBengkel ? 'default' : 'pointer' }"
+                      :title="authStore.isKepalaBengkel ? 'Status Persetujuan' : 'Klik untuk mengubah persetujuan konsumen'"
+                      @click="!authStore.isKepalaBengkel && handleApprovalClick(item)"
                     >
                       <i :class="getApprovalIcon(item.approvalStatus)"></i>
                       <span>{{ getApprovalLabel(item.approvalStatus) }}</span>
                       <i
+                        v-if="!authStore.isKepalaBengkel"
                         class="ph-bold ph-caret-down"
                         style="font-size: 10px; opacity: 0.7; margin-left: 2px"
                       ></i>
@@ -276,6 +323,7 @@
                   </td>
                   <td style="text-align: right">
                     <button
+                      v-if="authStore.isMechanic"
                       class="btn btn-danger"
                       style="padding: 4px 8px; font-size: 11px"
                       title="Hapus item dari PKB"
@@ -283,6 +331,7 @@
                     >
                       <i class="ph-bold ph-trash"></i>
                     </button>
+                    <span v-else style="color: var(--text-muted); font-size: 11px">-</span>
                   </td>
                 </tr>
                 <tr v-if="currentServiceItems.length === 0">
@@ -393,6 +442,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import Swal from 'sweetalert2';
+import { useAuthStore } from '../stores/authStore';
 import { useMasterStore } from '../stores/masterStore';
 import { useQueueStore } from '../stores/queueStore';
 import { useUiStore } from '../stores/uiStore';
@@ -405,6 +455,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'item-updated']);
 
+const authStore = useAuthStore();
 const masterStore = useMasterStore();
 const queueStore = useQueueStore();
 const uiStore = useUiStore();

@@ -8,7 +8,7 @@
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 8px">
           <i class="ph-bold ph-git-merge" style="color: var(--primary-color); font-size: 20px"></i>
-          <h3>Alokasi Pit & Penugasan Teknisi (Tahap 2)</h3>
+          <h3>Alokasi Pit & Penugasan Teknisi</h3>
         </div>
         <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
       </div>
@@ -46,7 +46,7 @@
                 }})
               </div>
             </div>
-            <span class="badge badge-pending">Menunggu</span>
+            <span class="badge badge-pending">{{ service.status }}</span>
           </div>
 
           <div
@@ -57,7 +57,7 @@
               font-size: 12.5px;
               display: flex;
               justify-content: space-between;
-              flex-wrap: gap;
+              flex-wrap: wrap;
               gap: 6px;
             "
           >
@@ -110,7 +110,7 @@
               Pilih Teknisi Pelaksana <span class="required-star">*</span>
             </label>
             <span style="font-size: 12px; color: var(--text-muted)">
-              Tersedia: <strong style="color: #059669">{{ standbyCount }}</strong> /
+              Standby: <strong style="color: #059669">{{ standbyCount }}</strong> /
               {{ mechanics.length }}
             </span>
           </div>
@@ -158,10 +158,11 @@
               gap: 6px;
             "
           >
-            <i class="ph-bold ph-warning" style="font-size: 15px"></i>
+            <i class="ph-bold ph-clock-countdown" style="font-size: 15px"></i>
             <span
               >{{ selectedMechanicName }} sedang aktif di motor
-              <strong>{{ getPlatOnly(getMechanicActiveJob(selectedMechanicName)) }}</strong></span
+              <strong>{{ getPlatOnly(getMechanicActiveJob(selectedMechanicName)) }}</strong
+              >. Anda dapat <strong>menugaskannya ke antrean berikutnya</strong>.</span
             >
           </div>
 
@@ -199,7 +200,7 @@
                         padding: 2px 5px;
                       "
                     >
-                      Pilihan Awal
+                      Ditugaskan
                     </span>
                   </div>
                   <div class="mechanic-spec-text">
@@ -230,11 +231,28 @@
         </div>
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" style="display: flex; justify-content: space-between; gap: 8px">
         <button class="btn btn-secondary" @click="$emit('update:modelValue', false)">Batal</button>
-        <button class="btn btn-primary" @click="handleConfirm">
-          <i class="ph-bold ph-play"></i> Konfirmasi & Mulai Servis
-        </button>
+
+        <div style="display: flex; gap: 8px">
+          <!-- Action 1: Assign Only (Status stays Menunggu) -->
+          <button
+            type="button"
+            class="btn btn-secondary"
+            style="border-color: var(--primary-color); color: var(--primary-color)"
+            title="Tugaskan teknisi namun biarkan status tetap Menunggu di antrean teknisi"
+            @click="handleAssignOnly"
+          >
+            <i class="ph-bold ph-calendar-plus"></i>
+            <span>Tugaskan Saja (Antre)</span>
+          </button>
+
+          <!-- Action 2: Start Working Immediately (Status -> Dikerjakan) -->
+          <button type="button" class="btn btn-primary" @click="handleStartWorking">
+            <i class="ph-bold ph-play"></i>
+            <span>Mulai Servis Sekarang</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -295,19 +313,22 @@ watch(
   { immediate: true }
 );
 
-const handleConfirm = async () => {
+/**
+ * Assign mechanic to queue without starting work immediately (Status: Menunggu)
+ */
+const handleAssignOnly = async () => {
   if (!selectedMechanicName.value) {
-    errorMessage.value = 'Harap pilih teknisi pelaksana terlebih dahulu sebelum memulai servis.';
+    errorMessage.value = 'Harap pilih teknisi pelaksana terlebih dahulu.';
     return;
   }
 
-  // 1. Validasi jika memilih teknisi selain pilihan awal pelanggan di Tahap 1
+  // Confirm reassignment if different from initial
   if (props.service.mechanicName && props.service.mechanicName !== selectedMechanicName.value) {
     const reassignmentConfirm = await SwalConfirm.fire({
       title: 'Pengalihan Teknisi Pelaksana',
-      html: `Pelanggan sebelumnya meminta teknisi <strong>${props.service.mechanicName}</strong>.<br><br>Apakah Anda yakin ingin mengalihkan pengerjaan motor <strong>${props.service.nopol}</strong> ke teknisi <strong>${selectedMechanicName.value}</strong>?`,
+      html: `Motor <strong>${props.service.nopol}</strong> sebelumnya ditugaskan ke <strong>${props.service.mechanicName}</strong>.<br><br>Alihkan antrean ke <strong>${selectedMechanicName.value}</strong>?`,
       icon: 'question',
-      confirmButtonText: 'Ya, Alihkan Teknisi',
+      confirmButtonText: 'Ya, Alihkan',
       cancelButtonText: 'Batal',
     });
 
@@ -316,15 +337,48 @@ const handleConfirm = async () => {
     }
   }
 
-  // 2. Validasi jika memilih teknisi yang sedang bekerja (On Duty)
+  emit('confirm', {
+    service: props.service,
+    mechanicName: selectedMechanicName.value,
+    pitNumber: selectedPit.value,
+    startWorking: false,
+    allowBusyOverride: true,
+  });
+};
+
+/**
+ * Start working immediately on Pit Bay (Status: Dikerjakan)
+ */
+const handleStartWorking = async () => {
+  if (!selectedMechanicName.value) {
+    errorMessage.value = 'Harap pilih teknisi pelaksana terlebih dahulu sebelum memulai servis.';
+    return;
+  }
+
+  // 1. Confirm reassignment if different
+  if (props.service.mechanicName && props.service.mechanicName !== selectedMechanicName.value) {
+    const reassignmentConfirm = await SwalConfirm.fire({
+      title: 'Pengalihan Teknisi Pelaksana',
+      html: `Pelanggan sebelumnya meminta teknisi <strong>${props.service.mechanicName}</strong>.<br><br>Apakah Anda yakin ingin mengalihkan pengerjaan motor <strong>${props.service.nopol}</strong> ke teknisi <strong>${selectedMechanicName.value}</strong>?`,
+      icon: 'question',
+      confirmButtonText: 'Ya, Alihkan & Mulai',
+      cancelButtonText: 'Batal',
+    });
+
+    if (!reassignmentConfirm.isConfirmed) {
+      return;
+    }
+  }
+
+  // 2. Validate if mechanic is currently busy working
   if (props.getMechanicStatus(selectedMechanicName.value) === 'Bekerja') {
     const activePlat = getPlatOnly(props.getMechanicActiveJob(selectedMechanicName.value));
     const busyConfirm = await SwalConfirm.fire({
-      title: 'Teknisi Sedang Bertugas!',
-      html: `Teknisi <strong>${selectedMechanicName.value}</strong> saat ini sedang aktif mengerjakan motor <strong>${activePlat}</strong>.<br><br>Apakah Anda ingin tetap menugaskan teknisi ini sebagai antrean berikutnya?`,
+      title: 'Teknisi Sedang Mengerjakan Motor Lain!',
+      html: `Teknisi <strong>${selectedMechanicName.value}</strong> saat ini sedang aktif mengerjakan motor <strong>${activePlat}</strong>.<br><br>Apakah Anda ingin tetap memulai pengerjaan unit ini sekarang?`,
       icon: 'warning',
-      confirmButtonText: 'Ya, Tetap Tugaskan',
-      cancelButtonText: 'Pilih Teknisi Lain',
+      confirmButtonText: 'Ya, Tetap Mulai',
+      cancelButtonText: 'Tugaskan Saja ke Antrean',
     });
 
     if (!busyConfirm.isConfirmed) {
@@ -336,6 +390,7 @@ const handleConfirm = async () => {
     service: props.service,
     mechanicName: selectedMechanicName.value,
     pitNumber: selectedPit.value,
+    startWorking: true,
     allowBusyOverride: true,
   });
 };
