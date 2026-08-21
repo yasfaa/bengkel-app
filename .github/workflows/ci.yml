@@ -1,4 +1,4 @@
-name: BengkelKu CI/CD Pipeline
+name: BengkelKu CI/CD Enterprise Pipeline
 
 on:
   push:
@@ -10,9 +10,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# ==============================================================================
+# Global Environment Variables & Secrets Management
+# ==============================================================================
+env:
+  CI: true
+  NODE_ENV: test
+  DATABASE_URL: ${{ secrets.DATABASE_URL || 'mysql://root:@127.0.0.1:3306/bengkel_test' }}
+  PORT: 3334
+  CORS_ORIGIN: "http://localhost:8080,http://127.0.0.1:8080"
+  RATE_LIMIT_WINDOW_MS: 900000
+  RATE_LIMIT_MAX: 500
+  # Secret variables (Fallback ke value sementara, dapat dipindahkan ke GitHub Secrets kapan saja)
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN || 'placeholder-codecov-token' }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD || '' }}
+
 jobs:
   # ============================================================================
-  # 1. Security & Dependency Vulnerability Gate (SCA & Code Quality)
+  # 1. Security & Dependency Vulnerability Gate (SCA)
   # ============================================================================
   security-audit:
     name: 🛡️ Security & Dependency Audit
@@ -41,12 +56,66 @@ jobs:
           npm audit --audit-level=high || true
 
   # ============================================================================
-  # 2. Backend Automated Testing & Database Schema Integrity (Jest & Supertest)
+  # 2. Linting & Code Formatting Gate (ESLint & Prettier)
+  # ============================================================================
+  lint-and-format:
+    name: ✨ Code Quality, Linting & Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: 📦 Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 📦 Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🔍 Validate Environment Templates (.env.example)
+        run: |
+          test -f backend/.env.example || { echo "Missing backend/.env.example"; exit 1; }
+          test -f frontend/.env.example || { echo "Missing frontend/.env.example"; exit 1; }
+
+      - name: 🧹 Backend Linting Check (ESLint)
+        run: |
+          cd backend
+          npm run lint
+
+      - name: 📐 Backend Code Formatting Check (Prettier)
+        run: |
+          cd backend
+          npm run format:check
+
+      - name: 🧹 Frontend Linting Check (ESLint & Vue)
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: 📐 Frontend Code Formatting Check (Prettier)
+        run: |
+          cd frontend
+          npm run format:check
+
+  # ============================================================================
+  # 3. Backend Testing, Database Schema Integrity & Coverage Reports
   # ============================================================================
   backend-ci:
-    name: ⚙️ Backend Testing & DB Integration
+    name: ⚙️ Backend Unit Testing & Coverage
     runs-on: ubuntu-latest
-    needs: security-audit
+    needs: [security-audit, lint-and-format]
     services:
       mysql:
         image: mysql:8.0
@@ -74,29 +143,42 @@ jobs:
           npm ci
 
       - name: 🗄️ Synchronize Prisma Database Schema
-        env:
-          DATABASE_URL: "mysql://root:@127.0.0.1:3306/bengkel_test"
         run: |
           cd backend
           npx prisma db push --skip-generate
           npx prisma generate
 
-      - name: 🧪 Execute Backend Automated Test Suite (Jest)
-        env:
-          DATABASE_URL: "mysql://root:@127.0.0.1:3306/bengkel_test"
-          NODE_ENV: test
-          PORT: 3334
+      - name: 🧪 Execute Backend Automated Test Suite with Coverage (Jest)
         run: |
           cd backend
-          npm test
+          npm run test:coverage
+
+      - name: 📊 Upload Backend Test Coverage Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-coverage
+          path: backend/coverage/
+          retention-days: 14
+
+      - name: ☂️ Upload Backend Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN || env.CODECOV_TOKEN }}
+          files: ./backend/coverage/lcov.info
+          flags: backend
+          name: codecov-backend
+          fail_ci_if_error: false
+          verbose: true
 
   # ============================================================================
-  # 3. Frontend Unit Testing, Pinia Stores & Production Build Verification
+  # 4. Frontend Unit Testing, Pinia Stores & Coverage Reports
   # ============================================================================
   frontend-ci:
-    name: 🎨 Frontend Testing & Vite Production Build
+    name: 🎨 Frontend Unit Testing, Coverage & Vite Build
     runs-on: ubuntu-latest
-    needs: security-audit
+    needs: [security-audit, lint-and-format]
     steps:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
@@ -113,12 +195,98 @@ jobs:
           cd frontend
           npm ci
 
-      - name: 🧪 Execute Frontend Automated Test Suite (Vitest)
+      - name: 🧪 Execute Frontend Automated Test Suite with Coverage (Vitest)
         run: |
           cd frontend
-          npm test
+          npm run test:coverage
+
+      - name: 📊 Upload Frontend Test Coverage Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-coverage
+          path: frontend/coverage/
+          retention-days: 14
+
+      - name: ☂️ Upload Frontend Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN || env.CODECOV_TOKEN }}
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: codecov-frontend
+          fail_ci_if_error: false
+          verbose: true
 
       - name: 🏗️ Verify Production Bundle Build (Vite)
+        env:
+          NODE_ENV: production
         run: |
           cd frontend
           npm run build
+
+  # ============================================================================
+  # 5. Integration & End-to-End (E2E) Workflow Testing
+  # ============================================================================
+  integration-e2e-ci:
+    name: 🚀 E2E Integration Testing & Workshop Workflow
+    runs-on: ubuntu-latest
+    needs: [backend-ci, frontend-ci]
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bengkel_test
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: 📦 Install Backend & Frontend Dependencies
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: 🗄️ Prepare Database Schema & Seed Initial Data
+        run: |
+          cd backend
+          npx prisma db push --skip-generate
+          npx prisma generate
+          npm run db:seed
+
+      - name: 🌐 Start Backend API Server in Background
+        run: |
+          cd backend
+          node src/index.js &
+          echo "SERVER_PID=$!" >> $GITHUB_ENV
+
+      - name: ⏳ Wait for Backend Health Readiness Probe (/api/health)
+        run: |
+          echo "Waiting for API server to become ready..."
+          for i in {1..30}; do
+            if curl -s -f http://localhost:3334/api/health > /dev/null; then
+              echo "✅ API server is up and healthy!"
+              break
+            fi
+            echo "Waiting for server ($i/30)..."
+            sleep 1
+          done
+
+      - name: 🧪 Execute End-to-End (E2E) Workflow Test Suite
+        run: |
+          cd backend
+          npm test -- tests/e2e-workflow.test.js
