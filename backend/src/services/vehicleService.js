@@ -95,9 +95,12 @@ class VehicleService {
     const brandName = normalizeText(body.brandName) || fallbackParts[0] || 'Umum';
     const capacityName = normalizeText(body.capacityName) || '110cc';
     const typeName = normalizeText(body.typeName) || fallbackParts.slice(1).join(' ') || 'Motor';
-    const vehicleJenis = typeof body.jenis === 'string' && body.jenis.trim()
-      ? body.jenis.trim().toLowerCase()
-      : (motorType.toLowerCase().includes('matic') ? 'matic' : 'bebek');
+    const vehicleJenis =
+      typeof body.jenis === 'string' && body.jenis.trim()
+        ? body.jenis.trim().toLowerCase()
+        : motorType.toLowerCase().includes('matic')
+          ? 'matic'
+          : 'bebek';
 
     const resolvedBrand = await tx.motorBrand.upsert({
       where: { nama: brandName },

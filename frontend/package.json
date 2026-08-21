@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format:check": "prettier --check \"**/*.{js,vue,css,json,html,md}\"",
+    "format": "prettier --write \"**/*.{js,vue,css,json,html,md}\"",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -15,9 +20,14 @@
     "vue": "^3.4.21"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@vitejs/plugin-vue": "^5.0.4",
+    "@vitest/coverage-v8": "^4.1.11",
     "@vue/test-utils": "^2.4.11",
+    "eslint": "^10.9.0",
+    "eslint-plugin-vue": "^10.10.0",
     "happy-dom": "^20.11.2",
+    "prettier": "^3.9.6",
     "vite": "^5.2.0",
     "vitest": "^4.1.11"
   }

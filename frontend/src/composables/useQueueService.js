@@ -1,7 +1,7 @@
 import { computed, ref, watch } from 'vue';
 import { apiGet, apiPost, apiPatch } from '../utils/api';
 import { SwalConfirm, SwalSuccess } from '../utils/swal';
-import { formatCurrency, buildMotorLabel } from '../utils/formatters';
+import { formatCurrency } from '../utils/formatters';
 
 const createServiceForm = () => ({
   customerName: '',
@@ -49,7 +49,9 @@ export function useQueueService(master = {}, ui = {}) {
   /* =========================================================================
      Computed Queries
      ========================================================================= */
-  const activeServices = computed(() => services.value.filter((service) => service.status !== 'Selesai'));
+  const activeServices = computed(() =>
+    services.value.filter((service) => service.status !== 'Selesai')
+  );
 
   const filteredServices = computed(() => {
     if (!searchQuery.value) return services.value;
@@ -65,7 +67,9 @@ export function useQueueService(master = {}, ui = {}) {
     });
   });
 
-  const lowStockCount = computed(() => spareparts.value.filter((part) => part.stok <= (part.min_stok || 5)).length);
+  const lowStockCount = computed(
+    () => spareparts.value.filter((part) => part.stok <= (part.min_stok || 5)).length
+  );
 
   const standbyMechanicsCount = computed(() => {
     const busyMechanics = services.value
@@ -76,12 +80,16 @@ export function useQueueService(master = {}, ui = {}) {
   });
 
   const getMechanicStatus = (mechanicName) => {
-    const isBusy = services.value.some((service) => service.status === 'Dikerjakan' && service.mechanicName === mechanicName);
+    const isBusy = services.value.some(
+      (service) => service.status === 'Dikerjakan' && service.mechanicName === mechanicName
+    );
     return isBusy ? 'Bekerja' : 'Standby';
   };
 
   const getMechanicActiveJob = (mechanicName) => {
-    const activeService = services.value.find((service) => service.status === 'Dikerjakan' && service.mechanicName === mechanicName);
+    const activeService = services.value.find(
+      (service) => service.status === 'Dikerjakan' && service.mechanicName === mechanicName
+    );
     return activeService ? `${activeService.nopol} (${activeService.customerName})` : null;
   };
 
@@ -121,7 +129,9 @@ export function useQueueService(master = {}, ui = {}) {
         motorTypes.value = [];
         return;
       }
-      const found = motorBrands.value.find((b) => b.nama.toLowerCase() === newBrandName.trim().toLowerCase());
+      const found = motorBrands.value.find(
+        (b) => b.nama.toLowerCase() === newBrandName.trim().toLowerCase()
+      );
       if (found) {
         await fetchMotorTypes(found.id);
       } else {
@@ -137,7 +147,9 @@ export function useQueueService(master = {}, ui = {}) {
       if (!newNopol || newNopol.length < 4) return;
 
       try {
-        const vehicle = await apiGet(`/api/vehicles/search?nopol=${encodeURIComponent(newNopol.toUpperCase())}`);
+        const vehicle = await apiGet(
+          `/api/vehicles/search?nopol=${encodeURIComponent(newNopol.toUpperCase())}`
+        );
         if (!vehicle) return;
 
         isPrefillingVehicle.value = true;
@@ -154,7 +166,10 @@ export function useQueueService(master = {}, ui = {}) {
         }
 
         newServiceForm.value.typeName = vehicle.typeName || vehicle.tipe || '';
-        showToast(`Kendaraan ditemukan: ${vehicle.customer.nama} (${vehicle.merk} ${vehicle.tipe})`, 2500);
+        showToast(
+          `Kendaraan ditemukan: ${vehicle.customer.nama} (${vehicle.merk} ${vehicle.tipe})`,
+          2500
+        );
       } catch (error) {
         console.error('Error searching vehicle on input:', error);
       } finally {
@@ -183,7 +198,9 @@ export function useQueueService(master = {}, ui = {}) {
   const composeMotorLabel = () => {
     const parts = [newServiceForm.value.brandName, newServiceForm.value.typeName].filter(Boolean);
     const base = parts.join(' ');
-    return newServiceForm.value.capacityName ? `${base} (${newServiceForm.value.capacityName})` : base;
+    return newServiceForm.value.capacityName
+      ? `${base} (${newServiceForm.value.capacityName})`
+      : base;
   };
 
   const saveNewService = async () => {
@@ -261,7 +278,11 @@ export function useQueueService(master = {}, ui = {}) {
         await apiPatch(`/api/services/${service.id}/status`, { status: 'Selesai' });
         await fetchServices();
         await fetchMechanics();
-        SwalSuccess.fire('Servis Selesai!', `Motor ${service.nopol} siap dibuatkan invoice.`, 'success');
+        SwalSuccess.fire(
+          'Servis Selesai!',
+          `Motor ${service.nopol} siap dibuatkan invoice.`,
+          'success'
+        );
       } catch (e) {
         console.error(e);
         showToast('❌ Gagal menyelesaikan servis.', 3000);

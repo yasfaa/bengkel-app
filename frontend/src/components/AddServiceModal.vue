@@ -1,9 +1,12 @@
 <template>
   <div v-if="modelValue" class="modal-backdrop" @click.self="$emit('update:modelValue', false)">
-    <div class="modal-card" style="max-width: 680px;">
+    <div class="modal-card" style="max-width: 680px">
       <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <i class="ph-bold ph-clipboard-text" style="color: var(--primary-color); font-size: 20px;"></i>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <i
+            class="ph-bold ph-clipboard-text"
+            style="color: var(--primary-color); font-size: 20px"
+          ></i>
           <h3>Reception & Pembuatan PKB (Service Advisor)</h3>
         </div>
         <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
@@ -11,7 +14,7 @@
 
       <div class="modal-body">
         <!-- Submit Error Banner -->
-        <div v-if="submitError" class="error-banner" style="margin-bottom: 18px;">
+        <div v-if="submitError" class="error-banner" style="margin-bottom: 18px">
           <div class="error-banner-content">
             <i class="ph-bold ph-warning-circle"></i>
             <span>{{ submitError }}</span>
@@ -21,21 +24,26 @@
         <!-- 1. IDENTITAS PELANGGAN & KENDARAAN -->
         <div class="section-card">
           <div class="section-card-title">
-            <i class="ph-bold ph-user" style="color: var(--primary-color);"></i>
+            <i class="ph-bold ph-user" style="color: var(--primary-color)"></i>
             <span>1. Data Pelanggan & Spesifikasi Motor</span>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Nomor Polisi (Nopol) <span class="required-star">*</span></label>
+              <label class="form-label"
+                >Nomor Polisi (Nopol) <span class="required-star">*</span></label
+              >
               <input
                 v-model="form.nopol"
                 type="text"
                 class="form-input nopol-font"
                 :class="{ 'has-error': fieldErrors.nopol }"
                 placeholder="Contoh: B 1234 ABC"
-                style="text-transform: uppercase; font-weight: 700; color: var(--primary-color);"
-                @input="clearFieldError('nopol'); validateNopol()"
+                style="text-transform: uppercase; font-weight: 700; color: var(--primary-color)"
+                @input="
+                  clearFieldError('nopol');
+                  validateNopol();
+                "
               />
               <span v-if="fieldErrors.nopol" class="form-error-msg">{{ fieldErrors.nopol }}</span>
             </div>
@@ -50,7 +58,9 @@
                 placeholder="Nama lengkap pelanggan..."
                 @input="clearFieldError('customerName')"
               />
-              <span v-if="fieldErrors.customerName" class="form-error-msg">{{ fieldErrors.customerName }}</span>
+              <span v-if="fieldErrors.customerName" class="form-error-msg">{{
+                fieldErrors.customerName
+              }}</span>
             </div>
           </div>
 
@@ -69,13 +79,18 @@
 
           <!-- Styled Brand Selection -->
           <div class="form-group">
-            <label class="form-label">Pilih Merk Kendaraan <span class="required-star">*</span></label>
+            <label class="form-label"
+              >Pilih Merk Kendaraan <span class="required-star">*</span></label
+            >
             <div class="brand-pill-grid">
               <button
                 v-for="brand in brands"
                 :key="brand.id"
                 type="button"
-                :class="['brand-pill-btn', { active: form.brandName.toLowerCase() === brand.nama.toLowerCase() }]"
+                :class="[
+                  'brand-pill-btn',
+                  { active: form.brandName.toLowerCase() === brand.nama.toLowerCase() },
+                ]"
                 @click="selectBrand(brand.nama)"
               >
                 <i class="ph-bold ph-motorcycle"></i>
@@ -93,13 +108,17 @@
                 {{ brand.nama }}
               </option>
             </select>
-            <span v-if="fieldErrors.brandName" class="form-error-msg">{{ fieldErrors.brandName }}</span>
+            <span v-if="fieldErrors.brandName" class="form-error-msg">{{
+              fieldErrors.brandName
+            }}</span>
           </div>
 
           <!-- Styled Type & Capacity Row -->
-          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px;">
+          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Tipe / Model Motor <span class="required-star">*</span></label>
+              <label class="form-label"
+                >Tipe / Model Motor <span class="required-star">*</span></label
+              >
               <div class="custom-styled-select-container">
                 <select
                   v-model="form.typeName"
@@ -109,14 +128,22 @@
                   @change="clearFieldError('typeName')"
                 >
                   <option value="">
-                    {{ !form.brandName ? '-- Pilih Merk Terlebih Dahulu --' : (motorTypeLoading ? 'Memuat tipe motor...' : '-- Pilih Tipe Motor --') }}
+                    {{
+                      !form.brandName
+                        ? '-- Pilih Merk Terlebih Dahulu --'
+                        : motorTypeLoading
+                          ? 'Memuat tipe motor...'
+                          : '-- Pilih Tipe Motor --'
+                    }}
                   </option>
                   <option v-for="t in types" :key="t.id" :value="t.nama">
                     {{ t.nama }} ({{ t.jenis ? t.jenis.toUpperCase() : 'MATIC' }})
                   </option>
                 </select>
               </div>
-              <span v-if="fieldErrors.typeName" class="form-error-msg">{{ fieldErrors.typeName }}</span>
+              <span v-if="fieldErrors.typeName" class="form-error-msg">{{
+                fieldErrors.typeName
+              }}</span>
             </div>
 
             <div class="form-group">
@@ -134,14 +161,16 @@
         <!-- 2. INSPEKSI AWAL & ODOMETER (CHECKLIST RECEPTION) -->
         <div class="section-card">
           <div class="section-card-title">
-            <i class="ph-bold ph-gauge" style="color: #0284c7;"></i>
+            <i class="ph-bold ph-gauge" style="color: #0284c7"></i>
             <span>2. Inspeksi Awal & Odometer Unit</span>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">KM Odometer Masuk <span class="required-star">*</span></label>
-              <div style="position: relative;">
+              <label class="form-label"
+                >KM Odometer Masuk <span class="required-star">*</span></label
+              >
+              <div style="position: relative">
                 <input
                   v-model.number="form.kmMasuk"
                   type="number"
@@ -151,9 +180,21 @@
                   placeholder="Contoh: 15200"
                   @input="clearFieldError('kmMasuk')"
                 />
-                <span style="position: absolute; right: 12px; top: 10px; font-size: 12px; font-weight: 700; color: var(--text-muted);">KM</span>
+                <span
+                  style="
+                    position: absolute;
+                    right: 12px;
+                    top: 10px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: var(--text-muted);
+                  "
+                  >KM</span
+                >
               </div>
-              <span v-if="fieldErrors.kmMasuk" class="form-error-msg">{{ fieldErrors.kmMasuk }}</span>
+              <span v-if="fieldErrors.kmMasuk" class="form-error-msg">{{
+                fieldErrors.kmMasuk
+              }}</span>
             </div>
 
             <div class="form-group">
@@ -172,7 +213,7 @@
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 0;">
+          <div class="form-group" style="margin-bottom: 0">
             <label class="form-label">Catatan Kondisi Fisik & Kelengkapan</label>
             <input
               v-model="form.catatanKondisi"
@@ -184,14 +225,16 @@
         </div>
 
         <!-- 3. DIAGNOSA KELUHAN & PAKET SERVIS -->
-        <div class="section-card" style="margin-bottom: 0;">
+        <div class="section-card" style="margin-bottom: 0">
           <div class="section-card-title">
-            <i class="ph-bold ph-wrench" style="color: #059669;"></i>
+            <i class="ph-bold ph-wrench" style="color: #059669"></i>
             <span>3. Diagnosa Keluhan & Paket Servis</span>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Keluhan Konsumen / Catatan Diagnosa <span class="required-star">*</span></label>
+            <label class="form-label"
+              >Keluhan Konsumen / Catatan Diagnosa <span class="required-star">*</span></label
+            >
             <input
               v-model="form.keluhan"
               type="text"
@@ -203,13 +246,19 @@
             <span v-if="fieldErrors.keluhan" class="form-error-msg">{{ fieldErrors.keluhan }}</span>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
               <label class="form-label">Pilih Paket Jasa Servis</label>
               <select v-model="form.serviceMasterId" class="type-select-dropdown">
                 <option value="">-- Tanpa Paket Jasa Khusus --</option>
-                <option v-for="service in serviceMasters" :key="service.id" :value="service.id" :disabled="!service.is_active">
-                  {{ service.nama }} (±{{ service.estimasi_durasi || 30 }} mnt) — Rp {{ formatCurrency(service.harga) }}
+                <option
+                  v-for="service in serviceMasters"
+                  :key="service.id"
+                  :value="service.id"
+                  :disabled="!service.is_active"
+                >
+                  {{ service.nama }} (±{{ service.estimasi_durasi || 30 }} mnt) — Rp
+                  {{ formatCurrency(service.harga) }}
                 </option>
               </select>
             </div>
@@ -222,23 +271,40 @@
                   {{ mech.nama }} ({{ mech.spesialisasi || 'Umum' }})
                 </option>
               </select>
-              <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">
-                Status awal selalu <strong>Menunggu</strong> sampai teknisi mulai mengerjakan di Pit.
+              <span
+                style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block"
+              >
+                Status awal selalu <strong>Menunggu</strong> sampai teknisi mulai mengerjakan di
+                Pit.
               </span>
             </div>
           </div>
 
           <!-- Summary Estimasi SA -->
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 16px;">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              background: #eff6ff;
+              border: 1px solid #bfdbfe;
+              border-radius: 8px;
+              padding: 10px 16px;
+            "
+          >
             <div>
-              <span style="font-size: 11.5px; color: #1e40af; font-weight: 600;">Estimasi Biaya Jasa Awal:</span>
-              <div class="numeric" style="font-size: 16px; font-weight: 800; color: #1e3a8a;">
+              <span style="font-size: 11.5px; color: #1e40af; font-weight: 600"
+                >Estimasi Biaya Jasa Awal:</span
+              >
+              <div class="numeric" style="font-size: 16px; font-weight: 800; color: #1e3a8a">
                 Rp {{ formatCurrency(form.estimasiBiaya) }}
               </div>
             </div>
-            <div style="text-align: right;">
-              <span style="font-size: 11.5px; color: #1e40af; font-weight: 600;">Estimasi Waktu Tunggu:</span>
-              <div style="font-size: 14px; font-weight: 700; color: #1e3a8a;">
+            <div style="text-align: right">
+              <span style="font-size: 11.5px; color: #1e40af; font-weight: 600"
+                >Estimasi Waktu Tunggu:</span
+              >
+              <div style="font-size: 14px; font-weight: 700; color: #1e3a8a">
                 ± {{ form.estimasiDurasi }} Menit
               </div>
             </div>
@@ -358,15 +424,23 @@ const handleSubmit = () => {
   emit('submit');
 };
 
-watch(() => props.modelValue, (val) => {
-  if (val) {
-    fieldErrors.value = {
-      customerName: '', phone: '', nopol: '',
-      brandName: '', typeName: '', kmMasuk: '', keluhan: '',
-    };
-    submitError.value = '';
+watch(
+  () => props.modelValue,
+  (val) => {
+    if (val) {
+      fieldErrors.value = {
+        customerName: '',
+        phone: '',
+        nopol: '',
+        brandName: '',
+        typeName: '',
+        kmMasuk: '',
+        keluhan: '',
+      };
+      submitError.value = '';
+    }
   }
-});
+);
 </script>
 
 <style scoped>

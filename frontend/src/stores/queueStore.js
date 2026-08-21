@@ -43,7 +43,9 @@ export const useQueueStore = defineStore('queue', () => {
   /* =========================================================================
      Computed Queries
      ========================================================================= */
-  const activeServices = computed(() => services.value.filter((service) => service.status !== 'Selesai'));
+  const activeServices = computed(() =>
+    services.value.filter((service) => service.status !== 'Selesai')
+  );
 
   const filteredServices = computed(() => {
     if (!uiStore.searchQuery) return services.value;
@@ -59,8 +61,8 @@ export const useQueueStore = defineStore('queue', () => {
     });
   });
 
-  const lowStockCount = computed(() =>
-    masterStore.spareparts.filter((part) => part.stok <= (part.min_stok || 5)).length
+  const lowStockCount = computed(
+    () => masterStore.spareparts.filter((part) => part.stok <= (part.min_stok || 5)).length
   );
 
   const standbyMechanicsCount = computed(() => {
@@ -68,7 +70,8 @@ export const useQueueStore = defineStore('queue', () => {
       .filter((service) => service.status === 'Dikerjakan' && service.mechanicName)
       .map((service) => service.mechanicName);
 
-    return masterStore.mechanics.filter((mechanic) => !busyMechanics.includes(mechanic.nama)).length;
+    return masterStore.mechanics.filter((mechanic) => !busyMechanics.includes(mechanic.nama))
+      .length;
   });
 
   const getMechanicStatus = (mechanicName) => {
@@ -139,7 +142,9 @@ export const useQueueStore = defineStore('queue', () => {
       if (!newNopol || newNopol.length < 4) return;
 
       try {
-        const vehicle = await apiGet(`/api/vehicles/search?nopol=${encodeURIComponent(newNopol.toUpperCase())}`);
+        const vehicle = await apiGet(
+          `/api/vehicles/search?nopol=${encodeURIComponent(newNopol.toUpperCase())}`
+        );
         if (!vehicle) return;
 
         isPrefillingVehicle.value = true;
@@ -156,7 +161,10 @@ export const useQueueStore = defineStore('queue', () => {
         }
 
         newServiceForm.value.typeName = vehicle.typeName || vehicle.tipe || '';
-        uiStore.showToast(`Kendaraan ditemukan: ${vehicle.customer.nama} (${vehicle.merk} ${vehicle.tipe})`, 2500);
+        uiStore.showToast(
+          `Kendaraan ditemukan: ${vehicle.customer.nama} (${vehicle.merk} ${vehicle.tipe})`,
+          2500
+        );
       } catch (error) {
         console.error('Error searching vehicle on input:', error);
       } finally {
@@ -185,7 +193,9 @@ export const useQueueStore = defineStore('queue', () => {
   const composeMotorLabel = () => {
     const parts = [newServiceForm.value.brandName, newServiceForm.value.typeName].filter(Boolean);
     const base = parts.join(' ');
-    return newServiceForm.value.capacityName ? `${base} (${newServiceForm.value.capacityName})` : base;
+    return newServiceForm.value.capacityName
+      ? `${base} (${newServiceForm.value.capacityName})`
+      : base;
   };
 
   const saveNewService = async () => {
@@ -263,7 +273,11 @@ export const useQueueStore = defineStore('queue', () => {
         await apiPatch(`/api/services/${service.id}/status`, { status: 'Selesai' });
         await fetchServices();
         await masterStore.fetchMechanics();
-        SwalSuccess.fire('Servis Selesai!', `Motor ${service.nopol} siap dibuatkan invoice.`, 'success');
+        SwalSuccess.fire(
+          'Servis Selesai!',
+          `Motor ${service.nopol} siap dibuatkan invoice.`,
+          'success'
+        );
       } catch (e) {
         console.error(e);
         uiStore.showToast('❌ Gagal menyelesaikan servis.', 3000);

@@ -1,9 +1,13 @@
 <template>
-  <div v-if="modelValue && service" class="modal-backdrop" @click.self="$emit('update:modelValue', false)">
-    <div class="modal-card" style="max-width: 650px;">
+  <div
+    v-if="modelValue && service"
+    class="modal-backdrop"
+    @click.self="$emit('update:modelValue', false)"
+  >
+    <div class="modal-card" style="max-width: 650px">
       <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <i class="ph-bold ph-git-merge" style="color: var(--primary-color); font-size: 20px;"></i>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <i class="ph-bold ph-git-merge" style="color: var(--primary-color); font-size: 20px"></i>
           <h3>Alokasi Pit & Penugasan Teknisi (Tahap 2)</h3>
         </div>
         <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
@@ -11,7 +15,7 @@
 
       <div class="modal-body">
         <!-- Error Alert -->
-        <div v-if="errorMessage" class="error-banner" style="margin-bottom: 16px;">
+        <div v-if="errorMessage" class="error-banner" style="margin-bottom: 16px">
           <div class="error-banner-content">
             <i class="ph-bold ph-warning-circle"></i>
             <span>{{ errorMessage }}</span>
@@ -19,29 +23,51 @@
         </div>
 
         <!-- 1. PKB Summary Card -->
-        <div class="section-card" style="margin-bottom: 16px; padding: 14px 16px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div class="section-card" style="margin-bottom: 16px; padding: 14px 16px">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start">
             <div>
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="pkb-font" style="font-size: 12.5px; font-weight: 800; color: var(--primary-color);">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span
+                  class="pkb-font"
+                  style="font-size: 12.5px; font-weight: 800; color: var(--primary-color)"
+                >
                   {{ service.nomorPkb }}
                 </span>
-                <span class="nopol-font" style="font-size: 16px; font-weight: 800; color: var(--text-main);">
+                <span
+                  class="nopol-font"
+                  style="font-size: 16px; font-weight: 800; color: var(--text-main)"
+                >
                   {{ service.nopol }}
                 </span>
               </div>
-              <div style="font-size: 12.5px; color: var(--text-secondary); margin-top: 2px;">
-                <strong>{{ service.motorType }}</strong> • {{ service.customerName }} ({{ service.phone }})
+              <div style="font-size: 12.5px; color: var(--text-secondary); margin-top: 2px">
+                <strong>{{ service.motorType }}</strong> • {{ service.customerName }} ({{
+                  service.phone
+                }})
               </div>
             </div>
             <span class="badge badge-pending">Menunggu</span>
           </div>
 
-          <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-subtle); font-size: 12.5px; display: flex; justify-content: space-between; flex-wrap: gap; gap: 6px;">
-            <div style="color: var(--text-secondary);">
+          <div
+            style="
+              margin-top: 8px;
+              padding-top: 8px;
+              border-top: 1px dashed var(--border-subtle);
+              font-size: 12.5px;
+              display: flex;
+              justify-content: space-between;
+              flex-wrap: gap;
+              gap: 6px;
+            "
+          >
+            <div style="color: var(--text-secondary)">
               <strong>Keluhan:</strong> {{ service.keluhan }}
             </div>
-            <div v-if="service.servicePackageName" style="color: var(--primary-color); font-weight: 600;">
+            <div
+              v-if="service.servicePackageName"
+              style="color: var(--primary-color); font-weight: 600"
+            >
               {{ service.servicePackageName }} (Rp {{ formatCurrency(service.estimasiBiaya) }})
             </div>
           </div>
@@ -49,63 +75,111 @@
 
         <!-- 2. Alokasi Pit Bay -->
         <div class="form-group">
-          <label class="form-label">Pilih Pit Kerja (Bay) <span class="required-star">*</span></label>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <label class="form-label"
+            >Pilih Pit Kerja (Bay) <span class="required-star">*</span></label
+          >
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px">
             <button
               v-for="pit in pitOptions"
               :key="pit.id"
               type="button"
               :class="['brand-pill-btn', { active: selectedPit === pit.name }]"
-              style="padding: 10px 14px; justify-content: flex-start; text-align: left;"
+              style="padding: 10px 14px; justify-content: flex-start; text-align: left"
               @click="selectedPit = pit.name"
             >
               <i :class="['ph-bold', pit.icon]"></i>
               <div>
-                <div style="font-weight: 700; font-size: 13px;">{{ pit.name }}</div>
-                <div style="font-size: 11px; font-weight: 500; opacity: 0.8;">{{ pit.desc }}</div>
+                <div style="font-weight: 700; font-size: 13px">{{ pit.name }}</div>
+                <div style="font-size: 11px; font-weight: 500; opacity: 0.8">{{ pit.desc }}</div>
               </div>
             </button>
           </div>
         </div>
 
         <!-- 3. Pemilihan Teknisi / Mekanik -->
-        <div class="form-group" style="margin-bottom: 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label class="form-label" style="margin-bottom: 0;">
+        <div class="form-group" style="margin-bottom: 0">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 8px;
+            "
+          >
+            <label class="form-label" style="margin-bottom: 0">
               Pilih Teknisi Pelaksana <span class="required-star">*</span>
             </label>
-            <span style="font-size: 12px; color: var(--text-muted);">
-              Tersedia: <strong style="color: #059669;">{{ standbyCount }}</strong> / {{ mechanics.length }}
+            <span style="font-size: 12px; color: var(--text-muted)">
+              Tersedia: <strong style="color: #059669">{{ standbyCount }}</strong> /
+              {{ mechanics.length }}
             </span>
           </div>
 
           <!-- Notice: Pilihan Berbeda dari Pilihan Awal Pelanggan -->
           <div
-            v-if="service.mechanicName && selectedMechanicName && service.mechanicName !== selectedMechanicName"
-            style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: #1e40af; display: flex; align-items: center; gap: 6px;"
+            v-if="
+              service.mechanicName &&
+              selectedMechanicName &&
+              service.mechanicName !== selectedMechanicName
+            "
+            style="
+              background: #eff6ff;
+              border: 1px solid #bfdbfe;
+              border-radius: 8px;
+              padding: 8px 12px;
+              margin-bottom: 10px;
+              font-size: 12px;
+              color: #1e40af;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            "
           >
-            <i class="ph-bold ph-info" style="font-size: 15px;"></i>
-            <span>Pengalihan Teknisi dari <strong>{{ service.mechanicName }}</strong> ke <strong>{{ selectedMechanicName }}</strong></span>
+            <i class="ph-bold ph-info" style="font-size: 15px"></i>
+            <span
+              >Pengalihan Teknisi dari <strong>{{ service.mechanicName }}</strong> ke
+              <strong>{{ selectedMechanicName }}</strong></span
+            >
           </div>
 
           <!-- Notice: Memilih Teknisi yang Sedang Bekerja -->
           <div
             v-if="selectedMechanicName && getMechanicStatus(selectedMechanicName) === 'Bekerja'"
-            style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: #92400e; display: flex; align-items: center; gap: 6px;"
+            style="
+              background: #fffbeb;
+              border: 1px solid #fde68a;
+              border-radius: 8px;
+              padding: 8px 12px;
+              margin-bottom: 10px;
+              font-size: 12px;
+              color: #92400e;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            "
           >
-            <i class="ph-bold ph-warning" style="font-size: 15px;"></i>
-            <span>{{ selectedMechanicName }} sedang aktif di motor <strong>{{ getPlatOnly(getMechanicActiveJob(selectedMechanicName)) }}</strong></span>
+            <i class="ph-bold ph-warning" style="font-size: 15px"></i>
+            <span
+              >{{ selectedMechanicName }} sedang aktif di motor
+              <strong>{{ getPlatOnly(getMechanicActiveJob(selectedMechanicName)) }}</strong></span
+            >
           </div>
 
           <!-- Clean Grid Daftar Teknisi -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 240px; overflow-y: auto; padding: 2px;">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 10px;
+              max-height: 240px;
+              overflow-y: auto;
+              padding: 2px;
+            "
+          >
             <div
               v-for="mech in mechanics"
               :key="mech.id"
-              :class="[
-                'mechanic-select-card',
-                { active: selectedMechanicName === mech.nama },
-              ]"
+              :class="['mechanic-select-card', { active: selectedMechanicName === mech.nama }]"
               @click="selectMechanic(mech.nama)"
             >
               <div class="mechanic-card-left">
@@ -118,7 +192,12 @@
                     <span
                       v-if="service.mechanicName === mech.nama"
                       class="badge"
-                      style="background: #e0f2fe; color: #0369a1; font-size: 9.5px; padding: 2px 5px;"
+                      style="
+                        background: #e0f2fe;
+                        color: #0369a1;
+                        font-size: 9.5px;
+                        padding: 2px 5px;
+                      "
                     >
                       Pilihan Awal
                     </span>
@@ -133,14 +212,14 @@
                 <span
                   v-if="getMechanicStatus(mech.nama) === 'Standby'"
                   class="badge badge-done"
-                  style="font-size: 11px; padding: 3px 8px;"
+                  style="font-size: 11px; padding: 3px 8px"
                 >
                   <i class="ph-bold ph-check"></i> Standby
                 </span>
                 <span
                   v-else
                   class="badge badge-working"
-                  style="font-size: 11px; padding: 3px 8px;"
+                  style="font-size: 11px; padding: 3px 8px"
                   :title="getMechanicActiveJob(mech.nama)"
                 >
                   <i class="ph-bold ph-gear"></i> Bekerja
@@ -171,7 +250,10 @@ const props = defineProps({
   mechanics: { type: Array, default: () => [] },
   getMechanicStatus: { type: Function, default: () => 'Standby' },
   getMechanicActiveJob: { type: Function, default: () => null },
-  formatCurrency: { type: Function, default: (val) => new Intl.NumberFormat('id-ID').format(val || 0) },
+  formatCurrency: {
+    type: Function,
+    default: (val) => new Intl.NumberFormat('id-ID').format(val || 0),
+  },
 });
 
 const emit = defineEmits(['update:modelValue', 'confirm']);
@@ -220,10 +302,7 @@ const handleConfirm = async () => {
   }
 
   // 1. Validasi jika memilih teknisi selain pilihan awal pelanggan di Tahap 1
-  if (
-    props.service.mechanicName &&
-    props.service.mechanicName !== selectedMechanicName.value
-  ) {
+  if (props.service.mechanicName && props.service.mechanicName !== selectedMechanicName.value) {
     const reassignmentConfirm = await SwalConfirm.fire({
       title: 'Pengalihan Teknisi Pelaksana',
       html: `Pelanggan sebelumnya meminta teknisi <strong>${props.service.mechanicName}</strong>.<br><br>Apakah Anda yakin ingin mengalihkan pengerjaan motor <strong>${props.service.nopol}</strong> ke teknisi <strong>${selectedMechanicName.value}</strong>?`,

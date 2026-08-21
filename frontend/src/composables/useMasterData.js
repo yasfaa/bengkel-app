@@ -332,7 +332,11 @@ export function useMasterData(ui = {}) {
       try {
         await apiDelete(`/api/master/spareparts/${part.id}`);
         await fetchSpareparts();
-        SwalSuccess.fire('Terhapus!', `Item ${part.name || part.nama} berhasil dihapus.`, 'success');
+        SwalSuccess.fire(
+          'Terhapus!',
+          `Item ${part.name || part.nama} berhasil dihapus.`,
+          'success'
+        );
       } catch (e) {
         console.error(e);
         showToast('❌ Gagal menghapus sparepart.', 3000);

@@ -1,7 +1,10 @@
 const { z } = require('zod');
 
 const createMechanicSchema = z.object({
-  nama: z.string({ required_error: 'Nama mekanik wajib diisi.' }).trim().min(2, 'Nama mekanik minimal 2 karakter.'),
+  nama: z
+    .string({ required_error: 'Nama mekanik wajib diisi.' })
+    .trim()
+    .min(2, 'Nama mekanik minimal 2 karakter.'),
   waktu_kerja: z.string().trim().optional(),
   waktuKerja: z.string().trim().optional(),
   spesialisasi: z.string().trim().optional(),

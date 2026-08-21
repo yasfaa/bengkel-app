@@ -1,6 +1,6 @@
 <template>
   <div v-if="modelValue" class="modal-backdrop" @click.self="$emit('update:modelValue', false)">
-    <div class="modal-card" style="max-width: 540px;">
+    <div class="modal-card" style="max-width: 540px">
       <div class="modal-header">
         <h3>{{ form.id ? 'Ubah Jasa Servis' : 'Tambah Jasa Servis Baru' }}</h3>
         <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
@@ -34,12 +34,12 @@
             v-model="form.deskripsi"
             class="form-input"
             rows="3"
-            style="height: auto; resize: vertical;"
+            style="height: auto; resize: vertical"
             placeholder="Keterangan rincian pengerjaan jasa..."
           ></textarea>
         </div>
 
-        <div class="form-group" style="margin-bottom: 0;">
+        <div class="form-group" style="margin-bottom: 0">
           <label class="form-label">Status Layanan</label>
           <select v-model="form.is_active" class="form-input">
             <option :value="true">Aktif (Dapat Dipilih)</option>

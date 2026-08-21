@@ -82,7 +82,9 @@ export function useTransactions(master = {}, queue = {}, ui = {}) {
     try {
       const invoiceNo = `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(transactions.value.length + 1).padStart(3, '0')}`;
       const serviceName = selectedServiceMaster.value?.nama || 'Servis Umum';
-      const partName = selectedSparepart.value ? ` + ${selectedSparepart.value.name || selectedSparepart.value.nama}` : '';
+      const partName = selectedSparepart.value
+        ? ` + ${selectedSparepart.value.name || selectedSparepart.value.nama}`
+        : '';
 
       transactions.value.unshift({
         id: Date.now(),

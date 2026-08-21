@@ -7,7 +7,8 @@ const {
   updateServiceStatusSchema,
 } = require('../validations/serviceValidation');
 
-router.route('/')
+router
+  .route('/')
   .get(queueController.getAllServices)
   .post(validate(createServiceSchema), queueController.createService);
 

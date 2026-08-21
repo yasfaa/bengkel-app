@@ -1,16 +1,16 @@
 <template>
   <div v-if="modelValue" class="modal-backdrop" @click.self="$emit('update:modelValue', false)">
-    <div class="modal-card" style="max-width: 580px;">
+    <div class="modal-card" style="max-width: 580px">
       <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <i class="ph-bold ph-package" style="color: var(--primary-color); font-size: 20px;"></i>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <i class="ph-bold ph-package" style="color: var(--primary-color); font-size: 20px"></i>
           <h3>{{ form.id ? 'Ubah Master Suku Cadang' : 'Tambah Master Suku Cadang Baru' }}</h3>
         </div>
         <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
       </div>
 
       <div class="modal-body">
-        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 14px">
           <div class="form-group">
             <label class="form-label">Kode Part (SKU) <span class="required-star">*</span></label>
             <input
@@ -18,7 +18,7 @@
               type="text"
               class="form-input sku-code"
               placeholder="Contoh: AHM-MPX2-08L"
-              style="text-transform: uppercase;"
+              style="text-transform: uppercase"
             />
           </div>
 
@@ -33,9 +33,11 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
           <div class="form-group">
-            <label class="form-label">Kategori Suku Cadang <span class="required-star">*</span></label>
+            <label class="form-label"
+              >Kategori Suku Cadang <span class="required-star">*</span></label
+            >
             <select v-model="form.kategori" class="form-input">
               <option value="FAST_MOVING">Fast Moving (Kampas, Busi, Filter)</option>
               <option value="OLI">Oli Mesin & Transmisi</option>
@@ -55,9 +57,11 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
           <div class="form-group">
-            <label class="form-label">Harga Beli / Pokok (Rp) <span class="required-star">*</span></label>
+            <label class="form-label"
+              >Harga Beli / Pokok (Rp) <span class="required-star">*</span></label
+            >
             <input
               v-model.number="form.harga_beli"
               type="number"
@@ -69,7 +73,9 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Harga Jual Konsumen (Rp) <span class="required-star">*</span></label>
+            <label class="form-label"
+              >Harga Jual Konsumen (Rp) <span class="required-star">*</span></label
+            >
             <input
               v-model.number="form.harga_jual"
               type="number"
@@ -81,9 +87,11 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Stok Fisik Awal (Unit) <span class="required-star">*</span></label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
+          <div class="form-group" style="margin-bottom: 0">
+            <label class="form-label"
+              >Stok Fisik Awal (Unit) <span class="required-star">*</span></label
+            >
             <input
               v-model.number="form.stok"
               type="number"
@@ -93,7 +101,7 @@
             />
           </div>
 
-          <div class="form-group" style="margin-bottom: 0;">
+          <div class="form-group" style="margin-bottom: 0">
             <label class="form-label">Batas Minimum (Reorder Point)</label>
             <input
               v-model.number="form.min_stok"

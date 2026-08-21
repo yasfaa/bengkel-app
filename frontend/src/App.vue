@@ -19,14 +19,14 @@
             <span
               v-if="menu.id === 'servis' && activeServices.length > 0"
               class="badge badge-working"
-              style="margin-left: auto; padding: 2px 7px; font-size: 11px;"
+              style="margin-left: auto; padding: 2px 7px; font-size: 11px"
             >
               {{ activeServices.length }}
             </span>
             <span
               v-if="menu.id === 'stok' && lowStockCount > 0"
               class="badge badge-error"
-              style="margin-left: auto; padding: 2px 7px; font-size: 11px;"
+              style="margin-left: auto; padding: 2px 7px; font-size: 11px"
             >
               {{ lowStockCount }}
             </span>
@@ -153,11 +153,7 @@
       @submit="saveServiceMaster"
     />
 
-    <MechanicModal
-      v-model="showMechanicModal"
-      :form="mechanicForm"
-      @submit="saveMechanic"
-    />
+    <MechanicModal v-model="showMechanicModal" :form="mechanicForm" @submit="saveMechanic" />
 
     <SparepartModal
       v-model="showSparepartModal"
@@ -169,7 +165,7 @@
     <!-- Toast Notification -->
     <Transition name="toast">
       <div v-if="toastMessage" class="toast-notification" @click="clearToast">
-        <i class="ph-bold ph-check-circle" style="color: #4ade80;"></i>
+        <i class="ph-bold ph-check-circle" style="color: #4ade80"></i>
         <span>{{ toastMessage }}</span>
       </div>
     </Transition>
@@ -216,13 +212,11 @@ const {
   getMechanicActiveJob,
   getStatusBadgeClass,
   formatCurrency,
-  assignMechanic,
   completeService,
   openAddServiceModal,
   openAddStockModal,
   openServiceMasterModal,
   openPkbModal,
-  printPkb,
   showPkbModal,
   selectedPkb,
   showAssignModal,
@@ -264,7 +258,6 @@ const {
   errorMessage,
   retryAllData,
   toastMessage,
-  showToast,
   clearToast,
 } = useBengkelApp();
 

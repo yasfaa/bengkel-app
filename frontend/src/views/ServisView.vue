@@ -1,10 +1,20 @@
 <template>
   <div>
     <!-- Section Header Card -->
-    <div class="card" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div
+      class="card"
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      "
+    >
       <div>
-        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main);">Antrean Servis & Perintah Kerja Bengkel (PKB)</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-main)">
+          Antrean Servis & Perintah Kerja Bengkel (PKB)
+        </h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px">
           Penerimaan unit Service Advisor (SA), alokasi pit pengerjaan, dan pencetakan dokumen PKB
         </p>
       </div>
@@ -14,18 +24,25 @@
     </div>
 
     <!-- Quick Search Bar -->
-    <div class="card" style="margin-bottom: 20px; padding: 12px 20px;">
-      <div style="display: flex; gap: 12px; align-items: center;">
-        <i class="ph-bold ph-magnifying-glass" style="font-size: 18px; color: var(--text-muted);"></i>
+    <div class="card" style="margin-bottom: 20px; padding: 12px 20px">
+      <div style="display: flex; gap: 12px; align-items: center">
+        <i
+          class="ph-bold ph-magnifying-glass"
+          style="font-size: 18px; color: var(--text-muted)"
+        ></i>
         <input
           type="text"
           class="form-input"
           :value="searchQuery"
           placeholder="Cari berdasarkan No. PKB (PKB-XXX), No. Polisi, nama pelanggan, atau tipe motor..."
-          style="border: none; box-shadow: none; padding: 0; height: 32px; font-size: 14px;"
+          style="border: none; box-shadow: none; padding: 0; height: 32px; font-size: 14px"
           @input="$emit('update:searchQuery', $event.target.value)"
         />
-        <span v-if="searchQuery" style="font-size: 12px; color: var(--text-muted); cursor: pointer; font-weight: 600;" @click="$emit('update:searchQuery', '')">
+        <span
+          v-if="searchQuery"
+          style="font-size: 12px; color: var(--text-muted); cursor: pointer; font-weight: 600"
+          @click="$emit('update:searchQuery', '')"
+        >
           Hapus
         </span>
       </div>
@@ -41,78 +58,115 @@
             <th>Odometer & Paket</th>
             <th>Keluhan Konsumen</th>
             <th>Teknisi / Mekanik</th>
-            <th style="text-align: center;">Status</th>
-            <th style="text-align: right;">Aksi</th>
+            <th style="text-align: center">Status</th>
+            <th style="text-align: right">Aksi</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="service in filteredServices" :key="service.id">
             <!-- No. PKB & Nopol -->
             <td>
-              <div class="pkb-font" style="font-weight: 800; font-size: 13px; color: var(--primary-color);">
-                {{ service.nomorPkb || ('PKB-' + service.id) }}
+              <div
+                class="pkb-font"
+                style="font-weight: 800; font-size: 13px; color: var(--primary-color)"
+              >
+                {{ service.nomorPkb || 'PKB-' + service.id }}
               </div>
-              <div class="nopol-font" style="font-weight: 700; font-size: 13.5px; color: var(--text-main); margin-top: 2px;">
+              <div
+                class="nopol-font"
+                style="
+                  font-weight: 700;
+                  font-size: 13.5px;
+                  color: var(--text-main);
+                  margin-top: 2px;
+                "
+              >
                 {{ service.nopol }}
               </div>
-              <div style="font-size: 11.5px; color: var(--text-muted);">
+              <div style="font-size: 11.5px; color: var(--text-muted)">
                 {{ service.motorType }}
               </div>
             </td>
 
             <!-- Pelanggan & Phone -->
             <td>
-              <div style="font-weight: 700; color: var(--text-main);">{{ service.customerName }}</div>
-              <div class="numeric" style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+              <div style="font-weight: 700; color: var(--text-main)">
+                {{ service.customerName }}
+              </div>
+              <div
+                class="numeric"
+                style="font-size: 12px; color: var(--text-secondary); margin-top: 2px"
+              >
                 {{ service.phone }}
               </div>
             </td>
 
             <!-- Odometer & Paket -->
             <td>
-              <div class="numeric" style="font-weight: 700; font-size: 13px; color: var(--text-main);">
+              <div
+                class="numeric"
+                style="font-weight: 700; font-size: 13px; color: var(--text-main)"
+              >
                 {{ service.kmMasuk ? service.kmMasuk + ' KM' : '-' }}
               </div>
-              <div style="font-size: 12px; color: var(--primary-color); font-weight: 600; margin-top: 2px;">
+              <div
+                style="
+                  font-size: 12px;
+                  color: var(--primary-color);
+                  font-weight: 600;
+                  margin-top: 2px;
+                "
+              >
                 {{ service.servicePackageName || 'Servis Umum' }}
               </div>
-              <div v-if="service.levelBensin" style="font-size: 11px; color: var(--text-muted);">
+              <div v-if="service.levelBensin" style="font-size: 11px; color: var(--text-muted)">
                 Bensin: <strong>{{ service.levelBensin }}</strong>
               </div>
             </td>
 
             <!-- Keluhan & Catatan -->
-            <td style="color: var(--text-secondary); max-width: 220px;">
+            <td style="color: var(--text-secondary); max-width: 220px">
               <div>{{ service.keluhan }}</div>
-              <div v-if="service.catatanKondisi && service.catatanKondisi !== '-'" style="font-size: 11.5px; color: var(--text-muted); margin-top: 3px; font-style: italic;">
+              <div
+                v-if="service.catatanKondisi && service.catatanKondisi !== '-'"
+                style="
+                  font-size: 11.5px;
+                  color: var(--text-muted);
+                  margin-top: 3px;
+                  font-style: italic;
+                "
+              >
                 "{{ service.catatanKondisi }}"
               </div>
             </td>
 
             <!-- Teknisi -->
             <td>
-              <div style="display: flex; align-items: center; gap: 6px; font-weight: 600;">
-                <i class="ph-bold ph-user-gear" style="color: var(--primary-color);"></i>
+              <div style="display: flex; align-items: center; gap: 6px; font-weight: 600">
+                <i class="ph-bold ph-user-gear" style="color: var(--primary-color)"></i>
                 <span>{{ service.mechanicName || 'Belum ditugaskan' }}</span>
               </div>
-              <div v-if="service.mechanicSpecialization" style="font-size: 11.5px; color: var(--text-muted); margin-left: 20px;">
+              <div
+                v-if="service.mechanicSpecialization"
+                style="font-size: 11.5px; color: var(--text-muted); margin-left: 20px"
+              >
                 {{ service.mechanicSpecialization }}
               </div>
             </td>
 
             <!-- Status -->
-            <td style="text-align: center;">
+            <td style="text-align: center">
               <span :class="['badge', getStatusBadgeClass(service.status)]">
                 {{ service.status }}
               </span>
             </td>
 
             <!-- Actions -->
-            <td style="text-align: right; white-space: nowrap;">
+            <td style="text-align: right; white-space: nowrap">
               <!-- Tombol Lihat / Cetak PKB -->
               <button
                 class="btn btn-secondary"
-                style="padding: 6px 10px; font-size: 12px; margin-right: 6px;"
+                style="padding: 6px 10px; font-size: 12px; margin-right: 6px"
                 title="Lihat Lembar Dokumen PKB"
                 @click="$emit('open-pkb-modal', service)"
               >
@@ -122,7 +176,7 @@
               <button
                 v-if="service.status === 'Menunggu'"
                 class="btn btn-secondary"
-                style="padding: 6px 12px; font-size: 12px;"
+                style="padding: 6px 12px; font-size: 12px"
                 @click="$emit('assign-mechanic', service)"
               >
                 <i class="ph-bold ph-play"></i> Mulai
@@ -130,7 +184,7 @@
               <button
                 v-else-if="service.status === 'Dikerjakan'"
                 class="btn btn-primary"
-                style="padding: 6px 12px; font-size: 12px;"
+                style="padding: 6px 12px; font-size: 12px"
                 @click="$emit('complete-service', service)"
               >
                 <i class="ph-bold ph-check"></i> Selesai
@@ -138,7 +192,7 @@
               <button
                 v-else-if="service.status === 'Selesai' && !service.isPaid"
                 class="btn btn-primary"
-                style="padding: 6px 12px; font-size: 12px; background-color: #059669;"
+                style="padding: 6px 12px; font-size: 12px; background-color: #059669"
                 @click="$emit('create-invoice', service)"
               >
                 <i class="ph-bold ph-receipt"></i> Kasir
@@ -153,7 +207,9 @@
               <div class="empty-state">
                 <div class="empty-state-illust">🛵</div>
                 <div class="empty-state-title">Antrean servis tidak ditemukan</div>
-                <div class="empty-state-desc">Pencarian tidak menemukan hasil atau belum ada PKB yang terdaftar hari ini.</div>
+                <div class="empty-state-desc">
+                  Pencarian tidak menemukan hasil atau belum ada PKB yang terdaftar hari ini.
+                </div>
                 <button class="btn btn-primary" @click="$emit('open-service-modal')">
                   <i class="ph-bold ph-plus"></i> Catat Servis / Buat PKB
                 </button>
@@ -173,5 +229,12 @@ defineProps({
   getStatusBadgeClass: { type: Function, required: true },
 });
 
-defineEmits(['update:searchQuery', 'open-service-modal', 'open-pkb-modal', 'assign-mechanic', 'complete-service', 'create-invoice']);
+defineEmits([
+  'update:searchQuery',
+  'open-service-modal',
+  'open-pkb-modal',
+  'assign-mechanic',
+  'complete-service',
+  'create-invoice',
+]);
 </script>

@@ -303,7 +303,10 @@ class QueueService {
 
     // Business Rule 1: Transitioning to 'Dikerjakan' requires an assigned mechanic
     if (status === 'Dikerjakan' && !targetMechanic) {
-      throw new AppError('Harap pilih teknisi / mekanik terlebih dahulu untuk memulai pengerjaan servis.', 400);
+      throw new AppError(
+        'Harap pilih teknisi / mekanik terlebih dahulu untuk memulai pengerjaan servis.',
+        400
+      );
     }
 
     // Business Rule 2: Validate if mechanic is currently busy working on another vehicle

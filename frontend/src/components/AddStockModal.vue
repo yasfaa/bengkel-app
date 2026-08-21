@@ -7,7 +7,9 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Pilih Item Sparepart <span class="required-star">*</span></label>
+          <label class="form-label"
+            >Pilih Item Sparepart <span class="required-star">*</span></label
+          >
           <select v-model="stockForm.sparepartId" class="form-input">
             <option value="">-- Pilih Sparepart --</option>
             <option v-for="part in spareparts" :key="part.id" :value="part.id">
@@ -25,7 +27,7 @@
             placeholder="Masukkan jumlah unit..."
           />
         </div>
-        <div class="form-group" style="margin-bottom: 0;">
+        <div class="form-group" style="margin-bottom: 0">
           <label class="form-label">Nama Supplier / Distributor</label>
           <input
             v-model="stockForm.supplier"

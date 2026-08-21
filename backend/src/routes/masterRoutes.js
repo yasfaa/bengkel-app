@@ -18,57 +18,69 @@ const {
 } = require('../validations/masterValidation');
 
 // Services Catalog Endpoints
-router.route('/services')
+router
+  .route('/services')
   .get(masterController.getAllServices)
   .post(validate(createServiceMasterSchema), masterController.createService);
 
-router.route('/services/:id')
+router
+  .route('/services/:id')
   .get(masterController.getServiceById)
   .patch(validate(updateServiceMasterSchema), masterController.updateService)
   .delete(masterController.deleteService);
 
 // Motor Brands Endpoints
-router.route('/brands')
+router
+  .route('/brands')
   .get(masterController.getAllBrands)
   .post(validate(createBrandSchema), masterController.createBrand);
 
-router.route('/brands/:id')
+router
+  .route('/brands/:id')
   .patch(validate(updateBrandSchema), masterController.updateBrand)
   .delete(masterController.deleteBrand);
 
 // Motor Types Endpoints
-router.route('/types')
+router
+  .route('/types')
   .get(masterController.getTypesByBrandId)
   .post(validate(createTypeSchema), masterController.createType);
 
-router.route('/types/:id')
+router
+  .route('/types/:id')
   .patch(validate(updateTypeSchema), masterController.updateType)
   .delete(masterController.deleteType);
 
 // Engine Capacities Endpoints
-router.route('/capacities')
+router
+  .route('/capacities')
   .get(masterController.getAllCapacities)
   .post(validate(createCapacitySchema), masterController.createCapacity);
 
-router.route('/capacities/:id')
+router
+  .route('/capacities/:id')
   .patch(validate(updateCapacitySchema), masterController.updateCapacity)
   .delete(masterController.deleteCapacity);
 
 // Master Suppliers Endpoints
-router.route('/suppliers')
+router
+  .route('/suppliers')
   .get(masterController.getAllSuppliers)
   .post(validate(createSupplierSchema), masterController.createSupplier);
 
-router.route('/suppliers/:id')
+router
+  .route('/suppliers/:id')
   .patch(validate(updateSupplierSchema), masterController.updateSupplier)
   .delete(masterController.deleteSupplier);
 
 // Spareparts Master Endpoints
-router.route('/spareparts')
+router
+  .route('/spareparts')
   .get(masterController.getAllSpareparts)
   .post(validate(createSparepartSchema), masterController.createSparepart);
 
-router.route('/spareparts/:id')
+router
+  .route('/spareparts/:id')
   .get(masterController.getSparepartById)
   .patch(validate(updateSparepartSchema), masterController.updateSparepart)
   .delete(masterController.deleteSparepart);

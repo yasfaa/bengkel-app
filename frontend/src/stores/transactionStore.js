@@ -50,9 +50,13 @@ export const useTransactionStore = defineStore('transaction', () => {
 
   const selectedServiceMaster = computed(() => {
     if (!invoiceForm.value.serviceMasterId) {
-      return masterStore.serviceMasters.find((s) => s.is_active) || masterStore.serviceMasters[0] || null;
+      return (
+        masterStore.serviceMasters.find((s) => s.is_active) || masterStore.serviceMasters[0] || null
+      );
     }
-    return masterStore.serviceMasters.find((s) => s.id === invoiceForm.value.serviceMasterId) || null;
+    return (
+      masterStore.serviceMasters.find((s) => s.id === invoiceForm.value.serviceMasterId) || null
+    );
   });
 
   const selectedSparepart = computed(() => {

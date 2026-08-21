@@ -6,10 +6,29 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format:check": "prettier --check \"**/*.{js,json,md}\"",
+    "format": "prettier --write \"**/*.{js,json,md}\"",
     "test": "jest --detectOpenHandles --forceExit --runInBand",
+    "test:coverage": "jest --detectOpenHandles --forceExit --runInBand --coverage",
     "db:migrate": "prisma migrate dev",
     "db:seed": "node src/seeds/index.js",
     "db:studio": "prisma studio"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/seeds/**"
+    ],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "clover",
+      "json-summary"
+    ]
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
@@ -22,8 +41,10 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "eslint": "^10.9.0",
     "jest": "^30.4.2",
     "nodemon": "^3.1.0",
+    "prettier": "^3.9.6",
     "prisma": "^5.14.0",
     "supertest": "^7.2.2"
   }

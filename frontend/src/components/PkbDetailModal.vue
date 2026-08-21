@@ -1,15 +1,19 @@
 <template>
-  <div v-if="modelValue && service" class="modal-backdrop" @click.self="$emit('update:modelValue', false)">
-    <div class="modal-card" style="max-width: 800px;">
+  <div
+    v-if="modelValue && service"
+    class="modal-backdrop"
+    @click.self="$emit('update:modelValue', false)"
+  >
+    <div class="modal-card" style="max-width: 800px">
       <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <i class="ph-bold ph-file-text" style="color: var(--primary-color); font-size: 20px;"></i>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <i class="ph-bold ph-file-text" style="color: var(--primary-color); font-size: 20px"></i>
           <h3>Perintah Kerja Bengkel (PKB) / Work Order</h3>
         </div>
         <button class="modal-close" @click="$emit('update:modelValue', false)">×</button>
       </div>
 
-      <div class="modal-body" style="padding: 24px;">
+      <div class="modal-body" style="padding: 24px">
         <!-- Official PKB Document Sheet (Borderless / Clean Document Style) -->
         <div class="pkb-document">
           <!-- 1. Header Bengkel & Identitas Dokumen -->
@@ -19,9 +23,7 @@
                 <i class="ph-bold ph-wrench"></i>
                 <span>BengkelKu Motor</span>
               </div>
-              <div class="workshop-sub">
-                Pusat Perawatan & Perbaikan Sepeda Motor
-              </div>
+              <div class="workshop-sub">Pusat Perawatan & Perbaikan Sepeda Motor</div>
               <div class="workshop-address">
                 Jl. Raya Otomotif No. 88 • Telp: (021) 555-0123 • WA: 0812-9988-7766
               </div>
@@ -30,7 +32,7 @@
             <div class="document-meta">
               <div class="document-title">SURAT PERINTAH KERJA (PKB)</div>
               <div class="pkb-number pkb-font">
-                {{ service.nomorPkb || ('PKB-' + service.id) }}
+                {{ service.nomorPkb || 'PKB-' + service.id }}
               </div>
               <div class="meta-row">
                 <span>Tgl Masuk:</span>
@@ -43,18 +45,20 @@
           <div class="pkb-section-grid">
             <!-- Kolom Pelanggan -->
             <div class="pkb-box">
-              <div class="box-title">
-                IDENTITAS PELANGGAN
-              </div>
+              <div class="box-title">IDENTITAS PELANGGAN</div>
               <table class="box-table">
                 <tbody>
                   <tr>
-                    <td style="width: 105px;">Nama Pemilik</td>
-                    <td>: <strong>{{ service.customerName }}</strong></td>
+                    <td style="width: 105px">Nama Pemilik</td>
+                    <td>
+                      : <strong>{{ service.customerName }}</strong>
+                    </td>
                   </tr>
                   <tr>
                     <td>No. Telepon / WA</td>
-                    <td>: <span class="numeric">{{ service.phone }}</span></td>
+                    <td>
+                      : <span class="numeric">{{ service.phone }}</span>
+                    </td>
                   </tr>
                   <tr>
                     <td>Tipe Konsumen</td>
@@ -66,14 +70,17 @@
 
             <!-- Kolom Kendaraan -->
             <div class="pkb-box">
-              <div class="box-title">
-                DATA KENDARAAN (UNIT)
-              </div>
+              <div class="box-title">DATA KENDARAAN (UNIT)</div>
               <table class="box-table">
                 <tbody>
                   <tr>
-                    <td style="width: 105px;">Nomor Polisi</td>
-                    <td>: <strong class="nopol-font" style="font-size: 14px; color: #000000;">{{ service.nopol }}</strong></td>
+                    <td style="width: 105px">Nomor Polisi</td>
+                    <td>
+                      :
+                      <strong class="nopol-font" style="font-size: 14px; color: #000000">{{
+                        service.nopol
+                      }}</strong>
+                    </td>
                   </tr>
                   <tr>
                     <td>Merk / Tipe Motor</td>
@@ -89,38 +96,53 @@
           </div>
 
           <!-- 3. Checklist Reception & Kondisi Awal -->
-          <div class="pkb-section-grid" style="margin-top: 10px;">
+          <div class="pkb-section-grid" style="margin-top: 10px">
             <div class="pkb-box">
-              <div class="box-title">
-                CHECKLIST RECEPTION & FISIK
-              </div>
+              <div class="box-title">CHECKLIST RECEPTION & FISIK</div>
               <table class="box-table">
                 <tbody>
                   <tr>
-                    <td style="width: 105px;">KM Odometer</td>
-                    <td>: <strong class="numeric">{{ formatNumber(service.kmMasuk || service.km_masuk || 0) }} KM</strong></td>
+                    <td style="width: 105px">KM Odometer</td>
+                    <td>
+                      :
+                      <strong class="numeric"
+                        >{{ formatNumber(service.kmMasuk || service.km_masuk || 0) }} KM</strong
+                      >
+                    </td>
                   </tr>
                   <tr>
                     <td>Indikator BBM</td>
-                    <td>: <span class="fuel-badge">{{ service.levelBensin || service.level_bensin || '1/2' }}</span></td>
+                    <td>
+                      :
+                      <span class="fuel-badge">{{
+                        service.levelBensin || service.level_bensin || '1/2'
+                      }}</span>
+                    </td>
                   </tr>
                   <tr>
                     <td>Catatan Fisik</td>
-                    <td>: {{ service.catatanKondisi || service.catatan_kondisi || 'Tidak ada catatan khusus' }}</td>
+                    <td>
+                      :
+                      {{
+                        service.catatanKondisi ||
+                        service.catatan_kondisi ||
+                        'Tidak ada catatan khusus'
+                      }}
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             <div class="pkb-box">
-              <div class="box-title">
-                ALOKASI KERJA & TEKNISI
-              </div>
+              <div class="box-title">ALOKASI KERJA & TEKNISI</div>
               <table class="box-table">
                 <tbody>
                   <tr>
-                    <td style="width: 105px;">Teknisi Pelaksana</td>
-                    <td>: <strong>{{ service.mechanicName || 'Belum Ditugaskan (Antrean)' }}</strong></td>
+                    <td style="width: 105px">Teknisi Pelaksana</td>
+                    <td>
+                      : <strong>{{ service.mechanicName || 'Belum Ditugaskan (Antrean)' }}</strong>
+                    </td>
                   </tr>
                   <tr>
                     <td>Keahlian / Spesialis</td>
@@ -136,14 +158,14 @@
           </div>
 
           <!-- 4. Uraian Keluhan & Estimasi Jasa Servis -->
-          <div class="job-table-box" style="margin-top: 10px;">
-            <div class="box-title" style="margin-bottom: 8px;">
+          <div class="job-table-box" style="margin-top: 10px">
+            <div class="box-title" style="margin-bottom: 8px">
               KELUHAN KONSUMEN & RINCIAN INSTRUKSI KERJA
             </div>
 
             <div class="complaint-banner">
               <strong>Keluhan Utama Konsumen:</strong>
-              <div style="font-style: italic; margin-top: 2px; color: #111827;">
+              <div style="font-style: italic; margin-top: 2px; color: #111827">
                 "{{ service.keluhan }}"
               </div>
             </div>
@@ -151,31 +173,33 @@
             <table class="job-table">
               <thead>
                 <tr>
-                  <th style="width: 40px; text-align: center;">No</th>
+                  <th style="width: 40px; text-align: center">No</th>
                   <th>Uraian Pekerjaan / Paket Jasa Servis</th>
-                  <th style="width: 120px; text-align: center;">Estimasi Waktu</th>
-                  <th style="width: 150px; text-align: right;">Estimasi Biaya</th>
+                  <th style="width: 120px; text-align: center">Estimasi Waktu</th>
+                  <th style="width: 150px; text-align: right">Estimasi Biaya</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style="text-align: center;">1</td>
+                  <td style="text-align: center">1</td>
                   <td>
-                    <strong>{{ service.servicePackageName || 'Servis & Perbaikan Berkala' }}</strong>
-                    <div style="font-size: 11px; color: #4b5563;">
+                    <strong>{{
+                      service.servicePackageName || 'Servis & Perbaikan Berkala'
+                    }}</strong>
+                    <div style="font-size: 11px; color: #4b5563">
                       Inspeksi keluhan: {{ service.keluhan }}
                     </div>
                   </td>
-                  <td style="text-align: center;" class="numeric">± 30 Menit</td>
-                  <td style="text-align: right;" class="numeric">
+                  <td style="text-align: center" class="numeric">± 30 Menit</td>
+                  <td style="text-align: right" class="numeric">
                     Rp {{ formatCurrency(service.estimasiBiaya || service.estimasi_biaya || 0) }}
                   </td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
-                  <th colspan="3" style="text-align: right;">TOTAL ESTIMASI BIAYA AWAL JASA:</th>
-                  <th style="text-align: right;" class="numeric total-amount">
+                  <th colspan="3" style="text-align: right">TOTAL ESTIMASI BIAYA AWAL JASA:</th>
+                  <th style="text-align: right" class="numeric total-amount">
                     Rp {{ formatCurrency(service.estimasiBiaya || service.estimasi_biaya || 0) }}
                   </th>
                 </tr>
@@ -185,12 +209,27 @@
 
           <!-- 5. Syarat, Ketentuan & Surat Kuasa Hukum -->
           <div class="legal-clause">
-            <div style="font-weight: 700; margin-bottom: 3px; color: #111827;">SYARAT & KETENTUAN PERJANJIAN KERJA (SURAT KUASA):</div>
-            <ol style="padding-left: 14px; margin: 0;">
-              <li>Pemilik kendaraan memberi kuasa penuh kepada pihak bengkel untuk melakukan perawatan, pembongkaran, dan uji jalan (*road test*) di luar area bengkel bila diperlukan.</li>
-              <li>Penggantian suku cadang atau pekerjaan tambahan di luar PKB ini wajib dikonfirmasikan dan disetujui konsumen terlebih dahulu.</li>
-              <li>Barang berharga di dalam bagasi wajib diambil. Bengkel tidak bertanggung jawab atas kehilangan barang pribadi yang tertinggal.</li>
-              <li>Kendaraan yang selesai dikerjakan wajib diambil maksimal 14 hari kerja setelah konfirmasi selesai.</li>
+            <div style="font-weight: 700; margin-bottom: 3px; color: #111827">
+              SYARAT & KETENTUAN PERJANJIAN KERJA (SURAT KUASA):
+            </div>
+            <ol style="padding-left: 14px; margin: 0">
+              <li>
+                Pemilik kendaraan memberi kuasa penuh kepada pihak bengkel untuk melakukan
+                perawatan, pembongkaran, dan uji jalan (*road test*) di luar area bengkel bila
+                diperlukan.
+              </li>
+              <li>
+                Penggantian suku cadang atau pekerjaan tambahan di luar PKB ini wajib
+                dikonfirmasikan dan disetujui konsumen terlebih dahulu.
+              </li>
+              <li>
+                Barang berharga di dalam bagasi wajib diambil. Bengkel tidak bertanggung jawab atas
+                kehilangan barang pribadi yang tertinggal.
+              </li>
+              <li>
+                Kendaraan yang selesai dikerjakan wajib diambil maksimal 14 hari kerja setelah
+                konfirmasi selesai.
+              </li>
             </ol>
           </div>
 
@@ -231,10 +270,13 @@
 </template>
 
 <script setup>
-const props = defineProps({
+defineProps({
   modelValue: { type: Boolean, default: false },
   service: { type: Object, default: null },
-  formatCurrency: { type: Function, default: (val) => new Intl.NumberFormat('id-ID').format(val || 0) },
+  formatCurrency: {
+    type: Function,
+    default: (val) => new Intl.NumberFormat('id-ID').format(val || 0),
+  },
   getStatusBadgeClass: { type: Function, default: () => 'badge-pending' },
 });
 

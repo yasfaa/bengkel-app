@@ -24,10 +24,7 @@ export function useBengkelApp() {
   const fetchAllData = async () => {
     uiStore.errorMessage = '';
     try {
-      await Promise.all([
-        masterStore.fetchAllMasterData(),
-        queueStore.fetchServices(),
-      ]);
+      await Promise.all([masterStore.fetchAllMasterData(), queueStore.fetchServices()]);
     } catch (e) {
       console.error('Error fetching all initial data:', e);
       uiStore.errorMessage = 'Gagal terhubung ke backend server. Periksa koneksi atau server.';

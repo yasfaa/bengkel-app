@@ -32,7 +32,8 @@ class MechanicService {
    */
   async createMechanic(payload) {
     const nama = normalizeText(payload.nama);
-    const waktuKerja = normalizeText(payload.waktu_kerja || payload.waktuKerja) || 'Full-time (08:00 - 17:00)';
+    const waktuKerja =
+      normalizeText(payload.waktu_kerja || payload.waktuKerja) || 'Full-time (08:00 - 17:00)';
     const spesialisasi = normalizeText(payload.spesialisasi) || 'Umum & Tune Up';
     const tglLahirStr = payload.tgl_lahir || payload.tglLahir || '1995-01-01';
     const tglLahir = new Date(tglLahirStr);

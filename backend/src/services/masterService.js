@@ -8,10 +8,7 @@ class MasterService {
      ========================================================================= */
   async getAllServices() {
     return prisma.serviceMaster.findMany({
-      orderBy: [
-        { is_active: 'desc' },
-        { nama: 'asc' },
-      ],
+      orderBy: [{ is_active: 'desc' }, { nama: 'asc' }],
     });
   }
 
@@ -59,7 +56,8 @@ class MasterService {
     if (payload.nama !== undefined) data.nama = normalizeText(payload.nama);
     if (payload.harga !== undefined) data.harga = parsePrice(payload.harga);
     if (payload.deskripsi !== undefined) data.deskripsi = normalizeText(payload.deskripsi) || null;
-    if (payload.estimasi_durasi !== undefined) data.estimasi_durasi = parseId(payload.estimasi_durasi);
+    if (payload.estimasi_durasi !== undefined)
+      data.estimasi_durasi = parseId(payload.estimasi_durasi);
     if (payload.kategori !== undefined) data.kategori = normalizeText(payload.kategori);
     if (typeof payload.is_active === 'boolean') data.is_active = payload.is_active;
 
