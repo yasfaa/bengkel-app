@@ -1,11 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const queueController = require('../controllers/queueController');
+const serviceItemController = require('../controllers/serviceItemController');
 const validate = require('../middlewares/validate');
 const {
   createServiceSchema,
   updateServiceStatusSchema,
 } = require('../validations/serviceValidation');
+const {
+  addServiceItemSchema,
+  updateServiceItemSchema,
+} = require('../validations/serviceItemValidation');
 
 router
   .route('/')
@@ -17,5 +22,16 @@ router.patch(
   validate(updateServiceStatusSchema),
   queueController.updateServiceStatus
 );
+
+// Work Order Items & Part Requisition (Stage 3)
+router
+  .route('/:id/items')
+  .get(serviceItemController.getItemsByServiceId)
+  .post(validate(addServiceItemSchema), serviceItemController.addServiceItem);
+
+router
+  .route('/:id/items/:itemId')
+  .patch(validate(updateServiceItemSchema), serviceItemController.updateServiceItem)
+  .delete(serviceItemController.removeServiceItem);
 
 module.exports = router;

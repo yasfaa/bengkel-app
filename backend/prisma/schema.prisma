@@ -161,6 +161,12 @@ enum ItemType {
   JASA
 }
 
+enum ApprovalStatus {
+  MENUNGGU_KONFIRMASI
+  DISETUJUI
+  DITOLAK
+}
+
 model ServiceItem {
   id                Int            @id @default(autoincrement())
   service_id        Int
@@ -170,9 +176,13 @@ model ServiceItem {
   sparepart         Sparepart?     @relation(fields: [sparepart_id], references: [id])
   service_master_id Int?
   serviceMaster     ServiceMaster? @relation(fields: [service_master_id], references: [id])
+  nama_item         String         // Snapshot nama suku cadang atau nama jasa
   quantity          Int            @default(1)
   harga_satuan      Float
   subtotal          Float
+  approval_status   ApprovalStatus @default(MENUNGGU_KONFIRMASI)
+  is_approved       Boolean        @default(false) // Sinkron dengan DISETUJUI
+  catatan           String?        // Catatan diagnosa teknisi
   created_at        DateTime       @default(now())
   updated_at        DateTime       @default(now()) @updatedAt
 }

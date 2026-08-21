@@ -64,6 +64,13 @@ class QueueService {
         },
         mechanic: true,
         serviceMaster: true,
+        serviceItems: {
+          include: {
+            sparepart: true,
+            serviceMaster: true,
+          },
+          orderBy: { created_at: 'asc' },
+        },
       },
       orderBy: {
         tgl_masuk: 'desc',
@@ -74,6 +81,27 @@ class QueueService {
       const brandName = s.vehicle?.motorType?.brand?.nama || 'Umum';
       const typeName = s.vehicle?.motorType?.nama || 'Motor';
       const capacityName = s.vehicle?.engineCapacity?.kapasitas || '-';
+
+      const items = (s.serviceItems || []).map((item) => {
+        const status =
+          item.approval_status || (item.is_approved ? 'DISETUJUI' : 'MENUNGGU_KONFIRMASI');
+        return {
+          id: item.id,
+          serviceId: item.service_id,
+          itemType: item.item_type,
+          sparepartId: item.sparepart_id,
+          kodePart: item.sparepart?.kode_part || null,
+          namaItem: item.nama_item || item.sparepart?.nama || item.serviceMaster?.nama || 'Item',
+          serviceMasterId: item.service_master_id,
+          quantity: item.quantity,
+          currentStock: item.sparepart ? item.sparepart.stok : null,
+          hargaSatuan: item.harga_satuan,
+          subtotal: item.subtotal,
+          approvalStatus: status,
+          isApproved: status === 'DISETUJUI',
+          catatan: item.catatan,
+        };
+      });
 
       return {
         id: s.id,
@@ -95,6 +123,7 @@ class QueueService {
         mechanicSpecialization: s.mechanic ? s.mechanic.spesialisasi : null,
         status: s.status,
         isPaid: false,
+        serviceItems: items,
         tgl_masuk: s.tgl_masuk,
         tgl_selesai: s.tgl_selesai,
       };
@@ -352,12 +381,40 @@ class QueueService {
         },
         mechanic: true,
         serviceMaster: true,
+        serviceItems: {
+          include: {
+            sparepart: true,
+            serviceMaster: true,
+          },
+          orderBy: { created_at: 'asc' },
+        },
       },
     });
 
     const brandName = updatedService.vehicle?.motorType?.brand?.nama || 'Umum';
     const typeName = updatedService.vehicle?.motorType?.nama || 'Motor';
     const capacityName = updatedService.vehicle?.engineCapacity?.kapasitas || '-';
+
+    const items = (updatedService.serviceItems || []).map((item) => {
+      const status =
+        item.approval_status || (item.is_approved ? 'DISETUJUI' : 'MENUNGGU_KONFIRMASI');
+      return {
+        id: item.id,
+        serviceId: item.service_id,
+        itemType: item.item_type,
+        sparepartId: item.sparepart_id,
+        kodePart: item.sparepart?.kode_part || null,
+        namaItem: item.nama_item || item.sparepart?.nama || item.serviceMaster?.nama || 'Item',
+        serviceMasterId: item.service_master_id,
+        quantity: item.quantity,
+        currentStock: item.sparepart ? item.sparepart.stok : null,
+        hargaSatuan: item.harga_satuan,
+        subtotal: item.subtotal,
+        approvalStatus: status,
+        isApproved: status === 'DISETUJUI',
+        catatan: item.catatan,
+      };
+    });
 
     return {
       id: updatedService.id,
@@ -379,6 +436,7 @@ class QueueService {
       mechanicSpecialization: updatedService.mechanic ? updatedService.mechanic.spesialisasi : null,
       status: updatedService.status,
       isPaid: false,
+      serviceItems: items,
       tgl_masuk: updatedService.tgl_masuk,
       tgl_selesai: updatedService.tgl_selesai,
     };
