@@ -1,0 +1,32 @@
+codecov:
+  require_ci_to_pass: false
+
+coverage:
+  precision: 2
+  round: down
+  range: "50...100"
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+      backend:
+        target: auto
+        flags:
+          - backend
+      frontend:
+        target: auto
+        flags:
+          - frontend
+
+flags:
+  backend:
+    paths:
+      - backend/
+  frontend:
+    paths:
+      - frontend/
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
