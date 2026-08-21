@@ -48,12 +48,18 @@
 - **Stock_In** (id, sparepart_id, jumlah, tgl_masuk, supplier)
 - **Transaction** (id, service_id, total, tgl_bayar, metode_bayar) – sebagai bukti pembayaran, berkait dengan service.
 
-## Role Access Sederhana
-- **Kasir/Admin** : 
-  - CRUD Servis, Transaksi, Stok Masuk, view Stok, view Mekanik, assign mekanik.
-- **Pemilik** : 
-  - View semua modul (read-only), akses dashboard & laporan ringkas.
-- (Untuk MVP, login dengan dua role bisa dibedakan, jika perlu. Kalau tidak, bisa satu akun admin dulu.)
+## Role Access & Authentication (RBAC)
+- **ADMIN (SA / Frontdesk / Admin Gudang / Kasir)**:
+  - CRUD Servis, PKB, Part Requisition, Transaksi Kasir, Stok Masuk/Keluar, view Mekanik, assign mekanik.
+- **MEKANIK**:
+  - Filter tugas pengerjaan motor khusus untuk mekanik yang sedang login (*data scoping*).
+  - Permintaan suku cadang gudang untuk servis miliknya.
+  - Cek stok gudang (*read-only*).
+- **KEPALA BENGKEL**:
+  - Executive Dashboard & Rekap Bisnis (Omzet harian/bulanan, performa kerja teknisi mekanik).
+  - CRUD Akun Pengguna / User Management (Admin, Mekanik, Kepala Bengkel).
+  - CRUD Data Mekanik & Aturan Komisi.
+  - Read-only data transaksi dan katalog master.
 
 ## Komponen UI yang Dibutuhkan
 - **Layout**: Sidebar navigasi, header (user info, logout).

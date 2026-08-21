@@ -21,9 +21,9 @@
             <div class="workshop-identity">
               <div class="brand-title">
                 <i class="ph-bold ph-wrench"></i>
-                <span>BengkelKu Motor</span>
+                <span>Wrenchly Motor Service</span>
               </div>
-              <div class="workshop-sub">Pusat Perawatan & Perbaikan Sepeda Motor</div>
+              <div class="workshop-sub">Smart Workshop Management & Moto Clinic</div>
               <div class="workshop-address">
                 Jl. Raya Otomotif No. 88 • Telp: (021) 555-0123 • WA: 0812-9988-7766
               </div>

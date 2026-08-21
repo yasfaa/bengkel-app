@@ -76,3 +76,29 @@ graph TD
 3. **Aturan Komisi Mekanik**:
    - Komisi dihitung dari persentase bagi hasil jasa servis atau tarif flat per jenis pekerjaan.
    - Pengerjaan ulang atas klaim garansi tidak menghasilkan komisi baru.
+
+---
+
+## 4. Matriks Hak Akses & Otorisasi Pengguna (Role-Based Access Control)
+
+Sistem menerapkan 3 peran utama dengan pembatasan hak akses berbasis keamanan enterprise:
+
+| Fitur / Modul | ADMIN / Service Advisor (SA) | MEKANIK | KEPALA BENGKEL |
+| :--- | :---: | :---: | :---: |
+| **Penerimaan Servis & PKB (Tahap 1)** | ✅ Penuh (CRUD) | ❌ Dibatasi | 👁️ Read-Only |
+| **Alokasi Pit & Penugasan (Tahap 2)** | ✅ Penuh (Assign Mekanik) | ❌ Dibatasi | 👁️ Read-Only |
+| **Pengerjaan & Permintaan Part (Tahap 3)**| ✅ Approval & Requisition | 🔧 Hanya Job Miliknya | 👁️ Read-Only |
+| **Final Inspection / QC (Tahap 4)** | ✅ Selesai & Lolos QC | ❌ Dibatasi | 👁️ Read-Only |
+| **Kasir, Billing & Pembayaran (Tahap 5)** | ✅ Penuh (Invoice & Bayar) | ❌ Dilarang (403) | 👁️ Read-Only |
+| **Katalog & Stok Sparepart Gudang** | ✅ Penuh (Stok Masuk/Keluar) | 👁️ Cek Stok (Read-Only) | 👁️ Read-Only |
+| **Manajemen Data Teknisi Mekanik** | 👁️ View & Status Kerja | ❌ Dibatasi | ✅ Penuh (CRUD + Komisi) |
+| **Executive Dashboard & Rekap Bisnis** | 📊 Ringkasan Harian | ❌ Dibatasi | 📈 Rekap Omzet & Performa |
+| **Manajemen Akun & Pengguna (*Users*)** | ❌ Dilarang (403) | ❌ Dilarang (403) | ✅ Penuh (CRUD User & Reset) |
+
+---
+
+## 5. Standar Keamanan & Manajemen Token
+
+* **Access Token**: JWT berdurasi **5 menit**, disimpan *In-Memory* di client (Pinia) untuk mencegah pencurian via XSS.
+* **Refresh Token**: Token unik berdurasi **7 hari**, disimpan di database dan dikirim via Cookie `httpOnly; Secure; SameSite=Lax`.
+* **Silent Refresh**: Otomatis memperbarui Access Token di background saat mendeteksi HTTP 401 tanpa *logout* paksa bagi user yang aktif.

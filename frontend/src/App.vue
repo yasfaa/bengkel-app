@@ -1,10 +1,21 @@
 <template>
-  <div class="app-container">
+  <!-- 1. Initializing Splash Screen -->
+  <div v-if="authStore.isInitializing" class="splash-screen">
+    <div class="splash-content">
+      <WrenchlyLogo :emblem-size="56" :is-stacked="true" custom-title-size="28px" custom-tagline-size="12px" />
+      <p style="margin-top: 14px; font-size: 13px; color: #94a3b8">Memverifikasi sesi keamanan...</p>
+    </div>
+  </div>
+
+  <!-- 2. Login View (If not authenticated) -->
+  <LoginView v-else-if="!authStore.isAuthenticated" @login-success="handleLoginSuccess" />
+
+  <!-- 3. Authenticated Enterprise Dashboard Layout -->
+  <div v-else class="app-container">
     <!-- Enterprise Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <i class="ph-bold ph-wrench"></i>
-        <span>BengkelKu</span>
+        <WrenchlyLogo :emblem-size="34" custom-title-size="19px" custom-tagline-size="9.5px" />
       </div>
       <nav>
         <ul class="sidebar-menu">
@@ -39,12 +50,34 @@
     <div class="content-area">
       <header class="topbar-section">
         <div>
-          <div class="breadcrumbs">BengkelKu / {{ activeMenuName }}</div>
+          <div class="breadcrumbs">Wrenchly / {{ activeMenuName }}</div>
           <h1 class="page-title">{{ activeMenuName }}</h1>
         </div>
-        <div class="user-badge">
-          <i class="ph-fill ph-user-circle"></i>
-          <span>Service Advisor / Kasir</span>
+
+        <div style="display: flex; align-items: center; gap: 12px">
+          <!-- User Role Badge & Profile -->
+          <div class="user-badge">
+            <i :class="getRoleHeaderIcon(authStore.role)"></i>
+            <span>{{ authStore.displayName }}</span>
+            <span
+              class="badge"
+              :class="getRoleHeaderBadge(authStore.role)"
+              style="font-size: 10.5px; margin-left: 4px"
+            >
+              {{ formatRoleHeader(authStore.role) }}
+            </span>
+          </div>
+
+          <!-- Logout Button -->
+          <button
+            class="btn btn-secondary btn-sm"
+            style="padding: 7px 12px; font-size: 12.5px; border-radius: 8px"
+            title="Keluar dari Sistem"
+            @click="handleLogout"
+          >
+            <i class="ph-bold ph-sign-out"></i>
+            <span>Keluar</span>
+          </button>
         </div>
       </header>
 
@@ -179,13 +212,19 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
+import Swal from 'sweetalert2';
+import { useAuthStore } from './stores/authStore';
 import { useBengkelApp } from './composables/useBengkelApp';
+import WrenchlyLogo from './components/WrenchlyLogo.vue';
+import LoginView from './views/LoginView.vue';
 import DashboardView from './views/DashboardView.vue';
+import ExecutiveDashboardView from './views/ExecutiveDashboardView.vue';
 import ServisView from './views/ServisView.vue';
 import TransaksiView from './views/TransaksiView.vue';
 import StokView from './views/StokView.vue';
 import MekanikView from './views/MekanikView.vue';
+import UserManagementView from './views/UserManagementView.vue';
 import AddServiceModal from './components/AddServiceModal.vue';
 import PkbDetailModal from './components/PkbDetailModal.vue';
 import AssignMechanicModal from './components/AssignMechanicModal.vue';
@@ -195,6 +234,8 @@ import InvoiceModal from './components/InvoiceModal.vue';
 import ServiceMasterModal from './components/ServiceMasterModal.vue';
 import MechanicModal from './components/MechanicModal.vue';
 import SparepartModal from './components/SparepartModal.vue';
+
+const authStore = useAuthStore();
 
 const {
   activeMenu,
@@ -271,15 +312,109 @@ const {
   clearToast,
 } = useBengkelApp();
 
+onMounted(() => {
+  authStore.initAuth();
+});
+
+const handleLoginSuccess = () => {
+  retryAllData();
+};
+
+const handleLogout = async () => {
+  const result = await Swal.fire({
+    title: 'Konfirmasi Keluar',
+    text: 'Apakah Anda yakin ingin keluar dari sesi Wrenchly?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, Keluar',
+    cancelButtonText: 'Batal',
+    confirmButtonColor: '#dc2626',
+  });
+
+  if (result.isConfirmed) {
+    await authStore.logout();
+  }
+};
+
+const formatRoleHeader = (role) => {
+  if (role === 'ADMIN') return 'SA / Admin';
+  if (role === 'MEKANIK') return 'Mekanik';
+  if (role === 'KEPALA_BENGKEL') return 'Kepala Bengkel';
+  return role || 'Tamu';
+};
+
+const getRoleHeaderIcon = (role) => {
+  if (role === 'ADMIN') return 'ph-fill ph-user-gear';
+  if (role === 'MEKANIK') return 'ph-fill ph-wrench';
+  if (role === 'KEPALA_BENGKEL') return 'ph-fill ph-briefcase';
+  return 'ph-fill ph-user-circle';
+};
+
+const getRoleHeaderBadge = (role) => {
+  if (role === 'ADMIN') return 'badge-primary';
+  if (role === 'MEKANIK') return 'badge-working';
+  if (role === 'KEPALA_BENGKEL') return 'badge-secondary';
+  return 'badge-primary';
+};
+
 const activeViewComponent = computed(() => {
+  if (activeMenu.value === 'dashboard') {
+    return authStore.isKepalaBengkel ? ExecutiveDashboardView : DashboardView;
+  }
+
   const viewMap = {
-    dashboard: DashboardView,
+    dashboard: authStore.isKepalaBengkel ? ExecutiveDashboardView : DashboardView,
     servis: ServisView,
     transaksi: TransaksiView,
     stok: StokView,
     mekanik: MekanikView,
+    users: UserManagementView,
   };
 
-  return viewMap[activeMenu.value] || DashboardView;
+  return viewMap[activeMenu.value] || (authStore.isKepalaBengkel ? ExecutiveDashboardView : DashboardView);
 });
 </script>
+
+<style scoped>
+.splash-screen {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.splash-content {
+  text-align: center;
+}
+
+.splash-badge {
+  width: 60px;
+  height: 60px;
+  background: #2563eb;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 16px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 15px rgba(37, 99, 235, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+</style>
