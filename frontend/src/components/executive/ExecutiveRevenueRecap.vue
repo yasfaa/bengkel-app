@@ -18,19 +18,31 @@
       <!-- Metric Highlights -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px">
         <div class="recap-stat-box" style="background: #fdf4ff; border-color: #f5d0fe">
-          <div style="font-size: 11.5px; color: #86198f; font-weight: 700">Rata-rata Tagihan (AOV)</div>
-          <div class="numeric" style="font-size: 17px; font-weight: 800; color: #701a75; margin-top: 4px">
+          <div style="font-size: 11.5px; color: #86198f; font-weight: 700">
+            Rata-rata Tagihan (AOV)
+          </div>
+          <div
+            class="numeric"
+            style="font-size: 17px; font-weight: 800; color: #701a75; margin-top: 4px"
+          >
             Rp {{ formatCurrency(averageTicketSize) }}
           </div>
           <div style="font-size: 11px; color: #a21caf; margin-top: 2px">Per unit sepeda motor</div>
         </div>
 
         <div class="recap-stat-box" style="background: #f0fdf4; border-color: #bbf7d0">
-          <div style="font-size: 11.5px; color: #166534; font-weight: 700">Total Transaksi Lunas</div>
-          <div class="numeric" style="font-size: 17px; font-weight: 800; color: #14532d; margin-top: 4px">
+          <div style="font-size: 11.5px; color: #166534; font-weight: 700">
+            Total Transaksi Lunas
+          </div>
+          <div
+            class="numeric"
+            style="font-size: 17px; font-weight: 800; color: #14532d; margin-top: 4px"
+          >
             {{ transactions.length }} Transaksi
           </div>
-          <div style="font-size: 11px; color: #15803d; margin-top: 2px">Kasir beroperasi normal</div>
+          <div style="font-size: 11px; color: #15803d; margin-top: 2px">
+            Kasir beroperasi normal
+          </div>
         </div>
       </div>
 
@@ -38,7 +50,10 @@
       <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main); margin-bottom: 8px">
         Rincian Berdasarkan Metode Pembayaran:
       </div>
-      <div class="table-container" style="border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 14px">
+      <div
+        class="table-container"
+        style="border: 1px solid var(--border-subtle); border-radius: 8px; margin-bottom: 14px"
+      >
         <table class="custom-table" style="font-size: 12.5px">
           <thead>
             <tr>
@@ -51,12 +66,18 @@
           <tbody>
             <tr v-for="item in paymentMethodBreakdown" :key="item.method">
               <td>
-                <span class="badge" style="background: #f1f5f9; color: var(--text-main); font-weight: 700">
+                <span
+                  class="badge"
+                  style="background: #f1f5f9; color: var(--text-main); font-weight: 700"
+                >
                   {{ item.method }}
                 </span>
               </td>
               <td style="text-align: center; font-weight: 600">{{ item.count }}x</td>
-              <td class="numeric" style="text-align: right; font-weight: 700; color: var(--text-main)">
+              <td
+                class="numeric"
+                style="text-align: right; font-weight: 700; color: var(--text-main)"
+              >
                 Rp {{ formatCurrency(item.total) }}
               </td>
               <td class="numeric" style="text-align: right; color: var(--text-muted)">

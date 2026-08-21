@@ -23,19 +23,34 @@
       <!-- Valuation Summary -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px">
         <div class="recap-stat-box" style="background: #fff7ed; border-color: #ffedd5">
-          <div style="font-size: 11.5px; color: #9a3412; font-weight: 700">Total Nilai Aset Stok (HPP)</div>
-          <div class="numeric" style="font-size: 17px; font-weight: 800; color: #7c2d12; margin-top: 4px">
+          <div style="font-size: 11.5px; color: #9a3412; font-weight: 700">
+            Total Nilai Aset Stok (HPP)
+          </div>
+          <div
+            class="numeric"
+            style="font-size: 17px; font-weight: 800; color: #7c2d12; margin-top: 4px"
+          >
             Rp {{ formatCurrency(totalInventoryAssetValue) }}
           </div>
-          <div style="font-size: 11px; color: #c2410c; margin-top: 2px">Berdasarkan harga beli gudang</div>
+          <div style="font-size: 11px; color: #c2410c; margin-top: 2px">
+            Berdasarkan harga beli gudang
+          </div>
         </div>
 
         <div class="recap-stat-box" style="background: #eff6ff; border-color: #dbeafe">
-          <div style="font-size: 11.5px; color: #1e40af; font-weight: 700">Total Potensi Nilai Jual</div>
-          <div class="numeric" style="font-size: 17px; font-weight: 800; color: #1e3a8a; margin-top: 4px">
+          <div style="font-size: 11.5px; color: #1e40af; font-weight: 700">
+            Total Potensi Nilai Jual
+          </div>
+          <div
+            class="numeric"
+            style="font-size: 17px; font-weight: 800; color: #1e3a8a; margin-top: 4px"
+          >
             Rp {{ formatCurrency(totalInventorySalesValue) }}
           </div>
-          <div style="font-size: 11px; color: #2563eb; margin-top: 2px">Estimasi margin kotor: Rp {{ formatCurrency(totalInventorySalesValue - totalInventoryAssetValue) }}</div>
+          <div style="font-size: 11px; color: #2563eb; margin-top: 2px">
+            Estimasi margin kotor: Rp
+            {{ formatCurrency(totalInventorySalesValue - totalInventoryAssetValue) }}
+          </div>
         </div>
       </div>
 
@@ -43,7 +58,10 @@
       <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main); margin-bottom: 8px">
         Daftar Suku Cadang Perlu Restock:
       </div>
-      <div class="table-container" style="border: 1px solid var(--border-subtle); border-radius: 8px">
+      <div
+        class="table-container"
+        style="border: 1px solid var(--border-subtle); border-radius: 8px"
+      >
         <table class="custom-table" style="font-size: 12.5px">
           <thead>
             <tr>
@@ -59,10 +77,15 @@
             <tr v-for="part in criticalSpareparts" :key="part.id">
               <td>
                 <div style="font-weight: 700; color: var(--text-main)">{{ part.nama }}</div>
-                <div class="sku-code" style="font-size: 11px; color: var(--primary-color)">{{ part.kode_part }}</div>
+                <div class="sku-code" style="font-size: 11px; color: var(--primary-color)">
+                  {{ part.kode_part }}
+                </div>
               </td>
               <td>
-                <span class="badge" style="background: #f1f5f9; color: var(--text-secondary); font-size: 10.5px">
+                <span
+                  class="badge"
+                  style="background: #f1f5f9; color: var(--text-secondary); font-size: 10.5px"
+                >
                   {{ part.kategori || 'FAST_MOVING' }}
                 </span>
               </td>
@@ -77,14 +100,15 @@
                 <span v-if="part.stok <= 0" class="badge badge-error" style="font-size: 10.5px">
                   Habis (0)
                 </span>
-                <span v-else class="badge badge-pending" style="font-size: 10.5px">
-                  Menipis
-                </span>
+                <span v-else class="badge badge-pending" style="font-size: 10.5px"> Menipis </span>
               </td>
             </tr>
             <tr v-if="criticalSpareparts.length === 0">
               <td colspan="6" style="text-align: center; color: #059669; padding: 18px">
-                <i class="ph-bold ph-check-circle" style="font-size: 20px; vertical-align: middle; margin-right: 4px"></i>
+                <i
+                  class="ph-bold ph-check-circle"
+                  style="font-size: 20px; vertical-align: middle; margin-right: 4px"
+                ></i>
                 Semua suku cadang berada dalam jumlah persediaan yang aman.
               </td>
             </tr>

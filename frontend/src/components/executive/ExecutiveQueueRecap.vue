@@ -16,41 +16,65 @@
 
     <div style="padding: 16px 20px">
       <!-- Status Funnel Cards Grid -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px">
+      <div
+        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px"
+      >
         <!-- 1. Menunggu -->
         <div class="status-funnel-card" style="background: #f8fafc; border-color: #cbd5e1">
           <div style="font-size: 11px; font-weight: 700; color: #475569">1. ANTREE / MENUNGGU</div>
-          <div class="numeric" style="font-size: 20px; font-weight: 900; color: #334155; margin-top: 4px">
+          <div
+            class="numeric"
+            style="font-size: 20px; font-weight: 900; color: #334155; margin-top: 4px"
+          >
             {{ queueSummary.menunggu }}
           </div>
-          <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px">Belum mulai dikerjakan</div>
+          <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 2px">
+            Belum mulai dikerjakan
+          </div>
         </div>
 
         <!-- 2. Dikerjakan -->
         <div class="status-funnel-card" style="background: #eff6ff; border-color: #bfdbfe">
           <div style="font-size: 11px; font-weight: 700; color: #1e40af">2. DIKERJAKAN DI PIT</div>
-          <div class="numeric" style="font-size: 20px; font-weight: 900; color: #1d4ed8; margin-top: 4px">
+          <div
+            class="numeric"
+            style="font-size: 20px; font-weight: 900; color: #1d4ed8; margin-top: 4px"
+          >
             {{ queueSummary.dikerjakan }}
           </div>
-          <div style="font-size: 10.5px; color: #2563eb; margin-top: 2px">Sedang ditangani teknisi</div>
+          <div style="font-size: 10.5px; color: #2563eb; margin-top: 2px">
+            Sedang ditangani teknisi
+          </div>
         </div>
 
         <!-- 3. Selesai (Belum Bayar) -->
         <div class="status-funnel-card" style="background: #fefce8; border-color: #fef08a">
-          <div style="font-size: 11px; font-weight: 700; color: #854d0e">3. SELESAI / SIAP KASIR</div>
-          <div class="numeric" style="font-size: 20px; font-weight: 900; color: #a16207; margin-top: 4px">
+          <div style="font-size: 11px; font-weight: 700; color: #854d0e">
+            3. SELESAI / SIAP KASIR
+          </div>
+          <div
+            class="numeric"
+            style="font-size: 20px; font-weight: 900; color: #a16207; margin-top: 4px"
+          >
             {{ queueSummary.selesai }}
           </div>
-          <div style="font-size: 10.5px; color: #ca8a04; margin-top: 2px">Menunggu billing kasir</div>
+          <div style="font-size: 10.5px; color: #ca8a04; margin-top: 2px">
+            Menunggu billing kasir
+          </div>
         </div>
 
         <!-- 4. Lunas -->
         <div class="status-funnel-card" style="background: #f0fdf4; border-color: #bbf7d0">
           <div style="font-size: 11px; font-weight: 700; color: #166534">4. LUNAS & SELESAI</div>
-          <div class="numeric" style="font-size: 20px; font-weight: 900; color: #15803d; margin-top: 4px">
+          <div
+            class="numeric"
+            style="font-size: 20px; font-weight: 900; color: #15803d; margin-top: 4px"
+          >
             {{ queueSummary.lunas }}
           </div>
-          <div style="font-size: 10.5px; color: #16a34a; margin-top: 2px">Transaksi pembayaran tuntas</div>
+          <div style="font-size: 10.5px; color: #16a34a; margin-top: 2px">
+            Transaksi pembayaran tuntas
+          </div>
         </div>
       </div>
 
@@ -58,7 +82,10 @@
       <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main); margin-bottom: 8px">
         Aktivitas 5 Unit Servis Terakhir:
       </div>
-      <div class="table-container" style="border: 1px solid var(--border-subtle); border-radius: 8px">
+      <div
+        class="table-container"
+        style="border: 1px solid var(--border-subtle); border-radius: 8px"
+      >
         <table class="custom-table" style="font-size: 12px">
           <thead>
             <tr>
@@ -73,12 +100,24 @@
           <tbody>
             <tr v-for="svc in recentServices" :key="svc.id">
               <td>
-                <span class="pkb-font" style="font-weight: 800; color: var(--primary-color)">{{ svc.nomorPkb || 'PKB-' + svc.id }}</span>
-                <div class="nopol-font" style="font-weight: 700; color: var(--text-main)">{{ svc.nopol }}</div>
+                <span class="pkb-font" style="font-weight: 800; color: var(--primary-color)">{{
+                  svc.nomorPkb || 'PKB-' + svc.id
+                }}</span>
+                <div class="nopol-font" style="font-weight: 700; color: var(--text-main)">
+                  {{ svc.nopol }}
+                </div>
               </td>
               <td style="font-weight: 600">{{ svc.customerName }}</td>
               <td style="color: var(--text-secondary)">{{ svc.motorType }}</td>
-              <td style="color: var(--text-muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">
+              <td
+                style="
+                  color: var(--text-muted);
+                  max-width: 160px;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
+                "
+              >
                 {{ svc.keluhan }}
               </td>
               <td>{{ svc.mechanicName || 'Belum ditugaskan' }}</td>

@@ -39,20 +39,12 @@
         <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
           <div class="form-group">
             <label class="form-label">Tanggal Bergabung (Masuk)</label>
-            <input
-              v-model="form.tgl_masuk"
-              type="date"
-              class="form-input"
-            />
+            <input v-model="form.tgl_masuk" type="date" class="form-input" />
           </div>
 
           <div class="form-group">
             <label class="form-label">Tanggal Lahir</label>
-            <input
-              v-model="form.tgl_lahir"
-              type="date"
-              class="form-input"
-            />
+            <input v-model="form.tgl_lahir" type="date" class="form-input" />
           </div>
         </div>
 

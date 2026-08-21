@@ -15,7 +15,10 @@
     </div>
 
     <div style="padding: 16px 20px">
-      <div class="table-container" style="border: 1px solid var(--border-subtle); border-radius: 8px">
+      <div
+        class="table-container"
+        style="border: 1px solid var(--border-subtle); border-radius: 8px"
+      >
         <table class="custom-table" style="font-size: 12.5px">
           <thead>
             <tr>
@@ -48,27 +51,32 @@
                   </div>
                   <div>
                     <div style="font-weight: 700; color: var(--text-main)">{{ mech.nama }}</div>
-                    <div style="font-size: 11px; color: var(--text-muted)">{{ mech.masaKerja || '-' }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      {{ mech.masaKerja || '-' }}
+                    </div>
                   </div>
                 </div>
               </td>
               <td>
-                <span class="badge" style="background: #f8fafc; color: var(--text-secondary); font-size: 11px">
+                <span
+                  class="badge"
+                  style="background: #f8fafc; color: var(--text-secondary); font-size: 11px"
+                >
                   {{ mech.spesialisasi || 'Umum & Tune Up' }}
                 </span>
               </td>
               <td style="text-align: center">
-                <span style="font-weight: 800; color: var(--primary-color)">{{ mech.completedCount }}</span> Selesai
+                <span style="font-weight: 800; color: var(--primary-color)">{{
+                  mech.completedCount
+                }}</span>
+                Selesai
                 <span v-if="mech.activeCount > 0" style="color: #d97706; font-size: 11px">
                   (+{{ mech.activeCount }} proses)
                 </span>
               </td>
               <td style="text-align: center">
                 <span
-                  :class="[
-                    'badge',
-                    mech.status === 'Bekerja' ? 'badge-working' : 'badge-done',
-                  ]"
+                  :class="['badge', mech.status === 'Bekerja' ? 'badge-working' : 'badge-done']"
                   style="font-size: 11px; padding: 3px 8px"
                 >
                   {{ mech.status }}
@@ -114,9 +122,7 @@ const mechanicStats = computed(() => {
     const mechServices = props.services.filter(
       (s) => s.mechanicName?.toLowerCase() === mech.nama.toLowerCase()
     );
-    const completedCount = mechServices.filter(
-      (s) => s.status === 'Selesai' || s.isPaid
-    ).length;
+    const completedCount = mechServices.filter((s) => s.status === 'Selesai' || s.isPaid).length;
     const activeCount = mechServices.filter(
       (s) => s.status === 'Dikerjakan' || s.status === 'Menunggu'
     ).length;

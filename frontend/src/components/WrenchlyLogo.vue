@@ -1,7 +1,10 @@
 <template>
   <div class="wrenchly-brand" :class="[layoutClass, { 'is-dark': isDark }]">
     <!-- Vector Emblem Mark -->
-    <div class="wrenchly-icon-wrapper" :style="{ width: emblemSize + 'px', height: emblemSize + 'px' }">
+    <div
+      class="wrenchly-icon-wrapper"
+      :style="{ width: emblemSize + 'px', height: emblemSize + 'px' }"
+    >
       <svg
         :width="emblemSize"
         :height="emblemSize"
@@ -20,7 +23,13 @@
 
           <!-- Outer Glow Drop Shadow -->
           <filter id="wrenchlyDropGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#2563eb" flood-opacity="0.4" />
+            <feDropShadow
+              dx="0"
+              dy="4"
+              stdDeviation="5"
+              flood-color="#2563eb"
+              flood-opacity="0.4"
+            />
           </filter>
         </defs>
 

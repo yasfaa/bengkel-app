@@ -12,7 +12,9 @@
         Rp {{ formatCurrency(totalRevenue) }}
       </div>
       <div class="exec-card-footer">
-        <span style="color: var(--text-muted)">Dari <strong>{{ transactions.length }}</strong> transaksi kasir lunas</span>
+        <span style="color: var(--text-muted)"
+          >Dari <strong>{{ transactions.length }}</strong> transaksi kasir lunas</span
+        >
       </div>
     </div>
 
@@ -24,9 +26,7 @@
           <i class="ph-bold ph-motorcycle"></i>
         </div>
       </div>
-      <div class="exec-card-value numeric" style="color: #0369a1">
-        {{ totalUnitsToday }} Unit
-      </div>
+      <div class="exec-card-value numeric" style="color: #0369a1">{{ totalUnitsToday }} Unit</div>
       <div class="exec-card-footer">
         <span style="color: #059669; font-weight: 700">{{ completedUnitsCount }} Selesai</span>
         <span style="color: var(--text-muted)"> • </span>
@@ -45,7 +45,8 @@
         </div>
       </div>
       <div class="exec-card-value numeric" style="color: #047857">
-        {{ standbyMechanicsCount }} / {{ mechanics.length }} <span style="font-size: 14px; font-weight: 600; color: var(--text-muted)">Standby</span>
+        {{ standbyMechanicsCount }} / {{ mechanics.length }}
+        <span style="font-size: 14px; font-weight: 600; color: var(--text-muted)">Standby</span>
       </div>
       <div class="exec-card-footer">
         <span style="color: var(--text-muted)">
@@ -63,7 +64,8 @@
         </div>
       </div>
       <div class="exec-card-value numeric" style="color: #c2410c">
-        {{ lowStockCount }} <span style="font-size: 14px; font-weight: 600; color: var(--text-muted)">Item Kritis</span>
+        {{ lowStockCount }}
+        <span style="font-size: 14px; font-weight: 600; color: var(--text-muted)">Item Kritis</span>
       </div>
       <div class="exec-card-footer">
         <span v-if="lowStockCount > 0" style="color: #dc2626; font-weight: 700">

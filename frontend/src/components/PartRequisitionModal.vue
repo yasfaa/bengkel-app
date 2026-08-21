@@ -181,7 +181,9 @@
         >
           <i class="ph-bold ph-shield-check" style="font-size: 22px; flex-shrink: 0"></i>
           <div>
-            <strong>Mode Service Advisor (Approval Konsumen):</strong> Pengisian suku cadang & jasa tambahan diajukan oleh teknisi mekanik. Anda dapat mengonfirmasi persetujuan konsumen dengan mengeklik status pada kolom <strong>Status Persetujuan</strong> di bawah.
+            <strong>Mode Service Advisor (Approval Konsumen):</strong> Pengisian suku cadang & jasa
+            tambahan diajukan oleh teknisi mekanik. Anda dapat mengonfirmasi persetujuan konsumen
+            dengan mengeklik status pada kolom <strong>Status Persetujuan</strong> di bawah.
           </div>
         </div>
 
@@ -203,7 +205,8 @@
         >
           <i class="ph-bold ph-eye" style="font-size: 22px; flex-shrink: 0"></i>
           <div>
-            <strong>Mode Rekap (View Only):</strong> Rincian item pengerjaan dan permintaan suku cadang ditampilkan untuk monitoring operasional bengkel.
+            <strong>Mode Rekap (View Only):</strong> Rincian item pengerjaan dan permintaan suku
+            cadang ditampilkan untuk monitoring operasional bengkel.
           </div>
         </div>
 
@@ -309,7 +312,11 @@
                     <button
                       :class="['approval-badge-btn', getApprovalButtonClass(item.approvalStatus)]"
                       :style="{ cursor: authStore.isKepalaBengkel ? 'default' : 'pointer' }"
-                      :title="authStore.isKepalaBengkel ? 'Status Persetujuan' : 'Klik untuk mengubah persetujuan konsumen'"
+                      :title="
+                        authStore.isKepalaBengkel
+                          ? 'Status Persetujuan'
+                          : 'Klik untuk mengubah persetujuan konsumen'
+                      "
                       @click="!authStore.isKepalaBengkel && handleApprovalClick(item)"
                     >
                       <i :class="getApprovalIcon(item.approvalStatus)"></i>
