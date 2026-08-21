@@ -2,12 +2,13 @@
  * Root Facade Composable for BengkelKu powered by Pinia Stores
  * Connects UI, Master Data, Queue/PKB, and Transactions Pinia Stores
  */
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useUiStore } from '../stores/uiStore';
 import { useMasterStore } from '../stores/masterStore';
 import { useQueueStore } from '../stores/queueStore';
 import { useTransactionStore } from '../stores/transactionStore';
+import { useAuthStore } from '../stores/authStore';
 import { formatCurrency, getStatusBadgeClass } from '../utils/formatters';
 
 export function useBengkelApp() {
@@ -15,6 +16,7 @@ export function useBengkelApp() {
   const masterStore = useMasterStore();
   const queueStore = useQueueStore();
   const transactionStore = useTransactionStore();
+  const authStore = useAuthStore();
 
   const uiRefs = storeToRefs(uiStore);
   const masterRefs = storeToRefs(masterStore);
@@ -36,6 +38,16 @@ export function useBengkelApp() {
   onMounted(() => {
     fetchAllData();
   });
+
+  // Automatically refresh scoped data when user session initializes or switches
+  watch(
+    () => [authStore.user, authStore.accessToken],
+    ([newUser, newAccessToken]) => {
+      if (newUser && newAccessToken) {
+        fetchAllData();
+      }
+    }
+  );
 
   return {
     // UI Store State & Actions

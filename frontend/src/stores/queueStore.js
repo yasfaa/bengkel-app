@@ -5,6 +5,7 @@ import { SwalConfirm, SwalSuccess } from '../utils/swal';
 import { formatCurrency } from '../utils/formatters';
 import { useUiStore } from './uiStore';
 import { useMasterStore } from './masterStore';
+import { useAuthStore } from './authStore';
 
 const createServiceForm = () => ({
   customerName: '',
@@ -28,6 +29,7 @@ const createServiceForm = () => ({
 export const useQueueStore = defineStore('queue', () => {
   const uiStore = useUiStore();
   const masterStore = useMasterStore();
+  const authStore = useAuthStore();
 
   const services = ref([]);
   const showAddServiceModal = ref(false);
@@ -47,15 +49,29 @@ export const useQueueStore = defineStore('queue', () => {
   /* =========================================================================
      Computed Queries
      ========================================================================= */
+  const scopedServices = computed(() => {
+    if (!authStore.isMechanic) return services.value;
+    const mechId = authStore.user?.mechanicId;
+    const mechName = (authStore.user?.nama || authStore.user?.username || '').toLowerCase();
+
+    return services.value.filter((service) => {
+      if (mechId && service.mechanicId === mechId) return true;
+      if (mechName && service.mechanicName && service.mechanicName.toLowerCase() === mechName) {
+        return true;
+      }
+      return false;
+    });
+  });
+
   const activeServices = computed(() =>
-    services.value.filter((service) => service.status !== 'Selesai')
+    scopedServices.value.filter((service) => service.status !== 'Selesai')
   );
 
   const filteredServices = computed(() => {
-    if (!uiStore.searchQuery) return services.value;
+    if (!uiStore.searchQuery) return scopedServices.value;
 
     const query = uiStore.searchQuery.toLowerCase();
-    return services.value.filter((service) => {
+    return scopedServices.value.filter((service) => {
       return (
         (service.nomorPkb && service.nomorPkb.toLowerCase().includes(query)) ||
         service.nopol.toLowerCase().includes(query) ||

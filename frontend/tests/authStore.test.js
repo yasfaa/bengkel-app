@@ -75,4 +75,53 @@ describe('AuthStore and Dynamic RBAC Navigation Tests', () => {
     expect(auth.user).toBeNull();
     expect(auth.isAuthenticated).toBe(false);
   });
+
+  it('queueStore should filter services strictly for MEKANIK role', async () => {
+    const { useQueueStore } = await import('../src/stores/queueStore');
+    const auth = useAuthStore();
+    const queue = useQueueStore();
+
+    queue.services = [
+      {
+        id: 1,
+        nomorPkb: 'PKB-01',
+        nopol: 'B 1111 AAA',
+        customerName: 'Joko',
+        motorType: 'Vario',
+        mechanicId: 1,
+        mechanicName: 'Asep Hidayat',
+        status: 'Dikerjakan',
+      },
+      {
+        id: 2,
+        nomorPkb: 'PKB-02',
+        nopol: 'B 2222 BBB',
+        customerName: 'Siti',
+        motorType: 'Beat',
+        mechanicId: 2,
+        mechanicName: 'Budi Santoso',
+        status: 'Dikerjakan',
+      },
+      {
+        id: 3,
+        nomorPkb: 'PKB-03',
+        nopol: 'B 3333 CCC',
+        customerName: 'Rian',
+        motorType: 'NMAX',
+        mechanicId: null,
+        mechanicName: null,
+        status: 'Menunggu',
+      },
+    ];
+
+    // Case 1: When user is MEKANIK (Asep)
+    auth.setUser({ id: 2, username: 'asep', nama: 'Asep Hidayat', role: 'MEKANIK', mechanicId: 1 });
+
+    expect(queue.filteredServices.length).toBe(1);
+    expect(queue.filteredServices[0].mechanicName).toBe('Asep Hidayat');
+
+    // Case 2: When user is ADMIN
+    auth.setUser({ id: 1, username: 'admin', role: 'ADMIN' });
+    expect(queue.filteredServices.length).toBe(3);
+  });
 });
