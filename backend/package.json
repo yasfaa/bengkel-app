@@ -14,6 +14,10 @@
     "test:coverage": "jest --detectOpenHandles --forceExit --runInBand --coverage",
     "db:migrate": "prisma migrate dev",
     "db:seed": "node src/seeds/index.js",
+    "db:seed:master": "node src/seeds/index.js --master",
+    "db:seed:dummy": "node src/seeds/index.js --dummy",
+    "db:reset": "prisma db push --force-reset --accept-data-loss --skip-generate && npm run db:seed:master && npm run db:seed:dummy",
+    "db:reset:master": "prisma db push --force-reset --accept-data-loss --skip-generate && npm run db:seed:master",
     "db:studio": "prisma studio"
   },
   "jest": {

@@ -153,6 +153,7 @@ model Service {
   updated_at        DateTime       @default(now()) @updatedAt
   serviceItems      ServiceItem[]
   transactions      Transaction[]
+  serviceQC         ServiceQC?
 }
 
 enum ItemType {
@@ -218,6 +219,7 @@ model User {
   is_active     Boolean        @default(true)
   mechanic      Mechanic?
   refreshTokens RefreshToken[]
+  serviceQCs    ServiceQC[]
   created_at    DateTime       @default(now())
   updated_at    DateTime       @default(now()) @updatedAt
 }
@@ -229,4 +231,20 @@ model RefreshToken {
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   expires_at DateTime
   created_at DateTime @default(now())
+}
+
+model ServiceQC {
+  id                    Int      @id @default(autoincrement())
+  service_id            Int      @unique
+  service               Service  @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  kelistrikan_ok        Boolean  @default(true)
+  rem_ok                Boolean  @default(true)
+  gas_ok                Boolean  @default(true)
+  test_ride_ok          Boolean  @default(true)
+  part_bekas_diserahkan Boolean  @default(true)
+  catatan               String?  @db.Text
+  qc_by_id              Int?
+  qcBy                  User?    @relation(fields: [qc_by_id], references: [id])
+  created_at            DateTime @default(now())
+  updated_at            DateTime @default(now()) @updatedAt
 }

@@ -44,6 +44,16 @@ const updateServiceStatusSchema = z.object({
     .optional(),
   mechanicName: z.string().trim().optional().nullable(),
   allowBusyOverride: z.boolean().optional(),
+  qcData: z
+    .object({
+      kelistrikan_ok: z.boolean().optional(),
+      rem_ok: z.boolean().optional(),
+      gas_ok: z.boolean().optional(),
+      test_ride_ok: z.boolean().optional(),
+      part_bekas_diserahkan: z.boolean().optional(),
+      catatan: z.string().optional().nullable(),
+    })
+    .optional(),
 });
 
 module.exports = {

@@ -92,6 +92,7 @@ class QueueService {
           },
           orderBy: { created_at: 'asc' },
         },
+        serviceQC: true,
       },
       orderBy: {
         tgl_masuk: 'desc',
@@ -147,6 +148,7 @@ class QueueService {
         serviceItems: items,
         tgl_masuk: s.tgl_masuk,
         tgl_selesai: s.tgl_selesai,
+        serviceQC: s.serviceQC || null,
       };
     });
   }
@@ -349,23 +351,15 @@ class QueueService {
     let targetMechanic = existingService.mechanic;
 
     if (user) {
-      if (status === 'Selesai') {
-        if (user.role === 'ADMIN') {
-          throw new AppError(
-            'Penyelesaian servis hanya dapat dilakukan oleh teknisi mekanik pelaksana.',
-            403
-          );
-        }
-        if (user.role === 'KEPALA_BENGKEL') {
-          throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
-        }
-        if (
-          user.role === 'MEKANIK' &&
-          existingService.mechanic_id &&
-          existingService.mechanic_id !== user.mechanicId
-        ) {
-          throw new AppError('Anda hanya dapat menyelesaikan servis yang ditugaskan ke Anda.', 403);
-        }
+      if (user.role === 'KEPALA_BENGKEL') {
+        throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
+      }
+      if (
+        user.role === 'MEKANIK' &&
+        existingService.mechanic_id &&
+        existingService.mechanic_id !== user.mechanicId
+      ) {
+        throw new AppError('Anda hanya dapat memperbarui servis yang ditugaskan ke Anda.', 403);
       }
     }
 
@@ -416,31 +410,61 @@ class QueueService {
       updateData.tgl_selesai = new Date();
     }
 
-    const updatedService = await prisma.service.update({
-      where: { id: serviceId },
-      data: updateData,
-      include: {
-        vehicle: {
-          include: {
-            customer: true,
-            motorType: {
-              include: { brand: true },
+    const { qcData } = payload;
+    let qcCreateData = null;
+    if (status === 'Selesai' && qcData) {
+      qcCreateData = {
+        kelistrikan_ok: qcData.kelistrikan_ok ?? true,
+        rem_ok: qcData.rem_ok ?? true,
+        gas_ok: qcData.gas_ok ?? true,
+        test_ride_ok: qcData.test_ride_ok ?? true,
+        part_bekas_diserahkan: qcData.part_bekas_diserahkan ?? true,
+        catatan: qcData.catatan || null,
+        qc_by_id: user ? user.id : null,
+      };
+    }
+
+    const updatedService = await prisma.$transaction(async (tx) => {
+      const updated = await tx.service.update({
+        where: { id: serviceId },
+        data: updateData,
+        include: {
+          vehicle: {
+            include: {
+              customer: true,
+              motorType: {
+                include: { brand: true },
+              },
+              engineCapacity: true,
             },
-            engineCapacity: true,
           },
-        },
-        mechanic: {
-          include: { user: true },
-        },
-        serviceMaster: true,
-        serviceItems: {
-          include: {
-            sparepart: true,
-            serviceMaster: true,
+          mechanic: {
+            include: { user: true },
           },
-          orderBy: { created_at: 'asc' },
+          serviceMaster: true,
+          serviceItems: {
+            include: {
+              sparepart: true,
+              serviceMaster: true,
+            },
+            orderBy: { created_at: 'asc' },
+          },
+          serviceQC: true,
         },
-      },
+      });
+
+      if (qcCreateData) {
+        await tx.serviceQC.upsert({
+          where: { service_id: serviceId },
+          update: qcCreateData,
+          create: {
+            ...qcCreateData,
+            service_id: serviceId,
+          },
+        });
+      }
+
+      return updated;
     });
 
     const brandName = updatedService.vehicle?.motorType?.brand?.nama || 'Umum';
@@ -491,6 +515,7 @@ class QueueService {
       serviceItems: items,
       tgl_masuk: updatedService.tgl_masuk,
       tgl_selesai: updatedService.tgl_selesai,
+      serviceQC: updatedService.serviceQC || null,
     };
   }
 }
