@@ -40,31 +40,23 @@
 - Node.js (v18+)
 - MySQL Server aktif
 
-### 2. Setup Backend
+### 2. Setup Cepat (Monorepo Root)
 ```bash
-cd backend
-npm install
+# Install dependencies di root, backend, dan frontend
+npm run install:all
 
-# Buat file .env dan sesuaikan kredensial database
-cp .env.example .env
+# Setup Database Backend (Fresh Migration & Seeding)
+npm run db:reset
 
-# Sinkronisasi skema database dan seed data awal
-npx prisma db push
-npm run seed
-
-# Jalankan server API backend (port 3333)
+# Jalankan Backend dan Frontend Sekaligus
 npm run dev
 ```
 
-### 3. Setup Frontend
-```bash
-cd frontend
-npm install
+> **Tips Reset Database Kapan Saja**:
+> - `npm run db:reset` : Mengosongkan database & mengisi data master + dummy aktif.
+> - `npm run db:reset:master` : Mengosongkan database & hanya mengisi data master (katalog motor, sparepart, dll).
 
-# Jalankan development server frontend (port 8080)
-npm run dev
-```
-
+Server API backend akan berjalan di port `3333` dan frontend di port `8080`.
 Buka aplikasi di browser melalui **`http://localhost:8080`**.
 
 ---
