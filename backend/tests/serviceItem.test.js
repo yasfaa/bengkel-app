@@ -66,6 +66,11 @@ describe('🛠️ Stage 3: Work Order Items & Part Requisition API Tests', () =>
   });
 
   afterAll(async () => {
+    if (testServiceId) {
+      await prisma.serviceQC.deleteMany({ where: { service_id: testServiceId } });
+      await prisma.serviceItem.deleteMany({ where: { service_id: testServiceId } });
+      await prisma.service.deleteMany({ where: { id: testServiceId } });
+    }
     await prisma.$disconnect();
   });
 

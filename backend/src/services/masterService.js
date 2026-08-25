@@ -6,10 +6,31 @@ class MasterService {
   /* =========================================================================
      1. ServiceMaster CRUD
      ========================================================================= */
+  formatServiceMaster(item) {
+    if (!item) return null;
+    return {
+      ...item,
+      harga: Number(item.harga),
+    };
+  }
+
+  formatSparepart(item) {
+    if (!item) return null;
+    return {
+      ...item,
+      harga_beli: Number(item.harga_beli),
+      harga_jual: Number(item.harga_jual),
+      hargaBeli: Number(item.harga_beli),
+      hargaJual: Number(item.harga_jual),
+      supplier: item.supplier ? item.supplier.nama : '-',
+    };
+  }
+
   async getAllServices() {
-    return prisma.serviceMaster.findMany({
+    const list = await prisma.serviceMaster.findMany({
       orderBy: [{ is_active: 'desc' }, { nama: 'asc' }],
     });
+    return list.map((item) => this.formatServiceMaster(item));
   }
 
   async getServiceById(id) {
@@ -21,7 +42,7 @@ class MasterService {
     });
     if (!service) throw new AppError('Data jasa servis tidak ditemukan.', 404);
 
-    return service;
+    return this.formatServiceMaster(service);
   }
 
   async createService(payload) {
@@ -36,7 +57,7 @@ class MasterService {
       throw new AppError('Nama dan harga jasa servis wajib diisi.', 400);
     }
 
-    return prisma.serviceMaster.create({
+    const created = await prisma.serviceMaster.create({
       data: {
         nama,
         harga,
@@ -46,6 +67,7 @@ class MasterService {
         is_active: isActive,
       },
     });
+    return this.formatServiceMaster(created);
   }
 
   async updateService(id, payload) {
@@ -65,10 +87,11 @@ class MasterService {
       throw new AppError('Tidak ada data yang perlu diperbarui.', 400);
     }
 
-    return prisma.serviceMaster.update({
+    const updated = await prisma.serviceMaster.update({
       where: { id: serviceMasterId },
       data,
     });
+    return this.formatServiceMaster(updated);
   }
 
   async deleteService(id) {
@@ -282,15 +305,8 @@ class MasterService {
   /* =========================================================================
      6. Sparepart CRUD
      ========================================================================= */
-  async getAllSpareparts() {
-    const spareparts = await prisma.sparepart.findMany({
-      include: {
-        supplier: true,
-      },
-      orderBy: { nama: 'asc' },
-    });
-
-    return spareparts.map((p) => ({
+  formatSparepart(p) {
+    return {
       id: p.id,
       kode_part: p.kode_part,
       nama: p.nama,
@@ -298,14 +314,23 @@ class MasterService {
       kategori: p.kategori,
       stok: p.stok,
       min_stok: p.min_stok,
-      harga_beli: p.harga_beli,
-      harga_jual: p.harga_jual,
-      hargaBeli: p.harga_beli,
-      hargaJual: p.harga_jual,
+      harga_beli: Number(p.harga_beli),
+      harga_jual: Number(p.harga_jual),
+      hargaBeli: Number(p.harga_beli),
+      hargaJual: Number(p.harga_jual),
       supplier_id: p.supplier_id,
       supplier: p.supplier ? p.supplier.nama : '-',
       supplier_detail: p.supplier,
-    }));
+    };
+  }
+
+  async getAllSpareparts() {
+    const parts = await prisma.sparepart.findMany({
+      include: { supplier: true },
+      orderBy: { nama: 'asc' },
+    });
+
+    return parts.map((p) => this.formatSparepart(p));
   }
 
   async getSparepartById(id) {
@@ -318,10 +343,7 @@ class MasterService {
     });
     if (!sparepart) throw new AppError('Data sparepart tidak ditemukan.', 404);
 
-    return {
-      ...sparepart,
-      supplier: sparepart.supplier ? sparepart.supplier.nama : '-',
-    };
+    return this.formatSparepart(sparepart);
   }
 
   async createSparepart(payload) {
@@ -338,7 +360,7 @@ class MasterService {
       throw new AppError('Kode part (SKU) dan nama suku cadang wajib diisi.', 400);
     }
 
-    return prisma.sparepart.create({
+    const created = await prisma.sparepart.create({
       data: {
         kode_part,
         nama,
@@ -351,6 +373,7 @@ class MasterService {
       },
       include: { supplier: true },
     });
+    return this.formatSparepart(created);
   }
 
   async updateSparepart(id, payload) {
@@ -379,11 +402,12 @@ class MasterService {
       data.supplier_id = parseId(payload.supplier_id || payload.supplierId);
     }
 
-    return prisma.sparepart.update({
+    const updated = await prisma.sparepart.update({
       where: { id: sparepartId },
       data,
       include: { supplier: true },
     });
+    return this.formatSparepart(updated);
   }
 
   async deleteSparepart(id) {

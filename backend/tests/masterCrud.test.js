@@ -12,6 +12,16 @@ describe('Master Data Full CRUD Integration Tests', () => {
   let createdPartId;
 
   beforeAll(async () => {
+    // Pre-cleanup leftover test data if any
+    await prisma.sparepart.deleteMany({ where: { kode_part: 'TEST-BELT-001' } });
+    await prisma.serviceMaster.deleteMany({
+      where: { nama: 'Servis Injeksi & Throttle Body Test' },
+    });
+    await prisma.motorType.deleteMany({ where: { nama: 'Vario 160 ABS Test' } });
+    await prisma.motorBrand.deleteMany({ where: { nama: 'Honda Test Brand' } });
+    await prisma.engineCapacity.deleteMany({ where: { kapasitas: '160 cc Test' } });
+    await prisma.supplier.deleteMany({ where: { nama: 'PT Daya Adicipta Motora Test' } });
+
     // Login as Admin
     const loginRes = await request(app)
       .post('/api/auth/login')

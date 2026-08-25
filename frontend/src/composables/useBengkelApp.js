@@ -26,7 +26,12 @@ export function useBengkelApp() {
   const fetchAllData = async () => {
     uiStore.errorMessage = '';
     try {
-      await Promise.all([masterStore.fetchAllMasterData(), queueStore.fetchServices()]);
+      await Promise.all([
+        masterStore.fetchAllMasterData(),
+        queueStore.fetchServices(),
+        transactionStore.fetchTransactions(),
+        transactionStore.fetchUnpaidServices(),
+      ]);
     } catch (e) {
       console.error('Error fetching all initial data:', e);
       uiStore.errorMessage = 'Gagal terhubung ke backend server. Periksa koneksi atau server.';
@@ -100,9 +105,10 @@ export function useBengkelApp() {
 
     // Transaction Store State & Actions
     ...transactionRefs,
-    createInvoice: transactionStore.createInvoice,
-    processPayment: transactionStore.processPayment,
-    openAddStockModal: transactionStore.openAddStockModal,
-    saveStockIn: transactionStore.saveStockIn,
+    fetchTransactions: transactionStore.fetchTransactions,
+    fetchUnpaidServices: transactionStore.fetchUnpaidServices,
+    openPaymentModal: transactionStore.openPaymentModal,
+    submitPayment: transactionStore.submitPayment,
+    viewReceipt: transactionStore.viewReceipt,
   };
 }

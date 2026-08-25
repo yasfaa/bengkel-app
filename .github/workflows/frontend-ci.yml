@@ -70,23 +70,23 @@ jobs:
           cd frontend
           npm run format:check
 
-      # - name: 🚨 Discord Alert (Lint / Audit Failure)
-      #   uses: sarisia/actions-status-discord@v1
-      #   if: failure() && env.DISCORD_WEBHOOK_URL != ''
-      #   with:
-      #     webhook: ${{ env.DISCORD_WEBHOOK_URL }}
-      #     title: "❌ Frontend Audit & Lint Gate: FAILED"
-      #     nodetail: false
-      #     color: 0xE74C3C
-      #     username: "BengkelKu CI/CD"
-      #     avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-      #     description: |
-      #       ⚠️ **ESLint atau Prettier code check pada Frontend mengalami error!**
-      #       
-      #       • **Branch**: `${{ github.ref_name }}`
-      #       • **Author**: `${{ github.actor }}`
-      #       • **Commit**: `${{ github.event.head_commit.message }}`
-      #       • [🔍 Buka Log Linting](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
+      - name: 🚨 Discord Alert (Lint / Audit Failure)
+        uses: sarisia/actions-status-discord@v1
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "❌ Frontend Audit & Lint Gate: FAILED"
+          nodetail: false
+          color: 0xE74C3C
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            ⚠️ **ESLint atau Prettier code check pada Frontend mengalami error!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [🔍 Buka Log Linting](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
 
   # ============================================================================
   # 2. Frontend Unit Testing, Pinia Stores, Coverage & Production Build
@@ -142,38 +142,38 @@ jobs:
           cd frontend
           npm run build
 
-      # - name: 📢 Discord Alert (Frontend Success)
-      #   uses: sarisia/actions-status-discord@v1
-      #   if: success() && env.DISCORD_WEBHOOK_URL != ''
-      #   with:
-      #     webhook: ${{ env.DISCORD_WEBHOOK_URL }}
-      #     title: "🎨 Frontend CI & Build: PASSED"
-      #     nodetail: false
-      #     color: 0x3498DB
-      #     username: "BengkelKu CI/CD"
-      #     avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-      #     description: |
-      #       🎉 **Vitest Component Tests, Pinia Stores & Production Bundle Build Berhasil!**
-      #       
-      #       • **Branch**: `${{ github.ref_name }}`
-      #       • **Author**: `${{ github.actor }}`
-      #       • **Commit**: `${{ github.event.head_commit.message }}`
-      #       • [📊 Lihat Detail Eksekusi & Coverage](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
+      - name: 📢 Discord Alert (Frontend Success)
+        uses: sarisia/actions-status-discord@v1
+        if: success() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "🎨 Frontend CI & Build: PASSED"
+          nodetail: false
+          color: 0x3498DB
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            🎉 **Vitest Component Tests, Pinia Stores & Production Bundle Build Berhasil!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [📊 Lihat Detail Eksekusi & Coverage](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
 
-      # - name: 🚨 Discord Alert (Frontend Test / Build Failure)
-      #   uses: sarisia/actions-status-discord@v1
-      #   if: failure() && env.DISCORD_WEBHOOK_URL != ''
-      #   with:
-      #     webhook: ${{ env.DISCORD_WEBHOOK_URL }}
-      #     title: "❌ Frontend CI & Build: FAILED"
-      #     nodetail: false
-      #     color: 0xE74C3C
-      #     username: "BengkelKu CI/CD"
-      #     avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-      #     description: |
-      #       ⚠️ **Frontend Vitest atau Vite Production Build Mengalami Kegagalan!**
-      #       
-      #       • **Branch**: `${{ github.ref_name }}`
-      #       • **Author**: `${{ github.actor }}`
-      #       • **Commit**: `${{ github.event.head_commit.message }}`
-      #       • [🔍 Buka Log Analisis Kegagalan](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
+      - name: 🚨 Discord Alert (Frontend Test / Build Failure)
+        uses: sarisia/actions-status-discord@v1
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "❌ Frontend CI & Build: FAILED"
+          nodetail: false
+          color: 0xE74C3C
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            ⚠️ **Frontend Vitest atau Vite Production Build Mengalami Kegagalan!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [🔍 Buka Log Analisis Kegagalan](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)

@@ -93,6 +93,7 @@ class QueueService {
           orderBy: { created_at: 'asc' },
         },
         serviceQC: true,
+        transactions: true,
       },
       orderBy: {
         tgl_masuk: 'desc',
@@ -117,13 +118,29 @@ class QueueService {
           serviceMasterId: item.service_master_id,
           quantity: item.quantity,
           currentStock: item.sparepart ? item.sparepart.stok : null,
-          hargaSatuan: item.harga_satuan,
-          subtotal: item.subtotal,
+          hargaSatuan: Number(item.harga_satuan),
+          subtotal: Number(item.subtotal),
           approvalStatus: status,
           isApproved: status === 'DISETUJUI',
           catatan: item.catatan,
         };
       });
+
+      const basePackagePrice = Number(s.serviceMaster?.harga || 0);
+      let extraJasa = 0;
+      let totalPart = 0;
+
+      const approvedItems = items.filter((it) => it.isApproved);
+      for (const it of approvedItems) {
+        if (it.itemType === 'JASA') {
+          extraJasa += Number(it.subtotal || 0);
+        } else if (it.itemType === 'SPAREPART') {
+          totalPart += Number(it.subtotal || 0);
+        }
+      }
+
+      const totalJasa = basePackagePrice + extraJasa;
+      const grandTotal = totalJasa + totalPart;
 
       return {
         id: s.id,
@@ -140,12 +157,18 @@ class QueueService {
         keluhan: s.keluhan,
         serviceMasterId: s.service_master_id,
         servicePackageName: s.serviceMaster ? s.serviceMaster.nama : null,
-        estimasiBiaya: s.estimasi_biaya || 0,
+        basePackageName: s.serviceMaster?.nama || 'Servis Standar',
+        basePackagePrice,
+        estimasiBiaya: Number(s.estimasi_biaya || 0),
+        totalJasa,
+        totalSparepart: totalPart,
+        grandTotal,
         mechanicName: s.mechanic ? s.mechanic.user?.nama || null : null,
         mechanicSpecialization: s.mechanic ? s.mechanic.spesialisasi : null,
         status: s.status,
-        isPaid: false,
+        isPaid: Boolean(s.transactions && s.transactions.length > 0),
         serviceItems: items,
+        approvedItems,
         tgl_masuk: s.tgl_masuk,
         tgl_selesai: s.tgl_selesai,
         serviceQC: s.serviceQC || null,
@@ -450,6 +473,7 @@ class QueueService {
             orderBy: { created_at: 'asc' },
           },
           serviceQC: true,
+          transactions: true,
         },
       });
 
@@ -484,13 +508,29 @@ class QueueService {
         serviceMasterId: item.service_master_id,
         quantity: item.quantity,
         currentStock: item.sparepart ? item.sparepart.stok : null,
-        hargaSatuan: item.harga_satuan,
-        subtotal: item.subtotal,
+        hargaSatuan: Number(item.harga_satuan),
+        subtotal: Number(item.subtotal),
         approvalStatus: itemStatus,
         isApproved: itemStatus === 'DISETUJUI',
         catatan: item.catatan,
       };
     });
+
+    const basePackagePrice = Number(updatedService.serviceMaster?.harga || 0);
+    let extraJasa = 0;
+    let totalPart = 0;
+
+    const approvedItems = items.filter((it) => it.isApproved);
+    for (const it of approvedItems) {
+      if (it.itemType === 'JASA') {
+        extraJasa += Number(it.subtotal || 0);
+      } else if (it.itemType === 'SPAREPART') {
+        totalPart += Number(it.subtotal || 0);
+      }
+    }
+
+    const totalJasa = basePackagePrice + extraJasa;
+    const grandTotal = totalJasa + totalPart;
 
     return {
       id: updatedService.id,
@@ -507,12 +547,18 @@ class QueueService {
       keluhan: updatedService.keluhan,
       serviceMasterId: updatedService.service_master_id,
       servicePackageName: updatedService.serviceMaster ? updatedService.serviceMaster.nama : null,
-      estimasiBiaya: updatedService.estimasi_biaya,
+      basePackageName: updatedService.serviceMaster?.nama || 'Servis Standar',
+      basePackagePrice,
+      estimasiBiaya: Number(updatedService.estimasi_biaya || 0),
+      totalJasa,
+      totalSparepart: totalPart,
+      grandTotal,
       mechanicName: updatedService.mechanic ? updatedService.mechanic.user?.nama || null : null,
       mechanicSpecialization: updatedService.mechanic ? updatedService.mechanic.spesialisasi : null,
       status: updatedService.status,
-      isPaid: false,
+      isPaid: Boolean(updatedService.transactions && updatedService.transactions.length > 0),
       serviceItems: items,
+      approvedItems,
       tgl_masuk: updatedService.tgl_masuk,
       tgl_selesai: updatedService.tgl_selesai,
       serviceQC: updatedService.serviceQC || null,

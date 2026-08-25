@@ -24,29 +24,35 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * Initialize authentication on app launch by checking httpOnly refresh cookie
    */
+  let initPromise = null;
   const initAuth = async () => {
-    isInitializing.value = true;
-    try {
-      const res = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
+    if (initPromise) return initPromise;
+    initPromise = (async () => {
+      isInitializing.value = true;
+      try {
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        accessToken.value = data.data.accessToken;
-        user.value = data.data.user;
-      } else {
+        if (res.ok) {
+          const data = await res.json();
+          accessToken.value = data.data.accessToken;
+          user.value = data.data.user;
+        } else {
+          accessToken.value = '';
+          user.value = null;
+        }
+      } catch {
         accessToken.value = '';
         user.value = null;
+      } finally {
+        isInitializing.value = false;
+        initPromise = null;
       }
-    } catch {
-      accessToken.value = '';
-      user.value = null;
-    } finally {
-      isInitializing.value = false;
-    }
+    })();
+    return initPromise;
   };
 
   /**

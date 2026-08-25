@@ -8,6 +8,7 @@ const vehicleRoutes = require('./vehicleRoutes');
 const queueRoutes = require('./queueRoutes');
 const authRoutes = require('./authRoutes');
 const userRoutes = require('./userRoutes');
+const transactionRoutes = require('./transactionRoutes');
 
 // Health & Readiness Check Endpoint
 router.get('/health', async (req, res) => {
@@ -36,5 +37,6 @@ router.use('/master', masterRoutes);
 router.use('/mechanics', mechanicRoutes);
 router.use('/vehicles', vehicleRoutes);
 router.use('/services', queueRoutes);
+router.use('/transactions', transactionRoutes);
 
 module.exports = router;

@@ -84,8 +84,8 @@ model Sparepart {
   kategori     String        @default("FAST_MOVING") // FAST_MOVING, SLOW_MOVING, OLI, BAN
   stok         Int           @default(0)
   min_stok     Int           @default(5) // Reorder point
-  harga_beli   Float
-  harga_jual   Float
+  harga_beli   Decimal       @db.Decimal(12, 2)
+  harga_jual   Decimal       @db.Decimal(12, 2)
   supplier_id  Int?
   supplier     Supplier?     @relation(fields: [supplier_id], references: [id])
   created_at   DateTime      @default(now())
@@ -109,7 +109,7 @@ model StockIn {
 model ServiceMaster {
   id              Int           @id @default(autoincrement())
   nama            String        @unique
-  harga           Float
+  harga           Decimal       @db.Decimal(12, 2)
   deskripsi       String?
   estimasi_durasi Int           @default(30) // dalam menit
   kategori        String        @default("RINGAN") // RINGAN, LENGKAP, BERAT, TUNE_UP, OLI
@@ -144,7 +144,7 @@ model Service {
   level_bensin      String?        // e.g. "1/4", "1/2", "3/4", "Full"
   catatan_kondisi   String?        // e.g. "Spion lengkap, lecet bodi kiri"
   keluhan           String
-  estimasi_biaya    Float?         @default(0)
+  estimasi_biaya    Decimal?       @default(0) @db.Decimal(12, 2)
   estimasi_waktu    DateTime?
   status            String         // e.g. "Menunggu", "Dikerjakan", "Selesai"
   tgl_masuk         DateTime       @default(now())
@@ -178,8 +178,8 @@ model ServiceItem {
   serviceMaster     ServiceMaster? @relation(fields: [service_master_id], references: [id])
   nama_item         String         // Snapshot nama suku cadang atau nama jasa
   quantity          Int            @default(1)
-  harga_satuan      Float
-  subtotal          Float
+  harga_satuan      Decimal        @db.Decimal(12, 2)
+  subtotal          Decimal        @db.Decimal(12, 2)
   approval_status   ApprovalStatus @default(MENUNGGU_KONFIRMASI)
   is_approved       Boolean        @default(false) // Sinkron dengan DISETUJUI
   catatan           String?        // Catatan diagnosa teknisi
@@ -189,14 +189,20 @@ model ServiceItem {
 
 model Transaction {
   id              Int      @id @default(autoincrement())
-  no_invoice      String?  @unique // e.g. INV-20260818-001
+  no_invoice      String?  @unique // e.g. INV-260825-001
   service_id      Int
   service         Service  @relation(fields: [service_id], references: [id])
-  total_jasa      Float    @default(0)
-  total_sparepart Float    @default(0)
-  total           Float
+  total_jasa      Decimal  @default(0) @db.Decimal(12, 2)
+  total_sparepart Decimal  @default(0) @db.Decimal(12, 2)
+  diskon          Decimal  @default(0) @db.Decimal(12, 2)
+  total           Decimal  @db.Decimal(12, 2)
+  uang_diterima   Decimal? @default(0) @db.Decimal(12, 2)
+  kembalian       Decimal? @default(0) @db.Decimal(12, 2)
   tgl_bayar       DateTime @default(now())
-  metode_bayar    String   // e.g. Tunai, Transfer Mandiri, Transfer BCA, QRIS
+  metode_bayar    String   // e.g. Tunai, Transfer Bank BCA, Transfer Bank Mandiri, QRIS, Piutang Armada
+  kasir_id        Int?
+  kasir           User?    @relation(fields: [kasir_id], references: [id])
+  catatan         String?  @db.Text
   created_at      DateTime @default(now())
   updated_at      DateTime @default(now()) @updatedAt
 }
@@ -220,6 +226,7 @@ model User {
   mechanic      Mechanic?
   refreshTokens RefreshToken[]
   serviceQCs    ServiceQC[]
+  transactions  Transaction[]
   created_at    DateTime       @default(now())
   updated_at    DateTime       @default(now()) @updatedAt
 }

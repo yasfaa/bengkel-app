@@ -26,7 +26,7 @@ class ServiceItemService {
         item.approval_status === 'DISETUJUI' ||
         (item.is_approved && item.approval_status !== 'DITOLAK')
       ) {
-        totalItems += item.subtotal;
+        totalItems += Number(item.subtotal || 0);
       }
     }
 
@@ -37,7 +37,7 @@ class ServiceItemService {
     );
 
     if (!hasBaseItem && service.serviceMaster && service.serviceMaster.harga) {
-      totalEstimate += service.serviceMaster.harga;
+      totalEstimate += Number(service.serviceMaster.harga || 0);
     }
 
     await tx.service.update({
@@ -84,8 +84,8 @@ class ServiceItemService {
         serviceMasterId: item.service_master_id,
         quantity: item.quantity,
         currentStock: item.sparepart ? item.sparepart.stok : null,
-        hargaSatuan: item.harga_satuan,
-        subtotal: item.subtotal,
+        hargaSatuan: Number(item.harga_satuan),
+        subtotal: Number(item.subtotal),
         approvalStatus: status,
         isApproved: status === 'DISETUJUI',
         catatan: item.catatan,
@@ -145,6 +145,15 @@ class ServiceItemService {
         );
       }
 
+      if (service.status === 'Selesai' || service.status === 'Lunas') {
+        if (user && user.role === 'MEKANIK') {
+          throw new AppError(
+            'Servis telah selesai / lulus QC. Mekanik tidak dapat menambah part atau jasa.',
+            403
+          );
+        }
+      }
+
       let namaItem = '';
       let hargaSatuan = 0;
       let targetSparepartId = null;
@@ -169,7 +178,7 @@ class ServiceItemService {
         }
 
         namaItem = sparepart.nama;
-        hargaSatuan = sparepart.harga_jual;
+        hargaSatuan = Number(sparepart.harga_jual);
       } else if (itemType === 'JASA') {
         targetServiceMasterId = parseId(serviceMasterId);
         if (!targetServiceMasterId) throw new AppError('Jasa servis wajib dipilih.', 400);
@@ -182,12 +191,12 @@ class ServiceItemService {
           throw new AppError('Paket jasa servis tidak ditemukan di master catalog.', 404);
 
         namaItem = serviceMaster.nama;
-        hargaSatuan = serviceMaster.harga;
+        hargaSatuan = Number(serviceMaster.harga);
       } else {
         throw new AppError('Tipe item tidak valid (Harus SPAREPART atau JASA).', 400);
       }
 
-      const subtotal = hargaSatuan * qty;
+      const subtotal = Number(hargaSatuan) * qty;
 
       const createdItem = await tx.serviceItem.create({
         data: {
@@ -227,8 +236,8 @@ class ServiceItemService {
       serviceMasterId: result.service_master_id,
       quantity: result.quantity,
       currentStock: result.sparepart ? result.sparepart.stok : null,
-      hargaSatuan: result.harga_satuan,
-      subtotal: result.subtotal,
+      hargaSatuan: Number(result.harga_satuan),
+      subtotal: Number(result.subtotal),
       approvalStatus: status,
       isApproved: status === 'DISETUJUI',
       catatan: result.catatan,
@@ -273,6 +282,15 @@ class ServiceItemService {
           'Anda hanya dapat mengubah item pada motor yang ditugaskan ke Anda.',
           403
         );
+      }
+
+      if (existing.service?.status === 'Selesai' || existing.service?.status === 'Lunas') {
+        if (user && user.role === 'MEKANIK') {
+          throw new AppError(
+            'Servis telah selesai / lulus QC. Mekanik tidak dapat mengubah part atau jasa.',
+            403
+          );
+        }
       }
 
       const updateData = {};
@@ -327,8 +345,8 @@ class ServiceItemService {
       serviceMasterId: result.service_master_id,
       quantity: result.quantity,
       currentStock: result.sparepart ? result.sparepart.stok : null,
-      hargaSatuan: result.harga_satuan,
-      subtotal: result.subtotal,
+      hargaSatuan: Number(result.harga_satuan),
+      subtotal: Number(result.subtotal),
       approvalStatus: status,
       isApproved: status === 'DISETUJUI',
       catatan: result.catatan,
@@ -371,6 +389,15 @@ class ServiceItemService {
           'Anda hanya dapat menghapus item pada motor yang ditugaskan ke Anda.',
           403
         );
+      }
+
+      if (existing.service?.status === 'Selesai' || existing.service?.status === 'Lunas') {
+        if (user && user.role === 'MEKANIK') {
+          throw new AppError(
+            'Servis telah selesai / lulus QC. Mekanik tidak dapat menghapus part atau jasa.',
+            403
+          );
+        }
       }
 
       await tx.serviceItem.delete({

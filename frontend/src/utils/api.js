@@ -52,6 +52,17 @@ export async function apiFetch(url, options = {}) {
     // AuthStore not yet initialized (e.g. before Pinia setup)
   }
 
+  // If authStore is still initializing on page refresh and has no token, await initialization first
+  if (
+    authStore &&
+    authStore.isInitializing &&
+    !authStore.accessToken &&
+    url !== '/api/auth/refresh' &&
+    url !== '/api/auth/login'
+  ) {
+    await authStore.initAuth();
+  }
+
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
@@ -69,11 +80,9 @@ export async function apiFetch(url, options = {}) {
 
   let res = await fetch(url, config);
 
-  // If 401 Unauthorized received and authStore is active, attempt silent refresh
+  // If 401 Unauthorized received, attempt silent refresh via httpOnly refresh cookie
   if (
     res.status === 401 &&
-    authStore &&
-    authStore.isAuthenticated &&
     url !== '/api/auth/login' &&
     url !== '/api/auth/refresh'
   ) {

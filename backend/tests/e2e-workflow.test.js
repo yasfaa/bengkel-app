@@ -24,6 +24,11 @@ describe('🚀 End-to-End (E2E) Workshop Operational Lifecycle Integration Test'
   });
 
   afterAll(async () => {
+    if (createdServiceId) {
+      await prisma.serviceQC.deleteMany({ where: { service_id: createdServiceId } });
+      await prisma.serviceItem.deleteMany({ where: { service_id: createdServiceId } });
+      await prisma.service.deleteMany({ where: { id: createdServiceId } });
+    }
     await prisma.$disconnect();
   });
 

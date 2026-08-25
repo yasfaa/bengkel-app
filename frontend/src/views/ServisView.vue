@@ -264,12 +264,12 @@
               <!-- 3. Selesai (Kasir / Billing) -->
               <template v-else-if="service.status === 'Selesai' && !service.isPaid">
                 <button
-                  v-if="authStore.isAdmin"
+                  v-if="authStore.isAdmin || authStore.isKepalaBengkel"
                   class="btn btn-primary"
-                  style="padding: 6px 12px; font-size: 12px; background-color: #059669"
-                  @click="$emit('create-invoice', service)"
+                  style="padding: 6px 12px; font-size: 12px; background-color: #059669; border-color: #059669"
+                  @click="$emit('open-payment-modal', service); $emit('create-invoice', service)"
                 >
-                  <i class="ph-bold ph-receipt"></i> Kasir
+                  <i class="ph-bold ph-credit-card"></i> Bayar Kasir
                 </button>
                 <span v-else class="badge badge-pending" style="font-size: 11px; padding: 5px 10px">
                   Belum Lunas
@@ -277,9 +277,19 @@
               </template>
 
               <!-- 4. Lunas -->
-              <span v-else class="badge badge-done">
-                <i class="ph-bold ph-check-circle"></i> LUNAS
-              </span>
+              <template v-else-if="service.status === 'Selesai' && service.isPaid">
+                <span class="badge badge-done" style="margin-right: 6px">
+                  <i class="ph-bold ph-check-circle"></i> LUNAS
+                </span>
+                <button
+                  class="btn btn-secondary"
+                  style="padding: 5px 9px; font-size: 11px"
+                  title="Lihat & Cetak Struk Pembayaran Kasir"
+                  @click="$emit('view-receipt', service.transactions && service.transactions[0] ? service.transactions[0] : { id: service.id, serviceId: service.id, noInvoice: service.nomorInvoice || 'INV-' + service.id, total: service.grandTotal, tglBayar: service.tgl_selesai, service })"
+                >
+                  <i class="ph-bold ph-printer"></i> Struk
+                </button>
+              </template>
             </td>
           </tr>
           <tr v-if="filteredServices.length === 0">
@@ -300,13 +310,6 @@
                       : 'Pencarian tidak menemukan hasil atau belum ada PKB yang terdaftar hari ini.'
                   }}
                 </div>
-                <button
-                  v-if="authStore.isAdmin"
-                  class="btn btn-primary"
-                  @click="$emit('open-service-modal')"
-                >
-                  <i class="ph-bold ph-plus"></i> Catat Servis / Buat PKB
-                </button>
               </div>
             </td>
           </tr>
@@ -335,6 +338,8 @@ defineEmits([
   'assign-mechanic',
   'start-service-mechanic',
   'complete-service',
+  'open-payment-modal',
+  'view-receipt',
   'create-invoice',
 ]);
 </script>

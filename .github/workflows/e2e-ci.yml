@@ -85,39 +85,39 @@ jobs:
           cd backend
           npm test -- tests/e2e-workflow.test.js
 
-      # - name: 📢 Discord Alert (E2E Success)
-      #   uses: sarisia/actions-status-discord@v1
-      #   if: success() && env.DISCORD_WEBHOOK_URL != ''
-      #   with:
-      #     webhook: ${{ env.DISCORD_WEBHOOK_URL }}
-      #     title: "🚀 Full E2E & Workshop Integration: PASSED"
-      #     nodetail: false
-      #     color: 0x9B59B6
-      #     username: "BengkelKu CI/CD"
-      #     avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-      #     description: |
-      #       🎉 **Seluruh Siklus Bisnis Bengkel & Integrasi Database E2E Sukses Terverifikasi!**
-      #       
-      #       • **Branch**: `${{ github.ref_name }}`
-      #       • **Author**: `${{ github.actor }}`
-      #       • **Commit**: `${{ github.event.head_commit.message }}`
-      #       • [📊 Lihat Detail Eksekusi](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
+      - name: 📢 Discord Alert (E2E Success)
+        uses: sarisia/actions-status-discord@v1
+        if: success() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "🚀 Full E2E & Workshop Integration: PASSED"
+          nodetail: false
+          color: 0x9B59B6
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            🎉 **Seluruh Siklus Bisnis Bengkel & Integrasi Database E2E Sukses Terverifikasi!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [📊 Lihat Detail Eksekusi](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
 
-      # - name: 🚨 Discord Alert (E2E Failure)
-      #   uses: sarisia/actions-status-discord@v1
-      #   if: failure() && env.DISCORD_WEBHOOK_URL != ''
-      #   with:
-      #     webhook: ${{ env.DISCORD_WEBHOOK_URL }}
-      #     title: "❌ Full E2E & Workshop Integration: FAILED"
-      #     nodetail: false
-      #     color: 0xE74C3C
-      #     username: "BengkelKu CI/CD"
-      #     avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-      #     description: |
-      #       ⚠️ **Siklus E2E Integrasi Bengkel Mengalami Kegagalan!**
-      #       
-      #       • **Branch**: `${{ github.ref_name }}`
-      #       • **Author**: `${{ github.actor }}`
-      #       • **Commit**: `${{ github.event.head_commit.message }}`
-      #       • [🔍 Buka Log Analisis Kegagalan](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
+      - name: 🚨 Discord Alert (E2E Failure)
+        uses: sarisia/actions-status-discord@v1
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "❌ Full E2E & Workshop Integration: FAILED"
+          nodetail: false
+          color: 0xE74C3C
+          username: "BengkelKu CI/CD"
+          avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+          description: |
+            ⚠️ **Siklus E2E Integrasi Bengkel Mengalami Kegagalan!**
+            
+            • **Branch**: `${{ github.ref_name }}`
+            • **Author**: `${{ github.actor }}`
+            • **Commit**: `${{ github.event.head_commit.message }}`
+            • [🔍 Buka Log Analisis Kegagalan](<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>)
 

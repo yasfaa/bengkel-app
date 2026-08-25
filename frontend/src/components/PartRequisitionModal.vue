@@ -92,9 +92,41 @@
           </div>
         </div>
 
-        <!-- Form Section: Tambah Item (Untuk ADMIN & MEKANIK) -->
+        <!-- View-Only Notice Banner -->
         <div
-          v-if="!authStore.isKepalaBengkel"
+          v-if="isViewOnly"
+          class="card"
+          style="
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12.5px;
+            color: #1e40af;
+          "
+        >
+          <i class="ph-bold ph-lock-key" style="font-size: 18px; color: #2563eb"></i>
+          <div>
+            <strong>Mode Pratinjau (Lihat Saja)</strong>:
+            <span v-if="authStore.isMechanic && service.status === 'Selesai'">
+              Pengerjaan servis motor ini telah selesai (Belum Lunas di kasir). Suku cadang & jasa bersifat tetap dan tidak dapat ditambah/dihapus oleh teknisi.
+            </span>
+            <span v-else-if="service.isPaid">
+              Servis ini telah lunas dan invoice telah diterbitkan.
+            </span>
+            <span v-else>
+              Hak akses akun ini hanya diperbolehkan melihat daftar suku cadang & jasa PKB.
+            </span>
+          </div>
+        </div>
+
+        <!-- Form Section: Tambah Item (Hanya jika bukan view-only) -->
+        <div
+          v-if="!isViewOnly"
           class="card"
           style="background: var(--bg-surface-secondary); margin-bottom: 16px; padding: 14px 18px"
         >
@@ -371,7 +403,7 @@
                   <th style="text-align: center; width: 55px">Qty</th>
                   <th style="text-align: right">Subtotal</th>
                   <th style="text-align: center">Status Persetujuan Konsumen</th>
-                  <th style="text-align: right; width: 70px">Aksi</th>
+                  <th v-if="!isViewOnly" style="text-align: right; width: 70px">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -438,29 +470,28 @@
                     </div>
                   </td>
                   <td style="text-align: center">
-                    <!-- Interactive Approval Status Button (Disabled for Kepala Bengkel) -->
+                    <!-- Interactive Approval Status Button (Disabled if isViewOnly) -->
                     <button
                       :class="['approval-badge-btn', getApprovalButtonClass(item.approvalStatus)]"
-                      :style="{ cursor: authStore.isKepalaBengkel ? 'default' : 'pointer' }"
+                      :style="{ cursor: isViewOnly ? 'default' : 'pointer' }"
                       :title="
-                        authStore.isKepalaBengkel
+                        isViewOnly
                           ? 'Status Persetujuan'
                           : 'Klik untuk mengubah persetujuan konsumen'
                       "
-                      @click="!authStore.isKepalaBengkel && handleApprovalClick(item)"
+                      @click="!isViewOnly && handleApprovalClick(item)"
                     >
                       <i :class="getApprovalIcon(item.approvalStatus)"></i>
                       <span>{{ getApprovalLabel(item.approvalStatus) }}</span>
                       <i
-                        v-if="!authStore.isKepalaBengkel"
+                        v-if="!isViewOnly"
                         class="ph-bold ph-caret-down"
                         style="font-size: 10px; opacity: 0.7; margin-left: 2px"
                       ></i>
                     </button>
                   </td>
-                  <td style="text-align: right">
+                  <td v-if="!isViewOnly" style="text-align: right">
                     <button
-                      v-if="!authStore.isKepalaBengkel"
                       class="btn btn-danger"
                       style="padding: 4px 8px; font-size: 11px"
                       title="Hapus item dari PKB"
@@ -468,19 +499,18 @@
                     >
                       <i class="ph-bold ph-trash"></i>
                     </button>
-                    <span v-else style="color: var(--text-muted); font-size: 11px">-</span>
                   </td>
                 </tr>
                 <tr v-if="currentServiceItems.length === 0">
                   <td
-                    colspan="7"
+                    :colspan="isViewOnly ? 6 : 7"
                     style="text-align: center; padding: 28px; color: var(--text-muted)"
                   >
                     <div style="font-size: 26px; margin-bottom: 4px">📦</div>
                     <div style="font-weight: 600">
                       Belum ada suku cadang atau jasa tambahan pada PKB ini.
                     </div>
-                    <div style="font-size: 11.5px; margin-top: 2px">
+                    <div v-if="!isViewOnly" style="font-size: 11.5px; margin-top: 2px">
                       Gunakan form di atas untuk mengajukan permintaan part atau jasa tambahan.
                     </div>
                   </td>
@@ -609,7 +639,8 @@
           tagihan PKB dan invoice kasir.
         </div>
         <button class="btn btn-primary" @click="$emit('update:modelValue', false)">
-          <i class="ph-bold ph-check"></i> Selesai & Simpan
+          <i :class="['ph-bold', isViewOnly ? 'ph-x' : 'ph-check']"></i>
+          {{ isViewOnly ? 'Tutup' : 'Selesai & Simpan' }}
         </button>
       </div>
     </div>
@@ -644,6 +675,13 @@ const itemQty = ref(1);
 const itemCatatan = ref('');
 const itemApprovalStatus = ref(authStore.isAdmin ? 'DISETUJUI' : 'MENUNGGU_KONFIRMASI');
 const isSubmitting = ref(false);
+
+const isViewOnly = computed(() => {
+  if (authStore.isKepalaBengkel) return true;
+  if (props.service?.isPaid) return true;
+  if (authStore.isMechanic && props.service?.status === 'Selesai') return true;
+  return false;
+});
 
 const basePackageName = computed(() => {
   if (!props.service) return 'Servis Umum / Custom';

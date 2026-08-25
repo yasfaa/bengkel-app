@@ -54,6 +54,10 @@ const swaggerSpec = {
     { name: 'Master - Suppliers', description: 'Katalog master pemasok / distributor' },
     { name: 'Master - Motor', description: 'Master merk, tipe, dan kapasitas mesin motor' },
     { name: 'Vehicles', description: 'Pencarian data kendaraan pelanggan' },
+    {
+      name: 'Transactions & POS (Stage 5)',
+      description: 'Kasir, pembayaran invoice PKB, dan pemotongan stok otomatis',
+    },
   ],
   paths: {
     // Health Check
@@ -553,6 +557,71 @@ const swaggerSpec = {
         summary: 'Cari kendaraan berdasarkan nomor polisi (Nopol)',
         parameters: [{ name: 'nopol', in: 'query', required: true, schema: { type: 'string' } }],
         responses: { 200: { description: 'Success' } },
+      },
+    },
+    // Stage 5: Transactions & POS Kasir
+    '/api/transactions/unpaid': {
+      get: {
+        tags: ['Transactions & POS (Stage 5)'],
+        summary: 'Daftar PKB yang sudah Selesai (Lulus QC) dan siap dibayar di kasir',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Daftar antrean PKB siap bayar berhasil diambil',
+          },
+        },
+      },
+    },
+    '/api/transactions': {
+      get: {
+        tags: ['Transactions & POS (Stage 5)'],
+        summary: 'Riwayat transaksi invoice kasir dengan filter pencarian',
+        parameters: [
+          { name: 'search', in: 'query', schema: { type: 'string' }, description: 'Cari nomor invoice, nopol, atau nama konsumen' },
+          { name: 'metodeBayar', in: 'query', schema: { type: 'string' }, description: 'Filter metode bayar (Tunai, QRIS, dll)' },
+        ],
+        responses: {
+          200: { description: 'Riwayat transaksi kasir berhasil diambil' },
+        },
+      },
+      post: {
+        tags: ['Transactions & POS (Stage 5)'],
+        summary: 'Proses pembayaran kasir & pengurangan stok sparepart atomik',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['serviceId', 'metodeBayar'],
+                properties: {
+                  serviceId: { type: 'integer', example: 1 },
+                  metodeBayar: { type: 'string', example: 'Tunai' },
+                  diskon: { type: 'number', example: 5000 },
+                  uangDiterima: { type: 'number', example: 150000 },
+                  catatan: { type: 'string', example: 'Pembayaran kasir loket 1' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Pembayaran kasir sukses & invoice dibuat' },
+          400: { description: 'Validasi gagal, nominal tunai kurang, atau stok tidak cukup' },
+          404: { description: 'PKB tidak ditemukan' },
+        },
+      },
+    },
+    '/api/transactions/{id}': {
+      get: {
+        tags: ['Transactions & POS (Stage 5)'],
+        summary: 'Detail data transaksi invoice untuk cetak struk / faktur',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: {
+          200: { description: 'Detail invoice berhasil diambil' },
+          404: { description: 'Invoice tidak ditemukan' },
+        },
       },
     },
   },

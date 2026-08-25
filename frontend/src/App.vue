@@ -109,6 +109,10 @@
           :service-masters="serviceMasters"
           :suppliers="suppliers"
           :transactions="transactions"
+          :unpaid-services="unpaidServices"
+          :unpaid-count="unpaidCount"
+          :filtered-transactions="filteredTransactions"
+          :payment-method-filter="paymentMethodFilter"
           :spareparts="spareparts"
           :total-revenue="totalRevenue"
           :standby-mechanics-count="standbyMechanicsCount"
@@ -134,7 +138,10 @@
           @assign-mechanic="openAssignModal"
           @start-service-mechanic="startServiceMechanic"
           @complete-service="completeService"
-          @create-invoice="createInvoice"
+          @open-payment-modal="openPaymentModal"
+          @view-receipt="viewReceipt"
+          @fetch-transactions="fetchTransactions"
+          @fetch-unpaid-services="fetchUnpaidServices"
         />
       </main>
     </div>
@@ -180,14 +187,21 @@
     <InvoiceModal
       v-model="showInvoiceModal"
       :selected-service="selectedService"
-      :invoice-form="invoiceForm"
-      :service-masters="serviceMasters"
-      :spareparts="spareparts"
-      :selected-sparepart="selectedSparepart"
-      :selected-service-master="selectedServiceMaster"
-      :calculated-total-invoice="calculatedTotalInvoice"
+      :payment-form="paymentForm"
+      :total-jasa="totalJasa"
+      :total-sparepart="totalSparepart"
+      :grand-total="grandTotal"
+      :kembalian="kembalian"
+      :is-cash-deficit="isCashDeficit"
+      :is-submitting="isSubmitting"
       :format-currency="formatCurrency"
-      @submit="processPayment"
+      @submit="submitPayment"
+    />
+
+    <InvoiceReceiptModal
+      v-model="showReceiptModal"
+      :invoice="activeInvoice"
+      :format-currency="formatCurrency"
     />
 
     <AddStockModal
@@ -245,6 +259,7 @@ import AssignMechanicModal from './components/AssignMechanicModal.vue';
 import PartRequisitionModal from './components/PartRequisitionModal.vue';
 import AddStockModal from './components/AddStockModal.vue';
 import InvoiceModal from './components/InvoiceModal.vue';
+import InvoiceReceiptModal from './components/InvoiceReceiptModal.vue';
 import ServiceMasterModal from './components/ServiceMasterModal.vue';
 import MechanicModal from './components/MechanicModal.vue';
 import SparepartModal from './components/SparepartModal.vue';
@@ -265,8 +280,12 @@ const {
   serviceMasters,
   suppliers,
   transactions,
+  unpaidServices,
+  unpaidCount,
   spareparts,
   searchQuery,
+  paymentMethodFilter,
+  filteredTransactions,
   filteredServices,
   lowStockCount,
   standbyMechanicsCount,
@@ -298,15 +317,26 @@ const {
   showAddServiceModal,
   showAddStockModal,
   showInvoiceModal,
+  showReceiptModal,
   selectedService,
+  activeInvoice,
+  paymentForm,
+  totalJasa,
+  totalSparepart,
+  grandTotal,
+  kembalian,
+  isCashDeficit,
+  isSubmitting,
+  openPaymentModal,
+  submitPayment,
+  viewReceipt,
+  fetchTransactions,
+  fetchUnpaidServices,
   selectedSparepart,
   selectedServiceMaster,
-  calculatedTotalInvoice,
-  invoiceForm,
   stockForm,
   newServiceForm,
   serviceMasterForm,
-  processPayment,
   saveNewService,
   saveStockIn,
   showServiceMasterModal,
@@ -323,7 +353,6 @@ const {
   saveSparepart,
   showSparepartModal,
   sparepartForm,
-  createInvoice,
   motorTypeLoading,
   errorMessage,
   retryAllData,

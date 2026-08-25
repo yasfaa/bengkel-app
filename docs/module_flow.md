@@ -49,20 +49,17 @@ graph TD
   2. Mengumpulkan sparepart bekas/lama untuk diserahkan ke konsumen sebagai bukti fisik penggantian.
   3. Status order: `DIKERJAKAN` ➔ `SELESAI` (Siap Bayar).
 
-### E. Tahap 5: Kasir, Billing & Pengurangan Stok Otomatis
-* **Petugas**: Kasir.
-* **Prosedur**:
-  1. Pembuatan Invoice dari PKB (Total Jasa + Total Sparepart - Diskon).
-  2. Penerimaan pembayaran (Tunai, Transfer Bank, QRIS, Piutang Armada).
-  3. **Pengurangan Stok Otomatis (FIFO)** di database saat transaksi disimpan secara atomik.
-  4. Cetak Invoice rangkap. Status transaksi: `LUNAS`.
-
-### F. Tahap 6: Serah Terima & Garansi Servis
-* **Petugas**: SA & Kasir.
-* **Ketentuan Garansi**:
-  - Servis Ringan / Rutin: 7 hari atau 500 km.
-  - Servis Berat / Turun Mesin: 30 hari atau 1.000 km.
-* **Reminder Servis**: Menjadwalkan pengingat servis otomatis untuk 2 bulan ke depan / +2.000 KM.
+### E. Tahap 5: Kasir, Billing, Pengurangan Stok & Serah Terima Garansi
+* **Petugas**: Kasir & SA.
+* **Prosedur Terpadu**:
+  1. **Pembuatan Invoice dari PKB**: Agregasi otomatis Total Jasa Dasar + Jasa Tambahan (Approved) + Suku Cadang (Approved) - Diskon. Format penomoran invoice resmi: `INV-YYMMDD-XXX`.
+  2. **Penerimaan Pembayaran Multikanal**: Tunai (dengan validasi kembalian), Transfer Bank (BCA, Mandiri, BRI), QRIS, Piutang Armada.
+  3. **Pengurangan Stok Otomatis Secara Atomik (`prisma.$transaction`)**: Kuantitas fisik suku cadang dipotong otomatis di gudang saat transaksi disimpan.
+  4. **Cetak Struk Kasir & Kartu Garansi Terpadu**:
+     - *Garansi Servis*: Servis Rutin (7 Hari / 500 KM) & Servis Berat / Turun Mesin (30 Hari / 1.000 KM).
+     - *Next Service Reminder*: Rekomendasi servis berikutnya (+60 Hari / +2.000 KM).
+     - *Pemberitahuan WhatsApp*: Tombol kirim ringkasan invoice, bukti garansi, dan pengingat servis langsung ke nomor WhatsApp konsumen.
+     - *Serah Terima*: Pernyataan resmi serah terima kunci motor dan suku cadang bekas. Status transaksi: `LUNAS`.
 
 ---
 

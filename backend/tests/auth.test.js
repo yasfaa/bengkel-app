@@ -1,11 +1,22 @@
 const request = require('supertest');
 const app = require('../src/app');
+const prisma = require('../src/db');
 
 describe('🔐 Authentication & RBAC Authorization Integration Tests', () => {
   let adminToken = '';
   let adminCookie = '';
   let kepalaToken = '';
   let asepToken = '';
+  const testServiceIds = [];
+
+  afterAll(async () => {
+    if (testServiceIds.length > 0) {
+      await prisma.serviceQC.deleteMany({ where: { service_id: { in: testServiceIds } } });
+      await prisma.serviceItem.deleteMany({ where: { service_id: { in: testServiceIds } } });
+      await prisma.service.deleteMany({ where: { id: { in: testServiceIds } } });
+    }
+    await prisma.$disconnect();
+  });
 
   beforeAll(async () => {
     // 1. Login as Admin
@@ -155,6 +166,7 @@ describe('🔐 Authentication & RBAC Authorization Integration Tests', () => {
         });
       expect(unassignedRes.statusCode).toBe(201);
       unassignedServiceId = unassignedRes.body.id;
+      testServiceIds.push(unassignedServiceId);
 
       // 2. Create an assigned service assigned to Asep
       const assignedRes = await request(app)
@@ -171,6 +183,7 @@ describe('🔐 Authentication & RBAC Authorization Integration Tests', () => {
         });
       expect(assignedRes.statusCode).toBe(201);
       assignedServiceId = assignedRes.body.id;
+      testServiceIds.push(assignedServiceId);
     });
 
     it('3.1 ADMIN should see both unassigned and assigned services', async () => {
@@ -226,6 +239,7 @@ describe('🔐 Authentication & RBAC Authorization Integration Tests', () => {
           capacityName: '160 cc',
         });
       serviceId = serviceRes.body.id;
+      testServiceIds.push(serviceId);
 
       // Start working
       await request(app)
@@ -302,6 +316,7 @@ describe('🔐 Authentication & RBAC Authorization Integration Tests', () => {
           capacityName: '110 cc',
         });
       const newServiceId = newServiceRes.body.id;
+      testServiceIds.push(newServiceId);
 
       // Start working
       await request(app)

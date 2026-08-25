@@ -26,20 +26,27 @@ describe('Pinia State Management Stores Tests', () => {
   });
 
   it('useTransactionStore should calculate revenue and total invoice accurately', () => {
-    const master = useMasterStore();
     const transactions = useTransactionStore();
 
-    master.serviceMasters = [{ id: 1, nama: 'Servis Ringan', harga: 50000, is_active: true }];
-    master.spareparts = [{ id: 10, nama: 'Oli MPX2', hargaJual: 52000, stok: 10 }];
+    transactions.transactions = [
+      { id: 1, total: 100000, tglBayar: new Date().toISOString() },
+      { id: 2, total: 150000, tglBayar: new Date().toISOString() },
+    ];
 
-    transactions.invoiceForm.serviceMasterId = 1;
-    transactions.invoiceForm.sparepartId = 10;
+    expect(transactions.totalRevenue).toBe(250000);
+    expect(transactions.todayRevenue).toBe(250000);
 
-    expect(transactions.selectedServiceMaster).not.toBeNull();
-    expect(transactions.selectedServiceMaster.harga).toBe(50000);
-    expect(transactions.selectedSparepart).not.toBeNull();
-    expect(transactions.selectedSparepart.hargaJual).toBe(52000);
-    expect(transactions.calculatedTotalInvoice).toBe(102000);
+    transactions.selectedService = {
+      id: 5,
+      totalJasa: 50000,
+      totalSparepart: 55000,
+    };
+    transactions.paymentForm.diskon = 5000;
+    transactions.paymentForm.uangDiterima = 120000;
+
+    expect(transactions.totalGross).toBe(105000);
+    expect(transactions.grandTotal).toBe(100000);
+    expect(transactions.kembalian).toBe(20000);
   });
 
   it('useQueueStore should filter active and completed services', () => {

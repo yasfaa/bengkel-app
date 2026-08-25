@@ -3,7 +3,14 @@ const app = require('../src/app');
 const prisma = require('../src/db');
 
 describe('API Input Validation Middleware Tests (Zod)', () => {
+  let createdServiceId = null;
+
   afterAll(async () => {
+    if (createdServiceId) {
+      await prisma.serviceQC.deleteMany({ where: { service_id: createdServiceId } });
+      await prisma.serviceItem.deleteMany({ where: { service_id: createdServiceId } });
+      await prisma.service.deleteMany({ where: { id: createdServiceId } });
+    }
     await prisma.$disconnect();
   });
 
@@ -39,6 +46,7 @@ describe('API Input Validation Middleware Tests (Zod)', () => {
     expect(res.body).toHaveProperty('nomorPkb');
     expect(res.body.nomorPkb).toMatch(/^PKB-\d{8}-\d{3}$/);
     expect(res.body.status).toBe('Menunggu');
+    createdServiceId = res.body.id;
   });
 
   it('should reject invalid master sparepart payload with 400 Bad Request', async () => {

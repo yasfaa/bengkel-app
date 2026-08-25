@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
+import { useAuthStore } from '../src/stores/authStore';
 import PartRequisitionModal from '../src/components/PartRequisitionModal.vue';
 
 describe('PartRequisitionModal Component Tests', () => {
@@ -65,5 +66,28 @@ describe('PartRequisitionModal Component Tests', () => {
     });
 
     expect(wrapper.find('.modal-backdrop').exists()).toBe(false);
+  });
+
+  it('should render modal as View Only for Mechanic when service is Selesai (Belum Lunas)', () => {
+    const authStore = useAuthStore();
+    authStore.setUser({ id: 5, username: 'asep', role: 'MEKANIK', mechanicId: 1 });
+
+    const selesaiService = {
+      ...sampleService,
+      status: 'Selesai',
+      isPaid: false,
+    };
+
+    const wrapper = mount(PartRequisitionModal, {
+      props: {
+        modelValue: true,
+        service: selesaiService,
+      },
+    });
+
+    expect(wrapper.text()).toContain('Mode Pratinjau (Lihat Saja)');
+    expect(wrapper.text()).not.toContain('Tambah Suku Cadang Gudang');
+    expect(wrapper.text()).not.toContain('Tambah Jasa Servis Ekstra');
+    expect(wrapper.find('.btn-danger').exists()).toBe(false);
   });
 });
