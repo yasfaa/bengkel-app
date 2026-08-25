@@ -65,18 +65,38 @@
       </div>
 
       <!-- Modal Body -->
-      <div v-if="invoice" class="modal-body receipt-content" style="padding: 16px 20px; max-height: 78vh; overflow-y: auto">
-        
+      <div
+        v-if="invoice"
+        class="modal-body receipt-content"
+        style="padding: 16px 20px; max-height: 78vh; overflow-y: auto"
+      >
         <!-- ================================================================= -->
         <!-- FORMAT 1: NOTA FAKTUR NCR 3-PLY / SURAT JALAN BENGKEL (DEFAULT)    -->
         <!-- ================================================================= -->
         <div v-if="printMode === 'ncr'" id="printable-ncr" class="ncr-invoice-paper">
           <!-- Header Perusahaan & Nota Title -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 12px">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              border-bottom: 2px solid #0f172a;
+              padding-bottom: 10px;
+              margin-bottom: 12px;
+            "
+          >
             <div>
               <div style="display: flex; align-items: center; gap: 6px">
                 <i class="ph-fill ph-wrench" style="color: #2563eb; font-size: 22px"></i>
-                <h2 style="margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a">
+                <h2
+                  style="
+                    margin: 0;
+                    font-size: 20px;
+                    font-weight: 900;
+                    letter-spacing: -0.5px;
+                    color: #0f172a;
+                  "
+                >
                   BENGKELKU MOTOR
                 </h2>
               </div>
@@ -89,7 +109,20 @@
             </div>
 
             <div style="text-align: right">
-              <div style="display: inline-block; border: 2px solid #059669; color: #059669; padding: 2px 10px; font-weight: 900; font-size: 14px; border-radius: 4px; letter-spacing: 1px; transform: rotate(-2deg); margin-bottom: 4px">
+              <div
+                style="
+                  display: inline-block;
+                  border: 2px solid #059669;
+                  color: #059669;
+                  padding: 2px 10px;
+                  font-weight: 900;
+                  font-size: 14px;
+                  border-radius: 4px;
+                  letter-spacing: 1px;
+                  transform: rotate(-2deg);
+                  margin-bottom: 4px;
+                "
+              >
                 LUNAS / PAID
               </div>
               <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a">
@@ -102,16 +135,33 @@
           </div>
 
           <!-- Metadata 2-Column Grid -->
-          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; font-size: 12px; line-height: 1.6">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1.2fr 1fr;
+              gap: 14px;
+              background: #f8fafc;
+              border: 1px solid #cbd5e1;
+              border-radius: 6px;
+              padding: 10px 14px;
+              margin-bottom: 14px;
+              font-size: 12px;
+              line-height: 1.6;
+            "
+          >
             <!-- Left: Customer & Vehicle -->
             <div>
               <div style="display: flex; justify-content: space-between">
                 <span style="color: #64748b">No. Polisi (Nopol):</span>
-                <strong class="nopol-font" style="color: #2563eb; font-size: 13px">{{ invoice.nopol || invoice.service?.nopol }}</strong>
+                <strong class="nopol-font" style="color: #2563eb; font-size: 13px">{{
+                  invoice.nopol || invoice.service?.nopol
+                }}</strong>
               </div>
               <div style="display: flex; justify-content: space-between">
                 <span style="color: #64748b">Nama Pemilik / Pelanggan:</span>
-                <strong style="color: #0f172a">{{ invoice.customerName || invoice.service?.customerName }}</strong>
+                <strong style="color: #0f172a">{{
+                  invoice.customerName || invoice.service?.customerName
+                }}</strong>
               </div>
               <div style="display: flex; justify-content: space-between">
                 <span style="color: #64748b">Tipe Motor / Kendaraan:</span>
@@ -127,7 +177,9 @@
             <div style="border-left: 1px solid #e2e8f0; padding-left: 14px">
               <div style="display: flex; justify-content: space-between">
                 <span style="color: #64748b">No. PKB:</span>
-                <strong class="pkb-font" style="color: #475569">{{ invoice.service?.nomorPkb || 'PKB-' + (invoice.service?.id || invoice.serviceId) }}</strong>
+                <strong class="pkb-font" style="color: #475569">{{
+                  invoice.service?.nomorPkb || 'PKB-' + (invoice.service?.id || invoice.serviceId)
+                }}</strong>
               </div>
               <div style="display: flex; justify-content: space-between">
                 <span style="color: #64748b">Tanggal & Waktu:</span>
@@ -135,7 +187,9 @@
               </div>
               <div style="display: flex; justify-content: space-between">
                 <span style="color: #64748b">Teknisi / Mekanik:</span>
-                <strong style="color: #0f172a">{{ invoice.service?.mechanicName || 'Teknisi Umum' }}</strong>
+                <strong style="color: #0f172a">{{
+                  invoice.service?.mechanicName || 'Teknisi Umum'
+                }}</strong>
               </div>
               <div style="display: flex; justify-content: space-between">
                 <span style="color: #64748b">Kasir / Frontdesk:</span>
@@ -145,11 +199,22 @@
           </div>
 
           <!-- Itemized Table (Jasa + Suku Cadang) -->
-          <table class="ncr-table" style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px">
+          <table
+            class="ncr-table"
+            style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 12px"
+          >
             <thead>
-              <tr style="background: #f1f5f9; border-top: 1px solid #0f172a; border-bottom: 1px solid #0f172a">
+              <tr
+                style="
+                  background: #f1f5f9;
+                  border-top: 1px solid #0f172a;
+                  border-bottom: 1px solid #0f172a;
+                "
+              >
                 <th style="padding: 6px 8px; text-align: center; width: 35px">No</th>
-                <th style="padding: 6px 8px; text-align: left">Deskripsi Pekerjaan / Suku Cadang</th>
+                <th style="padding: 6px 8px; text-align: left">
+                  Deskripsi Pekerjaan / Suku Cadang
+                </th>
                 <th style="padding: 6px 8px; text-align: center; width: 90px">Kategori</th>
                 <th style="padding: 6px 8px; text-align: center; width: 50px">Qty</th>
                 <th style="padding: 6px 8px; text-align: right; width: 110px">Harga Satuan</th>
@@ -162,14 +227,30 @@
                 <td style="padding: 6px 8px; text-align: center">1</td>
                 <td style="padding: 6px 8px">
                   <strong>{{ invoice.service?.basePackageName || 'Paket Servis Dasar' }}</strong>
-                  <div style="font-size: 10.5px; color: #64748b">Jasa Paket Pemeriksaan & Tune-up Standar Bengkel</div>
+                  <div style="font-size: 10.5px; color: #64748b">
+                    Jasa Paket Pemeriksaan & Tune-up Standar Bengkel
+                  </div>
                 </td>
                 <td style="padding: 6px 8px; text-align: center">
-                  <span style="background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700">JASA UTAMA</span>
+                  <span
+                    style="
+                      background: #e0e7ff;
+                      color: #3730a3;
+                      padding: 2px 6px;
+                      border-radius: 4px;
+                      font-size: 10px;
+                      font-weight: 700;
+                    "
+                    >JASA UTAMA</span
+                  >
                 </td>
                 <td style="padding: 6px 8px; text-align: center; font-weight: 700">1</td>
-                <td style="padding: 6px 8px; text-align: right">Rp {{ formatCurrency(invoice.service?.basePackagePrice || 0) }}</td>
-                <td style="padding: 6px 8px; text-align: right; font-weight: 700">Rp {{ formatCurrency(invoice.service?.basePackagePrice || 0) }}</td>
+                <td style="padding: 6px 8px; text-align: right">
+                  Rp {{ formatCurrency(invoice.service?.basePackagePrice || 0) }}
+                </td>
+                <td style="padding: 6px 8px; text-align: right; font-weight: 700">
+                  Rp {{ formatCurrency(invoice.service?.basePackagePrice || 0) }}
+                </td>
               </tr>
 
               <!-- Approved Parts and Extra Services -->
@@ -181,7 +262,9 @@
                 <td style="padding: 6px 8px; text-align: center">{{ idx + 2 }}</td>
                 <td style="padding: 6px 8px">
                   <div style="font-weight: 600; color: #0f172a">{{ item.namaItem }}</div>
-                  <div v-if="item.kodePart" style="font-size: 10.5px; color: #64748b">Kode Part: {{ item.kodePart }}</div>
+                  <div v-if="item.kodePart" style="font-size: 10.5px; color: #64748b">
+                    Kode Part: {{ item.kodePart }}
+                  </div>
                 </td>
                 <td style="padding: 6px 8px; text-align: center">
                   <span
@@ -191,36 +274,82 @@
                       padding: '2px 6px',
                       borderRadius: '4px',
                       fontSize: '10px',
-                      fontWeight: '700'
+                      fontWeight: '700',
                     }"
                   >
                     {{ item.itemType === 'SPAREPART' ? 'PART BARU' : 'JASA EKSTRA' }}
                   </span>
                 </td>
-                <td style="padding: 6px 8px; text-align: center; font-weight: 700">{{ item.quantity }}</td>
-                <td style="padding: 6px 8px; text-align: right">Rp {{ formatCurrency(item.hargaSatuan) }}</td>
-                <td style="padding: 6px 8px; text-align: right; font-weight: 700">Rp {{ formatCurrency(item.subtotal) }}</td>
+                <td style="padding: 6px 8px; text-align: center; font-weight: 700">
+                  {{ item.quantity }}
+                </td>
+                <td style="padding: 6px 8px; text-align: right">
+                  Rp {{ formatCurrency(item.hargaSatuan) }}
+                </td>
+                <td style="padding: 6px 8px; text-align: right; font-weight: 700">
+                  Rp {{ formatCurrency(item.subtotal) }}
+                </td>
               </tr>
             </tbody>
           </table>
 
           <!-- Financial Calculation & Warranty Grid -->
-          <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 12px">
+          <div
+            style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 12px"
+          >
             <!-- Left Box: Warranty & Notes -->
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 11px; line-height: 1.5; background: #fafafa">
-              <div style="font-weight: 800; color: #1e293b; margin-bottom: 3px; display: flex; align-items: center; gap: 4px">
-                <i class="ph-bold ph-shield-check" style="color: #059669"></i> KETENTUAN GARANSI & SURAT JALAN
+            <div
+              style="
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-size: 11px;
+                line-height: 1.5;
+                background: #fafafa;
+              "
+            >
+              <div
+                style="
+                  font-weight: 800;
+                  color: #1e293b;
+                  margin-bottom: 3px;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                "
+              >
+                <i class="ph-bold ph-shield-check" style="color: #059669"></i> KETENTUAN GARANSI &
+                SURAT JALAN
               </div>
-              <div>&bull; <strong>Garansi Servis Resmi</strong>: {{ warrantyDays }} Hari / {{ warrantyKm }} KM (Berlaku s/d <strong>{{ warrantyExpiryDate }}</strong>).</div>
-              <div>&bull; <strong>Jadwal Servis Berkala Berikutnya</strong>: Rekomendasi <strong>{{ nextServiceDate }}</strong> (+2.000 KM).</div>
-              <div>&bull; <strong>Suku Cadang Bekas</strong>: Telah diserahkan kembali kepada pemilik kendaraan.</div>
+              <div>
+                &bull; <strong>Garansi Servis Resmi</strong>: {{ warrantyDays }} Hari /
+                {{ warrantyKm }} KM (Berlaku s/d <strong>{{ warrantyExpiryDate }}</strong
+                >).
+              </div>
+              <div>
+                &bull; <strong>Jadwal Servis Berkala Berikutnya</strong>: Rekomendasi
+                <strong>{{ nextServiceDate }}</strong> (+2.000 KM).
+              </div>
+              <div>
+                &bull; <strong>Suku Cadang Bekas</strong>: Telah diserahkan kembali kepada pemilik
+                kendaraan.
+              </div>
               <div style="font-style: italic; color: #64748b; margin-top: 2px">
                 *Klaim garansi wajib menunjukkan lembar faktur asli ini.
               </div>
             </div>
 
             <!-- Right Box: Financial Summary -->
-            <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px; font-size: 12px; line-height: 1.6; background: #ffffff">
+            <div
+              style="
+                border: 1px solid #cbd5e1;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-size: 12px;
+                line-height: 1.6;
+                background: #ffffff;
+              "
+            >
               <div style="display: flex; justify-content: space-between">
                 <span style="color: #64748b">Total Jasa Servis:</span>
                 <span class="numeric">Rp {{ formatCurrency(invoice.totalJasa) }}</span>
@@ -229,52 +358,124 @@
                 <span style="color: #64748b">Total Suku Cadang:</span>
                 <span class="numeric">Rp {{ formatCurrency(invoice.totalSparepart) }}</span>
               </div>
-              <div v-if="invoice.diskon > 0" style="display: flex; justify-content: space-between; color: #dc2626">
+              <div
+                v-if="invoice.diskon > 0"
+                style="display: flex; justify-content: space-between; color: #dc2626"
+              >
                 <span>Diskon / Potongan:</span>
                 <span class="numeric">- Rp {{ formatCurrency(invoice.diskon) }}</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; border-top: 2px solid #0f172a; padding-top: 4px; margin-top: 4px; color: #0f172a">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-weight: 900;
+                  font-size: 14px;
+                  border-top: 2px solid #0f172a;
+                  padding-top: 4px;
+                  margin-top: 4px;
+                  color: #0f172a;
+                "
+              >
                 <span>GRAND TOTAL:</span>
-                <span class="numeric" style="color: #059669">Rp {{ formatCurrency(invoice.total) }}</span>
+                <span class="numeric" style="color: #059669"
+                  >Rp {{ formatCurrency(invoice.total) }}</span
+                >
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 2px; color: #475569">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 11px;
+                  margin-top: 2px;
+                  color: #475569;
+                "
+              >
                 <span>Metode Pembayaran:</span>
                 <strong>{{ invoice.metodeBayar }}</strong>
               </div>
-              <div v-if="invoice.metodeBayar === 'Tunai'" style="display: flex; justify-content: space-between; font-size: 11px">
+              <div
+                v-if="invoice.metodeBayar === 'Tunai'"
+                style="display: flex; justify-content: space-between; font-size: 11px"
+              >
                 <span>Tunai / Kembalian:</span>
-                <span>Rp {{ formatCurrency(invoice.uangDiterima) }} / <strong>Rp {{ formatCurrency(invoice.kembalian) }}</strong></span>
+                <span
+                  >Rp {{ formatCurrency(invoice.uangDiterima) }} /
+                  <strong>Rp {{ formatCurrency(invoice.kembalian) }}</strong></span
+                >
               </div>
             </div>
           </div>
 
           <!-- Signatures Section (3 Kolom Surat Jalan) -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; font-size: 11px; margin-top: 14px; padding-top: 6px; border-top: 1px dashed #cbd5e1">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 10px;
+              text-align: center;
+              font-size: 11px;
+              margin-top: 14px;
+              padding-top: 6px;
+              border-top: 1px dashed #cbd5e1;
+            "
+          >
             <div>
               <div style="color: #64748b">Penerima / Konsumen,</div>
               <div style="height: 44px"></div>
-              <div style="font-weight: 700; border-top: 1px solid #94a3b8; display: inline-block; min-width: 140px">
+              <div
+                style="
+                  font-weight: 700;
+                  border-top: 1px solid #94a3b8;
+                  display: inline-block;
+                  min-width: 140px;
+                "
+              >
                 ( {{ invoice.customerName || invoice.service?.customerName || 'Konsumen' }} )
               </div>
             </div>
             <div>
               <div style="color: #64748b">Teknisi / Mekanik,</div>
               <div style="height: 44px"></div>
-              <div style="font-weight: 700; border-top: 1px solid #94a3b8; display: inline-block; min-width: 140px">
+              <div
+                style="
+                  font-weight: 700;
+                  border-top: 1px solid #94a3b8;
+                  display: inline-block;
+                  min-width: 140px;
+                "
+              >
                 ( {{ invoice.service?.mechanicName || 'Mekanik' }} )
               </div>
             </div>
             <div>
               <div style="color: #64748b">Kasir / Service Advisor,</div>
               <div style="height: 44px"></div>
-              <div style="font-weight: 700; border-top: 1px solid #94a3b8; display: inline-block; min-width: 140px">
+              <div
+                style="
+                  font-weight: 700;
+                  border-top: 1px solid #94a3b8;
+                  display: inline-block;
+                  min-width: 140px;
+                "
+              >
                 ( {{ invoice.kasir?.nama || invoice.kasir?.username || 'Kasir Bengkel' }} )
               </div>
             </div>
           </div>
 
           <!-- NCR 3-Ply Bottom Legend -->
-          <div style="margin-top: 14px; padding-top: 6px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 9.5px; color: #64748b">
+          <div
+            style="
+              margin-top: 14px;
+              padding-top: 6px;
+              border-top: 1px solid #e2e8f0;
+              display: flex;
+              justify-content: space-between;
+              font-size: 9.5px;
+              color: #64748b;
+            "
+          >
             <span><strong>Lembar 1 (Putih)</strong>: Konsumen / Garansi</span>
             <span><strong>Lembar 2 (Merah/Kuning)</strong>: Arsip Keuangan & Kasir</span>
             <span><strong>Lembar 3 (Hijau/Biru)</strong>: Arsip Gudang & Bengkel</span>
@@ -284,7 +485,12 @@
         <!-- ================================================================= -->
         <!-- FORMAT 2: STRUK POS THERMAL 80MM (COMPACT OPTIONAL)               -->
         <!-- ================================================================= -->
-        <div v-else id="printable-thermal" class="receipt-paper" style="max-width: 360px; margin: 0 auto">
+        <div
+          v-else
+          id="printable-thermal"
+          class="receipt-paper"
+          style="max-width: 360px; margin: 0 auto"
+        >
           <!-- Workshop Header -->
           <div style="text-align: center; margin-bottom: 12px">
             <div style="display: flex; align-items: center; justify-content: center; gap: 6px">
@@ -303,11 +509,15 @@
           <div style="font-size: 11.5px; line-height: 1.5; margin-bottom: 10px">
             <div style="display: flex; justify-content: space-between">
               <span style="color: #64748b">Invoice:</span>
-              <strong style="color: #0f172a">{{ invoice.noInvoice || invoice.nomorInvoice }}</strong>
+              <strong style="color: #0f172a">{{
+                invoice.noInvoice || invoice.nomorInvoice
+              }}</strong>
             </div>
             <div style="display: flex; justify-content: space-between">
               <span style="color: #64748b">Nopol:</span>
-              <strong class="nopol-font" style="color: #2563eb">{{ invoice.nopol || invoice.service?.nopol }}</strong>
+              <strong class="nopol-font" style="color: #2563eb">{{
+                invoice.nopol || invoice.service?.nopol
+              }}</strong>
             </div>
             <div style="display: flex; justify-content: space-between">
               <span style="color: #64748b">Pelanggan:</span>
@@ -320,13 +530,25 @@
           </div>
 
           <!-- Table -->
-          <div style="border-top: 1px dashed #cbd5e1; border-bottom: 1px dashed #cbd5e1; padding: 8px 0; margin-bottom: 10px; font-size: 11.5px">
+          <div
+            style="
+              border-top: 1px dashed #cbd5e1;
+              border-bottom: 1px dashed #cbd5e1;
+              padding: 8px 0;
+              margin-bottom: 10px;
+              font-size: 11.5px;
+            "
+          >
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px">
               <div>
-                <div style="font-weight: 600">{{ invoice.service?.basePackageName || 'Paket Servis Dasar' }}</div>
+                <div style="font-weight: 600">
+                  {{ invoice.service?.basePackageName || 'Paket Servis Dasar' }}
+                </div>
                 <div style="font-size: 10px; color: #64748b">Jasa Servis Berkala</div>
               </div>
-              <span class="numeric" style="font-weight: 600">Rp {{ formatCurrency(invoice.service?.basePackagePrice || 0) }}</span>
+              <span class="numeric" style="font-weight: 600"
+                >Rp {{ formatCurrency(invoice.service?.basePackagePrice || 0) }}</span
+              >
             </div>
 
             <div
@@ -336,9 +558,13 @@
             >
               <div>
                 <div style="font-weight: 600">{{ item.namaItem }}</div>
-                <div style="font-size: 10px; color: #64748b">{{ item.quantity }} x Rp {{ formatCurrency(item.hargaSatuan) }}</div>
+                <div style="font-size: 10px; color: #64748b">
+                  {{ item.quantity }} x Rp {{ formatCurrency(item.hargaSatuan) }}
+                </div>
               </div>
-              <span class="numeric" style="font-weight: 600">Rp {{ formatCurrency(item.subtotal) }}</span>
+              <span class="numeric" style="font-weight: 600"
+                >Rp {{ formatCurrency(item.subtotal) }}</span
+              >
             </div>
           </div>
 
@@ -352,13 +578,28 @@
               <span style="color: #64748b">Total Part:</span>
               <span class="numeric">Rp {{ formatCurrency(invoice.totalSparepart) }}</span>
             </div>
-            <div v-if="invoice.diskon > 0" style="display: flex; justify-content: space-between; color: #dc2626">
+            <div
+              v-if="invoice.diskon > 0"
+              style="display: flex; justify-content: space-between; color: #dc2626"
+            >
               <span>Diskon:</span>
               <span class="numeric">- Rp {{ formatCurrency(invoice.diskon) }}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 13.5px; border-top: 1px solid #e2e8f0; padding-top: 4px; margin-top: 2px">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                font-weight: 800;
+                font-size: 13.5px;
+                border-top: 1px solid #e2e8f0;
+                padding-top: 4px;
+                margin-top: 2px;
+              "
+            >
               <span>GRAND TOTAL:</span>
-              <span class="numeric" style="color: #059669">Rp {{ formatCurrency(invoice.total) }}</span>
+              <span class="numeric" style="color: #059669"
+                >Rp {{ formatCurrency(invoice.total) }}</span
+              >
             </div>
             <div style="display: flex; justify-content: space-between; margin-top: 2px">
               <span style="color: #64748b">Metode:</span>
@@ -367,21 +608,29 @@
           </div>
 
           <!-- Thermal Footer -->
-          <div style="text-align: center; font-size: 9.5px; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 8px">
+          <div
+            style="
+              text-align: center;
+              font-size: 9.5px;
+              color: #64748b;
+              border-top: 1px dashed #cbd5e1;
+              padding-top: 8px;
+            "
+          >
             <p style="margin: 0 0 2px 0; font-weight: 700; color: #334155">
               GARANSI SERVIS {{ warrantyDays }} HARI / {{ warrantyKm }} KM
             </p>
             <p style="margin: 0">Suku cadang bekas telah diserahkan.</p>
-            <p style="margin: 2px 0 0 0; font-weight: 600; color: #0f172a">
-              *** TERIMA KASIH ***
-            </p>
+            <p style="margin: 2px 0 0 0; font-weight: 600; color: #0f172a">*** TERIMA KASIH ***</p>
           </div>
         </div>
-
       </div>
 
       <!-- Modal Footer -->
-      <div class="modal-footer no-print" style="display: flex; justify-content: space-between; align-items: center">
+      <div
+        class="modal-footer no-print"
+        style="display: flex; justify-content: space-between; align-items: center"
+      >
         <button class="btn btn-secondary" @click="$emit('update:modelValue', false)">Tutup</button>
 
         <div style="display: flex; gap: 8px">
@@ -482,12 +731,14 @@ const whatsappUrl = computed(() => {
     sanitized = '628' + sanitized.substring(1);
   }
 
-  const customer = props.invoice?.customerName || props.invoice?.service?.customerName || 'Konsumen';
+  const customer =
+    props.invoice?.customerName || props.invoice?.service?.customerName || 'Konsumen';
   const nopol = props.invoice?.nopol || props.invoice?.service?.nopol || '';
   const invNo = props.invoice?.noInvoice || props.invoice?.nomorInvoice || '';
   const total = props.formatCurrency(props.invoice?.total || 0);
 
-  const message = `Halo Kak ${customer}, terima kasih telah melakukan servis di *BengkelKu Motor* 🛵🔧.\n\n` +
+  const message =
+    `Halo Kak ${customer}, terima kasih telah melakukan servis di *BengkelKu Motor* 🛵🔧.\n\n` +
     `*FAKTUR SERVIS & SURAT JALAN:*\n` +
     `• No. Invoice: ${invNo}\n` +
     `• No. Polisi: ${nopol}\n` +

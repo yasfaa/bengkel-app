@@ -113,7 +113,8 @@
           <div>
             <strong>Mode Pratinjau (Lihat Saja)</strong>:
             <span v-if="authStore.isMechanic && service.status === 'Selesai'">
-              Pengerjaan servis motor ini telah selesai (Belum Lunas di kasir). Suku cadang & jasa bersifat tetap dan tidak dapat ditambah/dihapus oleh teknisi.
+              Pengerjaan servis motor ini telah selesai (Belum Lunas di kasir). Suku cadang & jasa
+              bersifat tetap dan tidak dapat ditambah/dihapus oleh teknisi.
             </span>
             <span v-else-if="service.isPaid">
               Servis ini telah lunas dan invoice telah diterbitkan.

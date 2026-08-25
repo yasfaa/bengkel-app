@@ -66,7 +66,8 @@
               >PELANGGAN / MOTOR</span
             >
             <strong style="font-size: 13px; color: var(--text-main)"
-              >{{ selectedService.customerName }} &bull; {{ selectedService.motorType || '-' }}</strong
+              >{{ selectedService.customerName }} &bull;
+              {{ selectedService.motorType || '-' }}</strong
             >
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center">
@@ -197,9 +198,7 @@
             "
           >
             <span>Total Biaya Jasa Servis:</span>
-            <span class="numeric" style="font-weight: 600"
-              >Rp {{ formatCurrency(totalJasa) }}</span
-            >
+            <span class="numeric" style="font-weight: 600">Rp {{ formatCurrency(totalJasa) }}</span>
           </div>
           <div
             style="

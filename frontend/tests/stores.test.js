@@ -60,4 +60,15 @@ describe('Pinia State Management Stores Tests', () => {
     expect(queue.activeServices.length).toBe(2);
     expect(queue.activeServices.map((s) => s.id)).toEqual([1, 2]);
   });
+
+  it('useMasterStore should manage spareparts, services, and brands state', () => {
+    const master = useMasterStore();
+    master.brands = [{ id: 1, nama: 'Honda' }];
+    master.serviceMasters = [{ id: 1, nama: 'Servis Ringan', harga: 50000 }];
+    master.spareparts = [{ id: 1, nama: 'Oli Mesin MPX2', stok: 10, hargaJual: 75000 }];
+
+    expect(master.brands.length).toBe(1);
+    expect(master.serviceMasters[0].nama).toBe('Servis Ringan');
+    expect(master.spareparts[0].stok).toBe(10);
+  });
 });

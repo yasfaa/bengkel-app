@@ -81,11 +81,7 @@ export async function apiFetch(url, options = {}) {
   let res = await fetch(url, config);
 
   // If 401 Unauthorized received, attempt silent refresh via httpOnly refresh cookie
-  if (
-    res.status === 401 &&
-    url !== '/api/auth/login' &&
-    url !== '/api/auth/refresh'
-  ) {
+  if (res.status === 401 && url !== '/api/auth/login' && url !== '/api/auth/refresh') {
     if (!isRefreshing) {
       isRefreshing = true;
       const newToken = await performSilentRefresh(authStore);

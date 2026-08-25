@@ -577,8 +577,18 @@ const swaggerSpec = {
         tags: ['Transactions & POS (Stage 5)'],
         summary: 'Riwayat transaksi invoice kasir dengan filter pencarian',
         parameters: [
-          { name: 'search', in: 'query', schema: { type: 'string' }, description: 'Cari nomor invoice, nopol, atau nama konsumen' },
-          { name: 'metodeBayar', in: 'query', schema: { type: 'string' }, description: 'Filter metode bayar (Tunai, QRIS, dll)' },
+          {
+            name: 'search',
+            in: 'query',
+            schema: { type: 'string' },
+            description: 'Cari nomor invoice, nopol, atau nama konsumen',
+          },
+          {
+            name: 'metodeBayar',
+            in: 'query',
+            schema: { type: 'string' },
+            description: 'Filter metode bayar (Tunai, QRIS, dll)',
+          },
         ],
         responses: {
           200: { description: 'Riwayat transaksi kasir berhasil diambil' },

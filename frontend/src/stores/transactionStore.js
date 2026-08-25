@@ -88,8 +88,7 @@ export const useTransactionStore = defineStore('transaction', () => {
         (t.nopol || '').toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         (t.customerName || '').toLowerCase().includes(searchQuery.value.toLowerCase());
 
-      const matchMethod =
-        !paymentMethodFilter.value || t.metodeBayar === paymentMethodFilter.value;
+      const matchMethod = !paymentMethodFilter.value || t.metodeBayar === paymentMethodFilter.value;
 
       return matchSearch && matchMethod;
     });
@@ -139,11 +138,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       service.serviceMaster?.nama ||
       'Paket Servis Dasar';
 
-    let basePackagePrice = Number(
-      service.basePackagePrice ??
-      service.serviceMaster?.harga ??
-      0
-    );
+    let basePackagePrice = Number(service.basePackagePrice ?? service.serviceMaster?.harga ?? 0);
 
     // If base package price is still 0, attempt lookup in master catalog
     try {
@@ -184,8 +179,7 @@ export const useTransactionStore = defineStore('transaction', () => {
       quantity: it.quantity || 1,
       hargaSatuan: Number(it.hargaSatuan || it.harga_satuan || 0),
       subtotal: Number(
-        it.subtotal ||
-        Number(it.hargaSatuan || it.harga_satuan || 0) * (it.quantity || 1)
+        it.subtotal || Number(it.hargaSatuan || it.harga_satuan || 0) * (it.quantity || 1)
       ),
     }));
 

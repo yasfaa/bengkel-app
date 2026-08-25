@@ -23,6 +23,7 @@ export default [
         clearInterval: 'readonly',
         fetch: 'readonly',
         URL: 'readonly',
+        URLSearchParams: 'readonly',
         global: 'readonly',
         globalThis: 'readonly',
         describe: 'readonly',

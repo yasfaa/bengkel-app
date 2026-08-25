@@ -54,7 +54,11 @@
     </div>
 
     <!-- TAB 1: KASIR & ANTREAN PKB SIAP BAYAR -->
-    <div v-if="activeTab === 'kasir'" class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px">
+    <div
+      v-if="activeTab === 'kasir'"
+      class="card"
+      style="padding: 0; overflow: hidden; margin-bottom: 24px"
+    >
       <div
         style="
           display: flex;
@@ -115,7 +119,9 @@
               </td>
               <td>
                 <strong style="color: var(--text-main)">{{ svc.customerName }}</strong>
-                <div style="font-size: 11px; color: var(--text-secondary)">{{ svc.phone || '-' }}</div>
+                <div style="font-size: 11px; color: var(--text-secondary)">
+                  {{ svc.phone || '-' }}
+                </div>
               </td>
               <td>
                 <span style="font-size: 13px; color: var(--text-secondary)">
@@ -131,7 +137,10 @@
                   ({{ svc.itemsCount }} part/jasa)
                 </div>
               </td>
-              <td class="numeric" style="text-align: right; font-weight: 800; color: #059669; font-size: 14px">
+              <td
+                class="numeric"
+                style="text-align: right; font-weight: 800; color: #059669; font-size: 14px"
+              >
                 Rp {{ formatCurrency(svc.grandTotal) }}
               </td>
               <td style="text-align: center">
@@ -172,7 +181,11 @@
     </div>
 
     <!-- TAB 2: RIWAYAT TRANSAKSI & INVOICE LUNAS -->
-    <div v-if="activeTab === 'riwayat'" class="card" style="padding: 0; overflow: hidden; margin-bottom: 24px">
+    <div
+      v-if="activeTab === 'riwayat'"
+      class="card"
+      style="padding: 0; overflow: hidden; margin-bottom: 24px"
+    >
       <!-- Search & Filters -->
       <div
         style="
@@ -190,7 +203,8 @@
             Riwayat Transaksi Kasir
           </h3>
           <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px; margin-bottom: 0">
-            Total Omset Terkumpul: <strong style="color: #059669">Rp {{ formatCurrency(totalRevenue) }}</strong>
+            Total Omset Terkumpul:
+            <strong style="color: #059669">Rp {{ formatCurrency(totalRevenue) }}</strong>
           </p>
         </div>
 
@@ -202,7 +216,10 @@
               class="form-input"
               style="padding-left: 32px; font-size: 13px"
               placeholder="Cari invoice, nopol, nama..."
-              @input="$emit('update:searchQuery', $event.target.value); fetchTransactions()"
+              @input="
+                $emit('update:searchQuery', $event.target.value);
+                fetchTransactions();
+              "
             />
             <i
               class="ph-bold ph-magnifying-glass"
@@ -220,7 +237,10 @@
             :value="paymentMethodFilter"
             class="form-input"
             style="width: 170px; font-size: 13px"
-            @change="$emit('update:paymentMethodFilter', $event.target.value); fetchTransactions()"
+            @change="
+              $emit('update:paymentMethodFilter', $event.target.value);
+              fetchTransactions();
+            "
           >
             <option value="">Semua Metode</option>
             <option value="Tunai">Tunai</option>
@@ -282,7 +302,10 @@
                   {{ trx.metodeBayar }}
                 </span>
               </td>
-              <td class="numeric" style="text-align: right; font-weight: 800; color: var(--text-main)">
+              <td
+                class="numeric"
+                style="text-align: right; font-weight: 800; color: var(--text-main)"
+              >
                 Rp {{ formatCurrency(trx.total) }}
               </td>
               <td style="font-size: 12px; color: var(--text-secondary)">
@@ -396,9 +419,7 @@
                 <div class="empty-state">
                   <div class="empty-state-illust">🧰</div>
                   <div class="empty-state-title">Katalog jasa servis masih kosong</div>
-                  <div class="empty-state-desc">
-                    Belum ada paket jasa servis yang terdaftar.
-                  </div>
+                  <div class="empty-state-desc">Belum ada paket jasa servis yang terdaftar.</div>
                 </div>
               </td>
             </tr>

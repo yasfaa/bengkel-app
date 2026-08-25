@@ -266,8 +266,16 @@
                 <button
                   v-if="authStore.isAdmin || authStore.isKepalaBengkel"
                   class="btn btn-primary"
-                  style="padding: 6px 12px; font-size: 12px; background-color: #059669; border-color: #059669"
-                  @click="$emit('open-payment-modal', service); $emit('create-invoice', service)"
+                  style="
+                    padding: 6px 12px;
+                    font-size: 12px;
+                    background-color: #059669;
+                    border-color: #059669;
+                  "
+                  @click="
+                    $emit('open-payment-modal', service);
+                    $emit('create-invoice', service);
+                  "
                 >
                   <i class="ph-bold ph-credit-card"></i> Bayar Kasir
                 </button>
@@ -285,7 +293,21 @@
                   class="btn btn-secondary"
                   style="padding: 5px 9px; font-size: 11px"
                   title="Lihat & Cetak Struk Pembayaran Kasir"
-                  @click="$emit('view-receipt', service.transactions && service.transactions[0] ? service.transactions[0] : { id: service.id, serviceId: service.id, noInvoice: service.nomorInvoice || 'INV-' + service.id, total: service.grandTotal, tglBayar: service.tgl_selesai, service })"
+                  @click="
+                    $emit(
+                      'view-receipt',
+                      service.transactions && service.transactions[0]
+                        ? service.transactions[0]
+                        : {
+                            id: service.id,
+                            serviceId: service.id,
+                            noInvoice: service.nomorInvoice || 'INV-' + service.id,
+                            total: service.grandTotal,
+                            tglBayar: service.tgl_selesai,
+                            service,
+                          }
+                    )
+                  "
                 >
                   <i class="ph-bold ph-printer"></i> Struk
                 </button>
