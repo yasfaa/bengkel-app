@@ -235,10 +235,50 @@ const swaggerSpec = {
     '/api/services/{id}/status': {
       patch: {
         tags: ['Services (PKB & Antrean)'],
-        summary: 'Pembaruan status servis & penugasan mekanik',
+        summary: 'Pembaruan status servis, penugasan teknisi & Audit QC (Tahap 4)',
+        description:
+          'Digunakan untuk mengubah status (Menunggu -> Dikerjakan -> Selesai). Saat status diubah ke Selesai, payload `qcData` disertakan untuk merekam audit kendali mutu (Quality Control).',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
-        responses: { 200: { description: 'Status berhasil diperbarui' } },
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: {
+                    type: 'string',
+                    enum: ['Menunggu', 'Dikerjakan', 'Selesai'],
+                    example: 'Selesai',
+                  },
+                  mechanicName: { type: 'string', example: 'Asep Hidayat' },
+                  allowBusyOverride: { type: 'boolean', example: false },
+                  qcData: {
+                    type: 'object',
+                    description: 'Data checklist audit kendali mutu (Quality Control) Tahap 4',
+                    properties: {
+                      kelistrikan_ok: { type: 'boolean', example: true },
+                      rem_ok: { type: 'boolean', example: true },
+                      gas_ok: { type: 'boolean', example: true },
+                      test_ride_ok: { type: 'boolean', example: true },
+                      part_bekas_diserahkan: { type: 'boolean', example: true },
+                      catatan: {
+                        type: 'string',
+                        example: 'Semua fungsi kelistrikan dan pengereman normal.',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Status servis berhasil diperbarui dan data QC tersimpan' },
+          400: { description: 'Validasi gagal (misal: mekanik sibuk atau payload tidak valid)' },
+          404: { description: 'Servis atau mekanik tidak ditemukan' },
+        },
       },
     },
 
