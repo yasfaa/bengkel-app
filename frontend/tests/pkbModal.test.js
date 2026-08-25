@@ -42,6 +42,8 @@ describe('PkbDetailModal Component Tests', () => {
     expect(wrapper.text()).toContain('Honda Beat (110cc)');
     expect(wrapper.text()).toContain('Tarikan berat dan ganti oli');
     expect(wrapper.text()).toContain('Asep');
+    expect(wrapper.text()).toContain('Servis Ringan');
+    expect(wrapper.text()).toContain('50.000');
     expect(wrapper.text()).toContain('SURAT PERINTAH KERJA (PKB)');
   });
 

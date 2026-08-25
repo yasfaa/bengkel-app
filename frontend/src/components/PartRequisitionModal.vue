@@ -28,162 +28,292 @@
 
       <!-- Modal Body -->
       <div class="modal-body" style="max-height: 75vh; overflow-y: auto">
-        <!-- Form Section: Tambah Item (Hanya untuk MEKANIK) -->
+        <!-- Service Package & Vehicle Summary Card -->
         <div
-          v-if="authStore.isMechanic"
           class="card"
-          style="background: var(--bg-surface-secondary); margin-bottom: 16px; padding: 14px 18px"
+          style="
+            background: #f8fafc;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 16px;
+            padding: 12px 16px;
+          "
         >
-          <div style="display: flex; gap: 8px; margin-bottom: 12px">
-            <button
-              :class="['btn', activeItemType === 'SPAREPART' ? 'btn-primary' : 'btn-secondary']"
-              style="padding: 6px 14px; font-size: 12.5px"
-              @click="activeItemType = 'SPAREPART'"
-            >
-              <i class="ph-bold ph-package"></i> Tambah Suku Cadang Gudang
-            </button>
-            <button
-              :class="['btn', activeItemType === 'JASA' ? 'btn-primary' : 'btn-secondary']"
-              style="padding: 6px 14px; font-size: 12.5px"
-              @click="activeItemType = 'JASA'"
-            >
-              <i class="ph-bold ph-gear"></i> Tambah Jasa Servis Ekstra
-            </button>
-          </div>
-
-          <!-- Form Sparepart -->
           <div
-            v-if="activeItemType === 'SPAREPART'"
-            class="form-grid"
-            style="grid-template-columns: 2fr 1fr 1.5fr auto; align-items: end; gap: 10px"
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              flex-wrap: wrap;
+              gap: 8px;
+            "
           >
-            <div class="form-group" style="margin-bottom: 0">
-              <label class="form-label" style="font-size: 12px">Pilih Sparepart Gudang *</label>
-              <select
-                v-model="selectedSparepartId"
-                class="form-input form-select"
-                style="font-size: 12.5px"
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+              <span
+                class="pkb-font"
+                style="font-size: 13px; font-weight: 800; color: var(--primary-color)"
               >
-                <option value="">-- Pilih Suku Cadang --</option>
-                <option
-                  v-for="part in masterStore.spareparts"
-                  :key="part.id"
-                  :value="part.id"
-                  :disabled="part.stok <= 0"
-                >
-                  [{{ part.kode_part }}] {{ part.nama }} — Rp
-                  {{ formatCurrency(part.harga_jual) }} (Stok: {{ part.stok }})
-                </option>
-              </select>
+                {{ service.nomorPkb || 'PKB-' + service.id }}
+              </span>
+              <span
+                class="nopol-font"
+                style="font-size: 15px; font-weight: 800; color: var(--text-main)"
+              >
+                {{ service.nopol }}
+              </span>
+              <span style="font-size: 12.5px; color: var(--text-secondary)">
+                {{ service.customerName }} • <strong>{{ service.motorType }}</strong>
+              </span>
             </div>
-
-            <div class="form-group" style="margin-bottom: 0">
-              <label class="form-label" style="font-size: 12px">Qty *</label>
-              <input
-                v-model.number="itemQty"
-                type="number"
-                min="1"
-                :max="maxAvailableStock"
-                class="form-input numeric"
-                style="font-size: 12.5px"
-              />
+            <div style="display: flex; align-items: center; gap: 6px">
+              <span style="font-size: 12px; color: var(--text-muted)">Paket Servis:</span>
+              <span
+                class="badge badge-primary"
+                style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 6px"
+              >
+                <i class="ph-bold ph-wrench" style="margin-right: 4px"></i>
+                {{ basePackageName }}
+                <span style="opacity: 0.9; margin-left: 4px">
+                  — Rp {{ formatCurrency(basePackagePrice) }}
+                </span>
+              </span>
             </div>
-
-            <div class="form-group" style="margin-bottom: 0">
-              <label class="form-label" style="font-size: 12px">Catatan / Alasan Ganti</label>
-              <input
-                v-model="itemCatatan"
-                type="text"
-                class="form-input"
-                placeholder="Misal: Kampas aus / tipis"
-                style="font-size: 12.5px"
-              />
-            </div>
-
-            <button
-              class="btn btn-primary"
-              style="padding: 9px 14px; font-size: 12.5px; white-space: nowrap"
-              :disabled="!selectedSparepartId || isSubmitting"
-              @click="submitAddItem"
-            >
-              <i class="ph-bold ph-plus"></i> Tambah Part
-            </button>
           </div>
-
-          <!-- Form Jasa Servis -->
           <div
-            v-else
-            class="form-grid"
-            style="grid-template-columns: 2fr 1fr 1.5fr auto; align-items: end; gap: 10px"
+            v-if="service.keluhan"
+            style="
+              margin-top: 8px;
+              padding-top: 8px;
+              border-top: 1px dashed var(--border-subtle);
+              font-size: 12px;
+              color: var(--text-secondary);
+            "
           >
-            <div class="form-group" style="margin-bottom: 0">
-              <label class="form-label" style="font-size: 12px">Pilih Jasa Servis *</label>
-              <select
-                v-model="selectedServiceMasterId"
-                class="form-input form-select"
-                style="font-size: 12.5px"
-              >
-                <option value="">-- Pilih Paket Jasa --</option>
-                <option v-for="svc in masterStore.serviceMasters" :key="svc.id" :value="svc.id">
-                  {{ svc.nama }} — Rp {{ formatCurrency(svc.harga) }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0">
-              <label class="form-label" style="font-size: 12px">Qty *</label>
-              <input
-                v-model.number="itemQty"
-                type="number"
-                min="1"
-                class="form-input numeric"
-                style="font-size: 12.5px"
-              />
-            </div>
-
-            <div class="form-group" style="margin-bottom: 0">
-              <label class="form-label" style="font-size: 12px">Catatan Pengerjaan</label>
-              <input
-                v-model="itemCatatan"
-                type="text"
-                class="form-input"
-                placeholder="Misal: Kuras minyak rem"
-                style="font-size: 12.5px"
-              />
-            </div>
-
-            <button
-              class="btn btn-primary"
-              style="padding: 9px 14px; font-size: 12.5px; white-space: nowrap"
-              :disabled="!selectedServiceMasterId || isSubmitting"
-              @click="submitAddItem"
-            >
-              <i class="ph-bold ph-plus"></i> Tambah Jasa
-            </button>
+            <strong>Keluhan Utama:</strong> {{ service.keluhan }}
           </div>
         </div>
 
-        <!-- Notice untuk ADMIN (Service Advisor): Approval & Konsultasi Konsumen -->
+        <!-- Form Section: Tambah Item (Untuk ADMIN & MEKANIK) -->
         <div
-          v-else-if="authStore.isAdmin"
+          v-if="!authStore.isKepalaBengkel"
           class="card"
-          style="
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            margin-bottom: 16px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 12.5px;
-            color: #1e40af;
-          "
+          style="background: var(--bg-surface-secondary); margin-bottom: 16px; padding: 14px 18px"
         >
-          <i class="ph-bold ph-shield-check" style="font-size: 22px; flex-shrink: 0"></i>
-          <div>
-            <strong>Mode Service Advisor (Approval Konsumen):</strong> Pengisian suku cadang & jasa
-            tambahan diajukan oleh teknisi mekanik. Anda dapat mengonfirmasi persetujuan konsumen
-            dengan mengeklik status pada kolom <strong>Status Persetujuan</strong> di bawah.
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 12px;
+            "
+          >
+            <div style="display: flex; gap: 8px">
+              <button
+                :class="['btn', activeItemType === 'SPAREPART' ? 'btn-primary' : 'btn-secondary']"
+                style="padding: 6px 14px; font-size: 12.5px"
+                @click="activeItemType = 'SPAREPART'"
+              >
+                <i class="ph-bold ph-package"></i> Tambah Suku Cadang Gudang
+              </button>
+              <button
+                :class="['btn', activeItemType === 'JASA' ? 'btn-primary' : 'btn-secondary']"
+                style="padding: 6px 14px; font-size: 12.5px"
+                @click="activeItemType = 'JASA'"
+              >
+                <i class="ph-bold ph-gear"></i> Tambah Jasa Servis Ekstra
+              </button>
+            </div>
+
+            <div
+              v-if="authStore.isAdmin"
+              style="font-size: 12px; color: var(--primary-color); font-weight: 600"
+            >
+              <i class="ph-bold ph-pencil-simple-line"></i> Pencatatan oleh SA / Frontdesk
+            </div>
+          </div>
+
+          <!-- Form Sparepart -->
+          <div v-if="activeItemType === 'SPAREPART'" class="add-item-form-container">
+            <!-- Row 1: Item Selection & Core Params -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 2.2fr 0.8fr 1.4fr;
+                gap: 12px;
+                margin-bottom: 12px;
+              "
+            >
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label" style="font-size: 12px">Pilih Sparepart Gudang *</label>
+                <select
+                  v-model="selectedSparepartId"
+                  class="form-input form-select"
+                  style="font-size: 12.5px"
+                >
+                  <option value="">-- Pilih Suku Cadang --</option>
+                  <option
+                    v-for="part in masterStore.spareparts"
+                    :key="part.id"
+                    :value="part.id"
+                    :disabled="part.stok <= 0"
+                  >
+                    [{{ part.kode_part }}] {{ part.nama }} — Rp
+                    {{ formatCurrency(part.harga_jual) }} (Stok: {{ part.stok }})
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label" style="font-size: 12px">Qty *</label>
+                <input
+                  v-model.number="itemQty"
+                  type="number"
+                  min="1"
+                  :max="maxAvailableStock"
+                  class="form-input numeric"
+                  style="font-size: 12.5px"
+                />
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label" style="font-size: 12px"
+                  >Status Persetujuan Konsumen</label
+                >
+                <select
+                  v-model="itemApprovalStatus"
+                  class="form-input form-select"
+                  style="font-size: 12.5px"
+                >
+                  <option value="DISETUJUI">Disetujui Konsumen</option>
+                  <option value="MENUNGGU_KONFIRMASI">Menunggu Konfirmasi</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Row 2: Note & Action Button -->
+            <div
+              style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end"
+            >
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label" style="font-size: 12px"
+                  >Catatan / Alasan Pergantian Suku Cadang</label
+                >
+                <input
+                  v-model="itemCatatan"
+                  type="text"
+                  class="form-input"
+                  placeholder="Misal: Kampas rem depan sudah tipis & aus"
+                  style="font-size: 12.5px"
+                />
+              </div>
+
+              <button
+                class="btn btn-primary"
+                style="
+                  height: 40px;
+                  padding: 0 18px;
+                  font-size: 13px;
+                  font-weight: 700;
+                  white-space: nowrap;
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+                :disabled="!selectedSparepartId || isSubmitting"
+                @click="submitAddItem"
+              >
+                <i class="ph-bold ph-plus-circle" style="font-size: 17px"></i>
+                <span>Tambah Suku Cadang</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Form Jasa Servis -->
+          <div v-else class="add-item-form-container">
+            <!-- Row 1: Service Selection & Core Params -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 2.2fr 0.8fr 1.4fr;
+                gap: 12px;
+                margin-bottom: 12px;
+              "
+            >
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label" style="font-size: 12px">Pilih Jasa Servis Ekstra *</label>
+                <select
+                  v-model="selectedServiceMasterId"
+                  class="form-input form-select"
+                  style="font-size: 12.5px"
+                >
+                  <option value="">-- Pilih Paket / Jasa Tambahan --</option>
+                  <option v-for="svc in masterStore.serviceMasters" :key="svc.id" :value="svc.id">
+                    {{ svc.nama }} — Rp {{ formatCurrency(svc.harga) }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label" style="font-size: 12px">Qty *</label>
+                <input
+                  v-model.number="itemQty"
+                  type="number"
+                  min="1"
+                  class="form-input numeric"
+                  style="font-size: 12.5px"
+                />
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label" style="font-size: 12px"
+                  >Status Persetujuan Konsumen</label
+                >
+                <select
+                  v-model="itemApprovalStatus"
+                  class="form-input form-select"
+                  style="font-size: 12.5px"
+                >
+                  <option value="DISETUJUI">Disetujui Konsumen</option>
+                  <option value="MENUNGGU_KONFIRMASI">Menunggu Konfirmasi</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Row 2: Note & Action Button -->
+            <div
+              style="display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end"
+            >
+              <div class="form-group" style="margin-bottom: 0">
+                <label class="form-label" style="font-size: 12px"
+                  >Catatan / Instruksi Pengerjaan Jasa</label
+                >
+                <input
+                  v-model="itemCatatan"
+                  type="text"
+                  class="form-input"
+                  placeholder="Misal: Kuras minyak rem depan & belakang"
+                  style="font-size: 12.5px"
+                />
+              </div>
+
+              <button
+                class="btn btn-primary"
+                style="
+                  height: 40px;
+                  padding: 0 18px;
+                  font-size: 13px;
+                  font-weight: 700;
+                  white-space: nowrap;
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+                :disabled="!selectedServiceMasterId || isSubmitting"
+                @click="submitAddItem"
+              >
+                <i class="ph-bold ph-plus-circle" style="font-size: 17px"></i>
+                <span>Tambah Jasa Servis</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -330,7 +460,7 @@
                   </td>
                   <td style="text-align: right">
                     <button
-                      v-if="authStore.isMechanic"
+                      v-if="!authStore.isKepalaBengkel"
                       class="btn btn-danger"
                       style="padding: 4px 8px; font-size: 11px"
                       title="Hapus item dari PKB"
@@ -373,33 +503,73 @@
           <div
             style="
               display: grid;
-              grid-template-columns: 1fr 1fr 1.5fr;
-              gap: 16px;
+              grid-template-columns: 1.2fr 1fr 1fr 1.6fr;
+              gap: 14px;
               align-items: center;
             "
           >
             <div>
-              <div style="font-size: 11.5px; color: var(--text-muted); font-weight: 600">
-                TOTAL JASA (DISETUJUI)
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600">
+                PAKET SERVIS DASAR
               </div>
               <div
                 class="numeric"
-                style="font-size: 15px; font-weight: 800; color: var(--text-main); margin-top: 2px"
+                style="
+                  font-size: 14.5px;
+                  font-weight: 800;
+                  color: var(--text-main);
+                  margin-top: 2px;
+                "
               >
-                Rp {{ formatCurrency(totalJasaApproved) }}
+                Rp {{ formatCurrency(basePackagePrice) }}
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  color: var(--primary-color);
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                "
+              >
+                {{ basePackageName }}
               </div>
             </div>
 
             <div>
-              <div style="font-size: 11.5px; color: var(--text-muted); font-weight: 600">
-                TOTAL PART (DISETUJUI)
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600">
+                TAMBAHAN JASA
               </div>
               <div
                 class="numeric"
-                style="font-size: 15px; font-weight: 800; color: var(--text-main); margin-top: 2px"
+                style="
+                  font-size: 14.5px;
+                  font-weight: 800;
+                  color: var(--text-main);
+                  margin-top: 2px;
+                "
+              >
+                Rp {{ formatCurrency(extraJasaApproved) }}
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted)">Disetujui</div>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted); font-weight: 600">
+                TAMBAHAN PART
+              </div>
+              <div
+                class="numeric"
+                style="
+                  font-size: 14.5px;
+                  font-weight: 800;
+                  color: var(--text-main);
+                  margin-top: 2px;
+                "
               >
                 Rp {{ formatCurrency(totalPartApproved) }}
               </div>
+              <div style="font-size: 11px; color: var(--text-muted)">Disetujui</div>
             </div>
 
             <div
@@ -472,7 +642,27 @@ const selectedSparepartId = ref('');
 const selectedServiceMasterId = ref('');
 const itemQty = ref(1);
 const itemCatatan = ref('');
+const itemApprovalStatus = ref(authStore.isAdmin ? 'DISETUJUI' : 'MENUNGGU_KONFIRMASI');
 const isSubmitting = ref(false);
+
+const basePackageName = computed(() => {
+  if (!props.service) return 'Servis Umum / Custom';
+  if (props.service.servicePackageName) return props.service.servicePackageName;
+  if (props.service.serviceMasterId) {
+    const baseSvc = masterStore.serviceMasters.find((s) => s.id === props.service.serviceMasterId);
+    if (baseSvc) return baseSvc.nama;
+  }
+  return 'Servis Umum / Custom';
+});
+
+const basePackagePrice = computed(() => {
+  if (!props.service) return 0;
+  if (props.service.serviceMasterId) {
+    const baseSvc = masterStore.serviceMasters.find((s) => s.id === props.service.serviceMasterId);
+    if (baseSvc) return baseSvc.harga;
+  }
+  return props.service.estimasiBiaya || props.service.estimasi_biaya || 0;
+});
 
 const currentServiceItems = computed(() => {
   if (!props.service) return [];
@@ -492,18 +682,18 @@ const isItemApproved = (item) => {
   );
 };
 
-const totalJasaApproved = computed(() => {
+const extraJasaApproved = computed(() => {
   let sum = 0;
-  if (props.service?.serviceMasterId) {
-    const baseSvc = masterStore.serviceMasters.find((s) => s.id === props.service.serviceMasterId);
-    if (baseSvc) sum += baseSvc.harga;
-  }
   for (const it of currentServiceItems.value) {
     if (it.itemType === 'JASA' && isItemApproved(it)) {
       sum += it.subtotal;
     }
   }
   return sum;
+});
+
+const totalJasaApproved = computed(() => {
+  return basePackagePrice.value + extraJasaApproved.value;
 });
 
 const totalPartApproved = computed(() => {
@@ -516,7 +706,9 @@ const totalPartApproved = computed(() => {
   return sum;
 });
 
-const grandTotalApproved = computed(() => totalJasaApproved.value + totalPartApproved.value);
+const grandTotalApproved = computed(
+  () => basePackagePrice.value + extraJasaApproved.value + totalPartApproved.value
+);
 
 watch(selectedSparepartId, () => {
   itemQty.value = 1;
@@ -541,30 +733,39 @@ const getApprovalLabel = (status) => {
 };
 
 /**
- * Step 1: Submit new item (defaults to MENUNGGU_KONFIRMASI)
+ * Step 1: Submit new item
  */
 const submitAddItem = async () => {
   if (!props.service) return;
 
   isSubmitting.value = true;
   try {
+    const statusToSet =
+      itemApprovalStatus.value || (authStore.isAdmin ? 'DISETUJUI' : 'MENUNGGU_KONFIRMASI');
+    const isApprovedFlag = statusToSet === 'DISETUJUI';
+
     const payload = {
       itemType: activeItemType.value,
       sparepartId: activeItemType.value === 'SPAREPART' ? selectedSparepartId.value : null,
       serviceMasterId: activeItemType.value === 'JASA' ? selectedServiceMasterId.value : null,
       quantity: itemQty.value,
-      approvalStatus: 'MENUNGGU_KONFIRMASI',
-      isApproved: false,
+      approvalStatus: statusToSet,
+      isApproved: isApprovedFlag,
       catatan: itemCatatan.value,
     };
 
     await queueStore.addServiceItem(props.service.id, payload);
-    uiStore.showToast('✅ Item diajukan (Status: Menunggu Konfirmasi)', 2500);
+    const toastMsg =
+      statusToSet === 'DISETUJUI'
+        ? '✅ Item berhasil ditambahkan & disetujui konsumen'
+        : '✅ Item diajukan (Status: Menunggu Konfirmasi)';
+    uiStore.showToast(toastMsg, 2500);
 
     selectedSparepartId.value = '';
     selectedServiceMasterId.value = '';
     itemQty.value = 1;
     itemCatatan.value = '';
+    itemApprovalStatus.value = authStore.isAdmin ? 'DISETUJUI' : 'MENUNGGU_KONFIRMASI';
     emit('item-updated');
   } catch (error) {
     console.error('Error adding item:', error);

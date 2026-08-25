@@ -90,6 +90,22 @@
                     <td>Warna / Tahun</td>
                     <td>: {{ service.warna || '-' }} / {{ service.tahunPembuatan || '-' }}</td>
                   </tr>
+                  <tr>
+                    <td>Paket Servis Dipilih</td>
+                    <td>
+                      :
+                      <strong style="color: var(--primary-color)">{{
+                        service.servicePackageName || 'Servis Umum / Reguler'
+                      }}</strong>
+                      <span
+                        v-if="basePackagePrice > 0"
+                        class="numeric"
+                        style="color: #374151; margin-left: 4px"
+                      >
+                        (Rp {{ formatCurrency(basePackagePrice) }})
+                      </span>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -183,16 +199,18 @@
               </thead>
               <tbody>
                 <!-- Base Package -->
-                <tr v-if="service.servicePackageName">
+                <tr>
                   <td style="text-align: center">1</td>
                   <td>
-                    <strong>{{ service.servicePackageName }}</strong>
+                    <strong style="color: var(--primary-color)">{{
+                      service.servicePackageName || 'Paket Servis Dasar / Tune Up'
+                    }}</strong>
                     <div style="font-size: 11px; color: #4b5563">
-                      Diagnosa awal: {{ service.keluhan }}
+                      Diagnosa & instruksi awal: {{ service.keluhan }}
                     </div>
                   </td>
                   <td style="text-align: center">
-                    <span class="badge badge-secondary" style="font-size: 10px">JASA</span>
+                    <span class="badge badge-secondary" style="font-size: 10px">PAKET</span>
                   </td>
                   <td style="text-align: center" class="numeric">1</td>
                   <td style="text-align: right" class="numeric">
@@ -203,10 +221,10 @@
                   </td>
                 </tr>
 
-                <!-- Service Items -->
+                <!-- Additional Service Items -->
                 <tr v-for="(item, idx) in service.serviceItems || []" :key="item.id">
                   <td style="text-align: center">
-                    {{ (service.servicePackageName ? 2 : 1) + idx }}
+                    {{ 2 + idx }}
                   </td>
                   <td>
                     <strong>{{ item.namaItem }}</strong>
@@ -261,10 +279,63 @@
                 </tr>
               </tbody>
               <tfoot>
-                <tr>
-                  <th colspan="5" style="text-align: right">TOTAL ESTIMASI BIAYA PKB:</th>
+                <tr v-if="(service.serviceItems || []).length > 0">
+                  <th
+                    colspan="5"
+                    style="
+                      text-align: right;
+                      font-size: 11px;
+                      font-weight: 500;
+                      color: #6b7280;
+                      padding: 4px 10px;
+                    "
+                  >
+                    Biaya Paket Servis Utama:
+                  </th>
+                  <th style="text-align: right; font-size: 11px; padding: 4px 10px" class="numeric">
+                    Rp {{ formatCurrency(basePackagePrice) }}
+                  </th>
+                </tr>
+                <tr v-if="totalSpareparts > 0">
+                  <th
+                    colspan="5"
+                    style="
+                      text-align: right;
+                      font-size: 11px;
+                      font-weight: 500;
+                      color: #6b7280;
+                      padding: 4px 10px;
+                    "
+                  >
+                    Total Tambahan Suku Cadang:
+                  </th>
+                  <th style="text-align: right; font-size: 11px; padding: 4px 10px" class="numeric">
+                    Rp {{ formatCurrency(totalSpareparts) }}
+                  </th>
+                </tr>
+                <tr v-if="totalExtraServices > 0">
+                  <th
+                    colspan="5"
+                    style="
+                      text-align: right;
+                      font-size: 11px;
+                      font-weight: 500;
+                      color: #6b7280;
+                      padding: 4px 10px;
+                    "
+                  >
+                    Total Tambahan Jasa Ekstra:
+                  </th>
+                  <th style="text-align: right; font-size: 11px; padding: 4px 10px" class="numeric">
+                    Rp {{ formatCurrency(totalExtraServices) }}
+                  </th>
+                </tr>
+                <tr style="background: #f9fafb">
+                  <th colspan="5" style="text-align: right; font-size: 12.5px; font-weight: 800">
+                    TOTAL ESTIMASI BIAYA PKB:
+                  </th>
                   <th style="text-align: right" class="numeric total-amount">
-                    Rp {{ formatCurrency(service.estimasiBiaya || service.estimasi_biaya || 0) }}
+                    Rp {{ formatCurrency(grandTotalPKB) }}
                   </th>
                 </tr>
               </tfoot>
@@ -357,10 +428,25 @@ const basePackagePrice = computed(() => {
     const pkg = masterStore.serviceMasters.find((s) => s.id === props.service.serviceMasterId);
     if (pkg) return pkg.harga;
   }
-  if (!props.service.serviceItems || props.service.serviceItems.length === 0) {
-    return props.service.estimasiBiaya || props.service.estimasi_biaya || 0;
-  }
-  return 0;
+  return props.service.estimasiBiaya || props.service.estimasi_biaya || 0;
+});
+
+const totalSpareparts = computed(() => {
+  if (!props.service?.serviceItems) return 0;
+  return props.service.serviceItems
+    .filter((it) => it.itemType === 'SPAREPART' && it.approvalStatus !== 'DITOLAK')
+    .reduce((acc, it) => acc + (it.subtotal || 0), 0);
+});
+
+const totalExtraServices = computed(() => {
+  if (!props.service?.serviceItems) return 0;
+  return props.service.serviceItems
+    .filter((it) => it.itemType === 'JASA' && it.approvalStatus !== 'DITOLAK')
+    .reduce((acc, it) => acc + (it.subtotal || 0), 0);
+});
+
+const grandTotalPKB = computed(() => {
+  return basePackagePrice.value + totalSpareparts.value + totalExtraServices.value;
 });
 
 const formatDateTime = (dateStr) => {

@@ -48,6 +48,8 @@ describe('PartRequisitionModal Component Tests', () => {
     expect(wrapper.text()).toContain('Item Pengerjaan & Permintaan Suku Cadang');
     expect(wrapper.text()).toContain('PKB-20260821-002');
     expect(wrapper.text()).toContain('D 5678 ABC');
+    expect(wrapper.text()).toContain('Servis Berkala');
+    expect(wrapper.text()).toContain('125.000');
     expect(wrapper.text()).toContain('Kampas Rem Depan');
     expect(wrapper.text()).toContain('KMP-DEP-01');
     expect(wrapper.text()).toContain('Menunggu Konfirmasi');
