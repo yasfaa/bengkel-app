@@ -238,7 +238,7 @@ describe('🔐 Authentication & RBAC Authorization Integration Tests', () => {
       sparepartId = partsRes.body[0]?.id || 1;
     });
 
-    it('4.1 ADMIN should NOT be allowed to add service items (403)', async () => {
+    it('4.1 ADMIN SHOULD be allowed to add service items on behalf of mechanics (201 Created)', async () => {
       const res = await request(app)
         .post(`/api/services/${serviceId}/items`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -246,26 +246,72 @@ describe('🔐 Authentication & RBAC Authorization Integration Tests', () => {
           itemType: 'SPAREPART',
           sparepartId,
           quantity: 1,
+          catatan: 'Dicatat oleh Admin/SA dari laporan mekanik',
         });
 
-      expect(res.statusCode).toBe(403);
-      expect(res.body.status).toBe('fail');
+      expect(res.statusCode).toBe(201);
+      expect(res.body).toHaveProperty('id');
+      expect(res.body.itemType).toBe('SPAREPART');
     });
 
-    it('4.2 ADMIN should NOT be allowed to complete service (403)', async () => {
+    it('4.2 KEPALA_BENGKEL should NOT be allowed to add service items or complete service (403 Forbidden)', async () => {
+      const itemRes = await request(app)
+        .post(`/api/services/${serviceId}/items`)
+        .set('Authorization', `Bearer ${kepalaToken}`)
+        .send({
+          itemType: 'SPAREPART',
+          sparepartId,
+          quantity: 1,
+        });
+
+      expect(itemRes.statusCode).toBe(403);
+      expect(itemRes.body.status).toBe('fail');
+
+      const statusRes = await request(app)
+        .patch(`/api/services/${serviceId}/status`)
+        .set('Authorization', `Bearer ${kepalaToken}`)
+        .send({ status: 'Selesai' });
+
+      expect(statusRes.statusCode).toBe(403);
+      expect(statusRes.body.status).toBe('fail');
+    });
+
+    it('4.3 ADMIN SHOULD be allowed to complete service (200 OK)', async () => {
       const res = await request(app)
         .patch(`/api/services/${serviceId}/status`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ status: 'Selesai' });
 
-      expect(res.statusCode).toBe(403);
-      expect(res.body.status).toBe('fail');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.status).toBe('Selesai');
+      expect(res.body.tgl_selesai).toBeDefined();
     });
 
-    it('4.3 MEKANIK (Asep) SHOULD be allowed to add service items and complete service', async () => {
+    it('4.4 MEKANIK (Asep) SHOULD be allowed to add service items and complete service on assigned unit', async () => {
+      // Create another service assigned to Asep
+      const newServiceRes = await request(app)
+        .post('/api/services')
+        .send({
+          customerName: 'Pelanggan Asep 2',
+          phone: '081299990000',
+          nopol: `B${Math.floor(1000 + Math.random() * 9000)}AS2`,
+          keluhan: 'Ganti busi',
+          mechanicName: 'Asep Hidayat',
+          brandName: 'Honda',
+          typeName: 'Beat FI',
+          capacityName: '110 cc',
+        });
+      const newServiceId = newServiceRes.body.id;
+
+      // Start working
+      await request(app)
+        .patch(`/api/services/${newServiceId}/status`)
+        .set('Authorization', `Bearer ${asepToken}`)
+        .send({ status: 'Dikerjakan' });
+
       // 1. Add item
       const itemRes = await request(app)
-        .post(`/api/services/${serviceId}/items`)
+        .post(`/api/services/${newServiceId}/items`)
         .set('Authorization', `Bearer ${asepToken}`)
         .send({
           itemType: 'SPAREPART',
@@ -277,7 +323,7 @@ describe('🔐 Authentication & RBAC Authorization Integration Tests', () => {
 
       // 2. Complete service
       const completeRes = await request(app)
-        .patch(`/api/services/${serviceId}/status`)
+        .patch(`/api/services/${newServiceId}/status`)
         .set('Authorization', `Bearer ${asepToken}`)
         .send({ status: 'Selesai' });
 

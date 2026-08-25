@@ -104,12 +104,6 @@ class ServiceItemService {
    */
   async addServiceItem(serviceId, payload, user = null) {
     if (user) {
-      if (user.role === 'ADMIN') {
-        throw new AppError(
-          'Pengajuan suku cadang dan jasa teknis hanya dapat dilakukan oleh teknisi mekanik.',
-          403
-        );
-      }
       if (user.role === 'KEPALA_BENGKEL') {
         throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
       }
@@ -248,7 +242,13 @@ class ServiceItemService {
    * @param {string|number} itemId
    * @param {object} payload
    */
-  async updateServiceItem(serviceId, itemId, payload) {
+  async updateServiceItem(serviceId, itemId, payload, user = null) {
+    if (user) {
+      if (user.role === 'KEPALA_BENGKEL') {
+        throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
+      }
+    }
+
     const sId = parseId(serviceId);
     const itId = parseId(itemId);
     if (!sId || !itId) throw new AppError('ID servis atau ID item tidak valid.', 400);
@@ -258,10 +258,22 @@ class ServiceItemService {
     const result = await prisma.$transaction(async (tx) => {
       const existing = await tx.serviceItem.findFirst({
         where: { id: itId, service_id: sId },
-        include: { sparepart: true },
+        include: { sparepart: true, service: true },
       });
 
       if (!existing) throw new AppError('Item pengerjaan PKB tidak ditemukan.', 404);
+
+      if (
+        user &&
+        user.role === 'MEKANIK' &&
+        existing.service?.mechanic_id &&
+        existing.service.mechanic_id !== user.mechanicId
+      ) {
+        throw new AppError(
+          'Anda hanya dapat mengubah item pada motor yang ditugaskan ke Anda.',
+          403
+        );
+      }
 
       const updateData = {};
 
@@ -332,12 +344,6 @@ class ServiceItemService {
    */
   async removeServiceItem(serviceId, itemId, user = null) {
     if (user) {
-      if (user.role === 'ADMIN') {
-        throw new AppError(
-          'Penghapusan item pengerjaan hanya dapat dilakukan oleh teknisi mekanik.',
-          403
-        );
-      }
       if (user.role === 'KEPALA_BENGKEL') {
         throw new AppError('Kepala Bengkel hanya memiliki hak akses lihat (view-only).', 403);
       }
@@ -350,9 +356,22 @@ class ServiceItemService {
     await prisma.$transaction(async (tx) => {
       const existing = await tx.serviceItem.findFirst({
         where: { id: itId, service_id: sId },
+        include: { service: true },
       });
 
       if (!existing) throw new AppError('Item pengerjaan PKB tidak ditemukan.', 404);
+
+      if (
+        user &&
+        user.role === 'MEKANIK' &&
+        existing.service?.mechanic_id &&
+        existing.service.mechanic_id !== user.mechanicId
+      ) {
+        throw new AppError(
+          'Anda hanya dapat menghapus item pada motor yang ditugaskan ke Anda.',
+          403
+        );
+      }
 
       await tx.serviceItem.delete({
         where: { id: itId },

@@ -13,11 +13,14 @@ class VehicleService {
     }
 
     const cleanNopol = nopol.trim().toUpperCase();
+    const formattedWithSpaces = cleanNopol.replace(
+      /^([A-Z]{1,2})\s*(\d{1,4})\s*([A-Z]+)$/,
+      '$1 $2 $3'
+    );
+
     const vehicle = await prisma.vehicle.findFirst({
       where: {
-        nopol: {
-          contains: cleanNopol,
-        },
+        OR: [{ nopol: { contains: cleanNopol } }, { nopol: { contains: formattedWithSpaces } }],
       },
       include: {
         customer: true,
