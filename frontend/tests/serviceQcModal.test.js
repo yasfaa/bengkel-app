@@ -113,7 +113,9 @@ describe('ServiceQcModal.vue Component Tests', () => {
       },
     });
 
-    const submitBtn = wrapper.findAll('button').find((b) => b.text().includes('Simpan & Selesaikan'));
+    const submitBtn = wrapper
+      .findAll('button')
+      .find((b) => b.text().includes('Simpan & Selesaikan'));
     await submitBtn.trigger('click');
 
     expect(wrapper.emitted('confirm')).toBeFalsy();

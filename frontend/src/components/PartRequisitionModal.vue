@@ -706,9 +706,7 @@ const totalPartApproved = computed(() => {
   return sum;
 });
 
-const grandTotalApproved = computed(
-  () => basePackagePrice.value + extraJasaApproved.value + totalPartApproved.value
-);
+const grandTotalApproved = computed(() => totalJasaApproved.value + totalPartApproved.value);
 
 watch(selectedSparepartId, () => {
   itemQty.value = 1;

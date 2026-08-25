@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
-import { apiGet, apiPost, apiPatch, apiPut, apiDelete, apiFetch } from '../src/utils/api';
+import { apiGet, apiPost, apiDelete } from '../src/utils/api';
 import { useAuthStore } from '../src/stores/authStore';
 
 describe('api.js Fetch Wrapper & Interceptor Tests', () => {
@@ -13,7 +13,7 @@ describe('api.js Fetch Wrapper & Interceptor Tests', () => {
     const authStore = useAuthStore();
     authStore.setToken('test_access_token_123');
 
-    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       status: 200,
       json: async () => ({ status: 'OK' }),
@@ -33,7 +33,7 @@ describe('api.js Fetch Wrapper & Interceptor Tests', () => {
   });
 
   it('2. should format POST body as JSON string and return response data', async () => {
-    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       status: 201,
       json: async () => ({ id: 42, name: 'Item Test' }),
@@ -53,7 +53,7 @@ describe('api.js Fetch Wrapper & Interceptor Tests', () => {
   });
 
   it('3. should throw meaningful error when API returns non-ok status', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue({
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       status: 400,
       json: async () => ({ message: 'Data tidak valid' }),
@@ -63,7 +63,7 @@ describe('api.js Fetch Wrapper & Interceptor Tests', () => {
   });
 
   it('4. should handle DELETE requests and return true on success', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue({
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       status: 200,
       json: async () => ({ success: true }),

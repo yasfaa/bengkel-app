@@ -174,8 +174,7 @@
               <!-- Tombol Kelola Part & Jasa PKB (Hanya muncul setelah mulai servis) -->
               <button
                 v-if="
-                  service.status !== 'Menunggu' &&
-                  (service.status !== 'Selesai' || !service.isPaid)
+                  service.status !== 'Menunggu' && (service.status !== 'Selesai' || !service.isPaid)
                 "
                 class="btn btn-secondary"
                 style="
