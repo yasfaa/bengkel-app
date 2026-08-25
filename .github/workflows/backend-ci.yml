@@ -59,6 +59,13 @@ jobs:
           cd backend
           npm audit --audit-level=high || true
 
+      - name: 🔎 Semgrep Code Security Audit
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/default"
+        # Tetap lanjut jika semgrep error agar tidak memblokir build sebelum diperbaiki sepenuhnya
+        continue-on-error: true
+
       - name: 🧹 Backend Linting Check (ESLint)
         run: |
           cd backend

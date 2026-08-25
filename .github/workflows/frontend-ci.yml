@@ -54,6 +54,12 @@ jobs:
           cd frontend
           npm audit --audit-level=high || true
 
+      - name: 🔎 Semgrep Code Security Audit
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/default"
+        continue-on-error: true
+
       - name: 🧹 Frontend Linting Check (ESLint & Vue)
         run: |
           cd frontend
