@@ -163,8 +163,12 @@
                 </span>
               </td>
               <td style="text-align: right; white-space: nowrap">
-                <!-- Tombol Part & Jasa (Tahap 3) -->
+                <!-- Tombol Part & Jasa (Tahap 3 - Hanya muncul setelah mulai servis) -->
                 <button
+                  v-if="
+                    service.status !== 'Menunggu' &&
+                    (service.status !== 'Selesai' || !service.isPaid)
+                  "
                   class="btn btn-secondary"
                   style="
                     padding: 6px 10px;
@@ -186,7 +190,9 @@
                   </span>
                 </button>
 
+                <!-- Tombol Lihat / Cetak PKB (Hanya muncul setelah mulai servis) -->
                 <button
+                  v-if="service.status !== 'Menunggu'"
                   class="btn btn-secondary"
                   style="padding: 6px 10px; font-size: 12px; margin-right: 6px"
                   title="Lihat Dokumen PKB"
@@ -210,7 +216,7 @@
                     v-else-if="authStore.isMechanic"
                     class="btn btn-primary"
                     style="padding: 6px 12px; font-size: 12px"
-                    @click="$emit('assign-mechanic', service)"
+                    @click="$emit('start-service-mechanic', service)"
                   >
                     <i class="ph-bold ph-play"></i> Mulai Servis
                   </button>
@@ -274,6 +280,7 @@ defineEmits([
   'open-pkb-modal',
   'open-part-modal',
   'assign-mechanic',
+  'start-service-mechanic',
   'complete-service',
 ]);
 </script>

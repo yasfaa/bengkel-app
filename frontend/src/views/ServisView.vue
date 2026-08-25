@@ -171,9 +171,12 @@
 
             <!-- Actions (Scoped per Role) -->
             <td style="text-align: right; white-space: nowrap">
-              <!-- Tombol Kelola Part & Jasa PKB (Tahap 3) -->
+              <!-- Tombol Kelola Part & Jasa PKB (Hanya muncul setelah mulai servis) -->
               <button
-                v-if="service.status !== 'Selesai' || !service.isPaid"
+                v-if="
+                  service.status !== 'Menunggu' &&
+                  (service.status !== 'Selesai' || !service.isPaid)
+                "
                 class="btn btn-secondary"
                 style="
                   padding: 6px 10px;
@@ -183,9 +186,9 @@
                   border-color: var(--primary-color);
                 "
                 :title="
-                  authStore.isMechanic
-                    ? 'Ajukan Suku Cadang & Jasa Tambahan'
-                    : 'Lihat Rincian Suku Cadang & Jasa PKB'
+                  authStore.isKepalaBengkel
+                    ? 'Lihat Rincian Suku Cadang & Jasa PKB'
+                    : 'Kelola & Catat Suku Cadang serta Jasa PKB'
                 "
                 @click="$emit('open-part-modal', service)"
               >
@@ -199,8 +202,9 @@
                 </span>
               </button>
 
-              <!-- Tombol Lihat / Cetak PKB -->
+              <!-- Tombol Lihat / Cetak PKB (Hanya muncul setelah mulai servis) -->
               <button
+                v-if="service.status !== 'Menunggu'"
                 class="btn btn-secondary"
                 style="padding: 6px 10px; font-size: 12px; margin-right: 6px"
                 title="Lihat Lembar Dokumen PKB"
@@ -231,16 +235,16 @@
                   class="btn btn-primary"
                   style="padding: 6px 12px; font-size: 12px"
                   title="Mulai pengerjaan servis di Pit"
-                  @click="$emit('assign-mechanic', service)"
+                  @click="$emit('start-service-mechanic', service)"
                 >
                   <i class="ph-bold ph-play"></i> Mulai Servis
                 </button>
               </template>
 
-              <!-- 2. Dikerjakan (Hanya Mekanik yang bisa menyelesaikan servis) -->
+              <!-- 2. Dikerjakan (Mekanik atau Admin bisa menyelesaikan servis) -->
               <template v-else-if="service.status === 'Dikerjakan'">
                 <button
-                  v-if="authStore.isMechanic"
+                  v-if="authStore.isAdmin || authStore.isMechanic"
                   class="btn btn-primary"
                   style="padding: 6px 12px; font-size: 12px"
                   title="Selesaikan pengerjaan servis motor ini"
@@ -330,6 +334,7 @@ defineEmits([
   'open-pkb-modal',
   'open-part-modal',
   'assign-mechanic',
+  'start-service-mechanic',
   'complete-service',
   'create-invoice',
 ]);
