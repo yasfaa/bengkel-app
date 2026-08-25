@@ -94,7 +94,9 @@ export function useBengkelApp() {
     printPkb: queueStore.printPkb,
     saveNewService: queueStore.saveNewService,
     assignMechanic: queueStore.assignMechanic,
+    startServiceMechanic: queueStore.startServiceMechanic,
     completeService: queueStore.completeService,
+    confirmCompleteService: queueStore.confirmCompleteService,
 
     // Transaction Store State & Actions
     ...transactionRefs,

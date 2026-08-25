@@ -132,6 +132,7 @@
           @edit-sparepart="editSparepart"
           @delete-sparepart="deleteSparepart"
           @assign-mechanic="openAssignModal"
+          @start-service-mechanic="startServiceMechanic"
           @complete-service="completeService"
           @create-invoice="createInvoice"
         />
@@ -169,6 +170,12 @@
     />
 
     <PartRequisitionModal v-model="showPartModal" :service="selectedServiceForPart" />
+
+    <ServiceQcModal
+      v-model="showQcModal"
+      :service="selectedServiceForQc"
+      @confirm="confirmCompleteService"
+    />
 
     <InvoiceModal
       v-model="showInvoiceModal"
@@ -241,6 +248,7 @@ import InvoiceModal from './components/InvoiceModal.vue';
 import ServiceMasterModal from './components/ServiceMasterModal.vue';
 import MechanicModal from './components/MechanicModal.vue';
 import SparepartModal from './components/SparepartModal.vue';
+import ServiceQcModal from './components/ServiceQcModal.vue';
 
 const authStore = useAuthStore();
 
@@ -278,9 +286,13 @@ const {
   selectedServiceForAssign,
   openAssignModal,
   confirmAssignMechanic,
+  startServiceMechanic,
   showPartModal,
   selectedServiceForPart,
   openPartModal,
+  showQcModal,
+  selectedServiceForQc,
+  confirmCompleteService,
   editServiceMaster,
   deleteServiceMaster,
   showAddServiceModal,

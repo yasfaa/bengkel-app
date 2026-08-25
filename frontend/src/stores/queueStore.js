@@ -291,32 +291,81 @@ export const useQueueStore = defineStore('queue', () => {
     }
   };
 
+  const startServiceMechanic = async (service) => {
+    // For mechanics: direct start without assign modal (just Swal Confirm)
+    const activeJob = getMechanicActiveJob(authStore.user.nama);
+    if (activeJob) {
+      uiStore.showToast(
+        '❌ Anda sedang aktif mengerjakan unit lain. Selesaikan terlebih dahulu.',
+        3000
+      );
+      return;
+    }
+
+    const confirm = await SwalConfirm.fire({
+      title: 'Mulai Servis?',
+      html: `Anda akan memulai pengerjaan untuk motor <strong>${service.nopol}</strong>.`,
+      icon: 'question',
+      confirmButtonText: 'Ya, Mulai',
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        await apiPatch(`/api/services/${service.id}/status`, {
+          status: 'Dikerjakan',
+          mechanicName: authStore.user.nama,
+          allowBusyOverride: true,
+        });
+
+        await fetchServices();
+        await masterStore.fetchMechanics();
+
+        SwalSuccess.fire({
+          title: 'Servis Dimulai!',
+          html: `Anda telah memulai pengerjaan motor <strong>${service.nopol}</strong>.`,
+          icon: 'success',
+        });
+      } catch (e) {
+        console.error(e);
+        uiStore.showToast('❌ Gagal memulai servis: ' + (e.message || ''), 4000);
+      }
+    }
+  };
+
   const assignMechanic = (service) => {
     openAssignModal(service);
   };
 
-  const completeService = async (service) => {
-    const result = await SwalConfirm.fire({
-      title: 'Selesaikan Pengerjaan Servis?',
-      text: `Motor ${service.nopol} telah selesai diperbaiki dan siap masuk ke billing/kasir.`,
-      icon: 'question',
-      confirmButtonText: 'Ya, Selesai',
-    });
+  /* =========================================================================
+     Stage 4: QC & Final Inspection (Selesai Servis)
+     ========================================================================= */
+  const showQcModal = ref(false);
+  const selectedServiceForQc = ref(null);
 
-    if (result.isConfirmed) {
-      try {
-        await apiPatch(`/api/services/${service.id}/status`, { status: 'Selesai' });
-        await fetchServices();
-        await masterStore.fetchMechanics();
-        SwalSuccess.fire(
-          'Servis Selesai!',
-          `Motor ${service.nopol} siap dibuatkan invoice.`,
-          'success'
-        );
-      } catch (e) {
-        console.error(e);
-        uiStore.showToast('❌ Gagal menyelesaikan servis.', 3000);
-      }
+  const completeService = (service) => {
+    // Buka Modal QC terlebih dahulu
+    selectedServiceForQc.value = service;
+    showQcModal.value = true;
+  };
+
+  const confirmCompleteService = async (qcData) => {
+    try {
+      await apiPatch(`/api/services/${selectedServiceForQc.value.id}/status`, {
+        status: 'Selesai',
+        qcData,
+      });
+      await fetchServices();
+      await masterStore.fetchMechanics();
+      showQcModal.value = false;
+      SwalSuccess.fire(
+        'Pemeriksaan Selesai!',
+        `Motor ${selectedServiceForQc.value.nopol} telah lulus QC dan siap dibuatkan invoice.`,
+        'success'
+      );
+      selectedServiceForQc.value = null;
+    } catch (e) {
+      console.error(e);
+      uiStore.showToast('❌ Gagal menyimpan data QC dan menyelesaikan servis.', 4000);
     }
   };
 
@@ -368,6 +417,8 @@ export const useQueueStore = defineStore('queue', () => {
     selectedServiceForAssign,
     showPartModal,
     selectedServiceForPart,
+    showQcModal,
+    selectedServiceForQc,
     openAddServiceModal,
     openPkbModal,
     openAssignModal,
@@ -380,7 +431,9 @@ export const useQueueStore = defineStore('queue', () => {
     printPkb,
     saveNewService,
     assignMechanic,
+    startServiceMechanic,
     completeService,
+    confirmCompleteService,
     isPrefillingVehicle,
   };
 });
