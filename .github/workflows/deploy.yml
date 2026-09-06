@@ -95,7 +95,7 @@ jobs:
       # Buat file .env.prod di server dari GitHub Secrets
       - name: 📝 Create Production .env File
         run: |
-          cat > ${{ github.workspace }}/.env.prod << EOF
+          cat > ${{ github.workspace }}/.env.prod << 'EOF'
           DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}

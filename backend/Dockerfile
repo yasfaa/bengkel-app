@@ -8,7 +8,10 @@
 FROM node:20-alpine AS deps-stage
 WORKDIR /app
 
-# Copy package files
+# Install OpenSSL for Prisma engine compatibility on Alpine Linux
+RUN apk add --no-cache openssl
+
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm ci --omit=dev
 
@@ -23,8 +26,14 @@ RUN npx prisma generate
 FROM node:20-alpine AS production-stage
 WORKDIR /app
 
+# Install OpenSSL runtime for Prisma binary engine
+RUN apk add --no-cache openssl
+
 # Create non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy package files (needed for npm scripts like db:seed:master)
+COPY package*.json ./
 
 # Copy installed dependencies and generated Prisma client from deps stage
 COPY --from=deps-stage /app/node_modules ./node_modules
