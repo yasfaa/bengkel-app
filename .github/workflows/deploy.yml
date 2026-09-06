@@ -121,10 +121,10 @@ jobs:
         run: |
           docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --remove-orphans
 
-      # Jalankan migrasi database Prisma (jika ada schema baru)
-      - name: 🗄️ Run Database Migrations
+      # Sinkronisasi schema database Prisma ke MySQL
+      - name: 🗄️ Sync Database Schema
         run: |
-          docker exec bengkel-backend npx prisma migrate deploy
+          docker exec bengkel-backend npx prisma db push --accept-data-loss --skip-generate
 
       # Jalankan seeder master data agar database selalu terisi data referensi
       - name: 🗃️ Run Master Data Seeder
