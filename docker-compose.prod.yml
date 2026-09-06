@@ -1,0 +1,90 @@
+# ==============================================================================
+# BengkelKu - Docker Compose Production
+# Mengambil pre-built image dari Container Registry (Docker Hub / GHCR)
+# Dijalankan oleh self-hosted GitHub Actions runner di VPS
+# ==============================================================================
+# Cara pakai:
+#   1. Buat file .env.prod di server (isi semua var)
+#   2. docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# ==============================================================================
+
+services:
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Database: MySQL 8.0
+  # ────────────────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: bengkel-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - bengkel-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Backend: pre-built image dari Registry
+  # ────────────────────────────────────────────────────────────────────────────
+  backend:
+    image: ${DOCKERHUB_USERNAME}/bengkel-backend:latest
+    container_name: bengkel-backend
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
+      ACCESS_TOKEN_EXPIRES_IN: ${ACCESS_TOKEN_EXPIRES_IN:-15m}
+      REFRESH_TOKEN_EXPIRES_IN: ${REFRESH_TOKEN_EXPIRES_IN:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-500}
+    networks:
+      - bengkel-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # Frontend: pre-built image dari Registry
+  # ────────────────────────────────────────────────────────────────────────────
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/bengkel-frontend:latest
+    container_name: bengkel-frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - bengkel-net
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Volumes & Networks
+# ──────────────────────────────────────────────────────────────────────────────
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  bengkel-net:
+    driver: bridge

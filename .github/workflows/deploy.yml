@@ -1,0 +1,162 @@
+name: 🚀 Build, Push & Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Bisa trigger manual dari GitHub UI
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/bengkel-backend
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/bengkel-frontend
+  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL || '' }}
+
+jobs:
+  # ============================================================================
+  # Job 1: Build Docker Images & Push ke Docker Hub
+  # Dijalankan di GitHub-hosted runner (ubuntu-latest)
+  # ============================================================================
+  build-and-push:
+    name: 🐳 Build & Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup Docker Buildx untuk cache & multi-platform support
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Login ke Docker Hub menggunakan secrets
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ────────────────────────────────────────────────────────────────────────
+      # Build & Push Backend Image
+      # ────────────────────────────────────────────────────────────────────────
+      - name: ⚙️ Build & Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          dockerfile: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          # Pakai GitHub Actions cache untuk mempercepat build berikutnya
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+
+      # ────────────────────────────────────────────────────────────────────────
+      # Build & Push Frontend Image
+      # ────────────────────────────────────────────────────────────────────────
+      - name: 🖥️ Build & Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          dockerfile: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+  # ============================================================================
+  # Job 2: Deploy di Self-Hosted Runner (langsung di VPS)
+  # Runner terinstall di VPS, tidak butuh SSH expose ke internet.
+  # Koneksi: VPS → GitHub (outbound-only, lebih aman).
+  # ============================================================================
+  deploy:
+    name: 🚀 Deploy to Server
+    runs-on: self-hosted
+    needs: build-and-push  # Hanya jalan setelah image berhasil di-push
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      # Login di runner (VPS) untuk pull image private
+      - name: 🔐 Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Buat file .env.prod di server dari GitHub Secrets
+      - name: 📝 Create Production .env File
+        run: |
+          cat > ${{ github.workspace }}/.env.prod << EOF
+          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER=${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+          ACCESS_TOKEN_EXPIRES_IN=${{ secrets.ACCESS_TOKEN_EXPIRES_IN }}
+          REFRESH_TOKEN_EXPIRES_IN=${{ secrets.REFRESH_TOKEN_EXPIRES_IN }}
+          CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
+          RATE_LIMIT_WINDOW_MS=900000
+          RATE_LIMIT_MAX=500
+          FRONTEND_PORT=80
+          EOF
+
+      # Pull image terbaru dari Docker Hub
+      - name: ⬇️ Pull Latest Images
+        run: |
+          docker compose -f docker-compose.prod.yml --env-file .env.prod pull
+
+      # Restart container dengan image terbaru (zero-downtime rolling update)
+      - name: ♻️ Restart Containers
+        run: |
+          docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --remove-orphans
+
+      # Jalankan migrasi database Prisma (jika ada schema baru)
+      - name: 🗄️ Run Database Migrations
+        run: |
+          docker exec bengkel-backend npx prisma migrate deploy
+
+      # Jalankan seeder master data agar database selalu terisi data referensi
+      - name: 🗃️ Run Master Data Seeder
+        run: |
+          docker exec bengkel-backend npm run db:seed:master
+
+      # Bersihkan image lama yang tidak dipakai untuk menjaga ruang disk
+      - name: 🧹 Prune Unused Docker Images
+        run: |
+          docker image prune -f
+
+      # Tampilkan status container untuk konfirmasi
+      - name: 📊 Show Running Containers
+        run: |
+          docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+
+      # Kirim Notifikasi Discord Jika Sukses
+      - name: 📢 Discord Alert (Deploy Success)
+        uses: sarisia/actions-status-discord@v1
+        if: success() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "🚀 Deploy to Production Success!"
+          description: "Aplikasi BengkelKu berhasil di-deploy ke server VPS."
+          color: 0x00FF00
+
+      # Kirim Notifikasi Discord Jika Gagal
+      - name: 🚨 Discord Alert (Deploy Failure)
+        uses: sarisia/actions-status-discord@v1
+        if: failure() && env.DISCORD_WEBHOOK_URL != ''
+        with:
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
+          title: "❌ Deploy to Production Failed!"
+          description: "Terjadi kesalahan saat proses deployment. Harap periksa log GitHub Actions."
+          color: 0xFF0000
